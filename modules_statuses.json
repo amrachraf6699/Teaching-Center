@@ -1,0 +1,8 @@
+{
+    "Core": true,
+    "People": true,
+    "Academics": true,
+    "Exams": true,
+    "Notifications": true,
+    "ImportsExports": true
+}
