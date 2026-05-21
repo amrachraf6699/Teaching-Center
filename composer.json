@@ -10,8 +10,14 @@
     "license": "MIT",
     "require": {
         "php": "^8.3",
+        "barryvdh/laravel-dompdf": "^3.1",
         "laravel/framework": "^13.8",
-        "laravel/tinker": "^3.0"
+        "laravel/tinker": "^3.0",
+        "maatwebsite/excel": "^3.1",
+        "nwidart/laravel-modules": "^13.0",
+        "spatie/laravel-activitylog": "^4.12",
+        "spatie/laravel-medialibrary": "^11.22",
+        "spatie/laravel-settings": "^3.8"
     },
     "require-dev": {
         "fakerphp/faker": "^1.23",
@@ -82,7 +88,8 @@
         "sort-packages": true,
         "allow-plugins": {
             "pestphp/pest-plugin": true,
-            "php-http/discovery": true
+            "php-http/discovery": true,
+            "wikimedia/composer-merge-plugin": true
         }
     },
     "minimum-stability": "stable",
