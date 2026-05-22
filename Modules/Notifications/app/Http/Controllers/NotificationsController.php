@@ -12,7 +12,7 @@ class NotificationsController extends Controller
      */
     public function index()
     {
-        return view('notifications::index');
+        abort(404);
     }
 
     /**
@@ -20,7 +20,7 @@ class NotificationsController extends Controller
      */
     public function create()
     {
-        return view('notifications::create');
+        abort(404);
     }
 
     /**
@@ -33,7 +33,7 @@ class NotificationsController extends Controller
      */
     public function show($id)
     {
-        return view('notifications::show');
+        abort(404);
     }
 
     /**
@@ -41,7 +41,7 @@ class NotificationsController extends Controller
      */
     public function edit($id)
     {
-        return view('notifications::edit');
+        abort(404);
     }
 
     /**

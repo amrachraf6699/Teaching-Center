@@ -12,7 +12,7 @@ class AcademicsController extends Controller
      */
     public function index()
     {
-        return view('academics::index');
+        abort(404);
     }
 
     /**
@@ -20,7 +20,7 @@ class AcademicsController extends Controller
      */
     public function create()
     {
-        return view('academics::create');
+        abort(404);
     }
 
     /**
@@ -33,7 +33,7 @@ class AcademicsController extends Controller
      */
     public function show($id)
     {
-        return view('academics::show');
+        abort(404);
     }
 
     /**
@@ -41,7 +41,7 @@ class AcademicsController extends Controller
      */
     public function edit($id)
     {
-        return view('academics::edit');
+        abort(404);
     }
 
     /**

@@ -12,7 +12,7 @@ class PeopleController extends Controller
      */
     public function index()
     {
-        return view('people::index');
+        abort(404);
     }
 
     /**
@@ -20,7 +20,7 @@ class PeopleController extends Controller
      */
     public function create()
     {
-        return view('people::create');
+        abort(404);
     }
 
     /**
@@ -33,7 +33,7 @@ class PeopleController extends Controller
      */
     public function show($id)
     {
-        return view('people::show');
+        abort(404);
     }
 
     /**
@@ -41,7 +41,7 @@ class PeopleController extends Controller
      */
     public function edit($id)
     {
-        return view('people::edit');
+        abort(404);
     }
 
     /**

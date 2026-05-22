@@ -4,6 +4,7 @@ use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Http\UploadedFile;
 use Illuminate\Support\Facades\Storage;
+use Inertia\Testing\AssertableInertia as Assert;
 use Modules\Core\Models\SettingMedia;
 use Modules\Core\Settings\GeneralSettings;
 
@@ -15,7 +16,12 @@ it('allows a teacher to view and update core settings', function () {
     $this->actingAs($teacher)
         ->get(route('admin.settings.edit'))
         ->assertOk()
-        ->assertSee('Settings');
+        ->assertInertia(fn (Assert $page) => $page
+            ->component('Admin/Settings/Edit')
+            ->has('settings')
+            ->has('media')
+            ->has('timezones')
+            ->where('action', route('admin.settings.update')));
 
     $this->actingAs($teacher)
         ->put(route('admin.settings.update'), validSettingsPayload([

@@ -2,6 +2,7 @@
 
 use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
+use Inertia\Testing\AssertableInertia as Assert;
 use Modules\Academics\Models\Attendance;
 use Modules\Academics\Models\GroupSession;
 use Modules\Academics\Models\TeachingGroup;
@@ -18,6 +19,15 @@ it('redirects guests to the login page', function () {
 
 it('redirects unauthenticated admin requests to the login page', function () {
     $this->get(route('admin.dashboard'))->assertRedirect(route('login'));
+});
+
+it('renders the unified login inertia page', function () {
+    $this->get(route('login'))
+        ->assertOk()
+        ->assertInertia(fn (Assert $page) => $page
+            ->component('Auth/Login')
+            ->where('title', 'Login')
+            ->where('action', route('login.store')));
 });
 
 it('logs teachers and parents in from the same login page', function () {
@@ -52,7 +62,9 @@ it('separates teacher admin access from parent portal access', function () {
     $this->actingAs($teacher)
         ->get(route('admin.dashboard'))
         ->assertOk()
-        ->assertSee('Teacher Dashboard');
+        ->assertInertia(fn (Assert $page) => $page
+            ->component('Admin/Dashboard')
+            ->has('metrics', 5));
 
     $this->actingAs($teacher)
         ->get(route('parent.dashboard'))
@@ -65,7 +77,10 @@ it('separates teacher admin access from parent portal access', function () {
     $this->actingAs($parent)
         ->get(route('parent.dashboard'))
         ->assertOk()
-        ->assertSee('Parent Portal');
+        ->assertInertia(fn (Assert $page) => $page
+            ->component('Parent/Dashboard')
+            ->has('children')
+            ->has('notifications'));
 });
 
 it('only shows a parent their own children in the portal', function () {
@@ -78,8 +93,177 @@ it('only shows a parent their own children in the portal', function () {
     $this->actingAs($parent)
         ->get(route('parent.dashboard'))
         ->assertOk()
-        ->assertSee('Visible Student')
-        ->assertDontSee('Hidden Student');
+        ->assertInertia(fn (Assert $page) => $page
+            ->component('Parent/Dashboard')
+            ->has('children', 1)
+            ->where('children.0.name', 'Visible Student'));
+});
+
+it('auto-generates sequential student codes when no code is provided', function () {
+    $teacher = User::factory()->teacher()->create();
+    $parent = User::factory()->parent()->create();
+
+    Student::create([
+        'parent_id' => $parent->id,
+        'name' => 'Existing Student',
+        'code' => 'ST-009',
+    ]);
+
+    $this->actingAs($teacher)
+        ->post(route('admin.students.store'), [
+            'parent_id' => $parent->id,
+            'name' => 'Auto Coded Student',
+        ])
+        ->assertRedirect(route('admin.students.index'));
+
+    expect(Student::query()->where('name', 'Auto Coded Student')->firstOrFail()->code)->toBe('ST-010');
+});
+
+it('supports full admin crud routes with relationship-rich show pages', function () {
+    $teacher = User::factory()->teacher()->create();
+    $parent = User::factory()->parent()->create(['name' => 'Original Parent']);
+    $student = Student::create(['parent_id' => $parent->id, 'name' => 'Original Student', 'code' => 'ST-101']);
+    $group = TeachingGroup::create(['name' => 'Original Group', 'subject' => 'Math']);
+    $group->students()->sync([$student->id]);
+    $session = GroupSession::create([
+        'teaching_group_id' => $group->id,
+        'title' => 'Original Session',
+        'starts_at' => now()->addDay(),
+    ]);
+    $exam = Exam::create([
+        'teaching_group_id' => $group->id,
+        'title' => 'Original Exam',
+        'exam_date' => now()->toDateString(),
+        'max_score' => 100,
+    ]);
+    Attendance::create([
+        'teaching_session_id' => $session->id,
+        'student_id' => $student->id,
+        'status' => 'present',
+    ]);
+    ExamResult::create([
+        'exam_id' => $exam->id,
+        'student_id' => $student->id,
+        'score' => 95,
+    ]);
+    ParentNotification::create([
+        'parent_id' => $parent->id,
+        'student_id' => $student->id,
+        'type' => 'general',
+        'title' => 'Update',
+        'body' => 'Relationship data.',
+    ]);
+
+    $this->actingAs($teacher)
+        ->get(route('admin.parents.show', $parent))
+        ->assertOk()
+        ->assertInertia(fn (Assert $page) => $page
+            ->component('Admin/Parents/Show')
+            ->has('parent.children', 1)
+            ->has('parent.notifications', 1));
+
+    $this->actingAs($teacher)
+        ->get(route('admin.students.show', $student))
+        ->assertOk()
+        ->assertInertia(fn (Assert $page) => $page
+            ->component('Admin/Students/Show')
+            ->has('student.groups', 1)
+            ->has('student.attendance', 1)
+            ->has('student.exam_results', 1)
+            ->has('student.notifications', 1));
+
+    $this->actingAs($teacher)
+        ->get(route('admin.groups.show', $group))
+        ->assertOk()
+        ->assertInertia(fn (Assert $page) => $page
+            ->component('Admin/Groups/Show')
+            ->has('group.students', 1)
+            ->has('group.sessions', 1)
+            ->has('group.exams', 1));
+
+    $this->actingAs($teacher)
+        ->get(route('admin.sessions.show', $session))
+        ->assertOk()
+        ->assertInertia(fn (Assert $page) => $page
+            ->component('Admin/Sessions/Show')
+            ->has('session.students', 1)
+            ->has('session.attendance', 1));
+
+    $this->actingAs($teacher)
+        ->get(route('admin.exams.show', $exam))
+        ->assertOk()
+        ->assertInertia(fn (Assert $page) => $page
+            ->component('Admin/Exams/Show')
+            ->has('exam.students', 1)
+            ->has('exam.results', 1));
+
+    $this->actingAs($teacher)
+        ->put(route('admin.parents.update', $parent), [
+            'name' => 'Updated Parent',
+            'email' => $parent->email,
+            'password' => '',
+        ])
+        ->assertRedirect(route('admin.parents.show', $parent));
+    expect($parent->refresh()->name)->toBe('Updated Parent');
+
+    $this->actingAs($teacher)
+        ->put(route('admin.students.update', $student), [
+            'parent_id' => $parent->id,
+            'name' => 'Updated Student',
+            'code' => 'ST-102',
+            'phone' => '01011111111',
+            'date_of_birth' => null,
+            'notes' => 'Updated notes.',
+            'is_active' => true,
+        ])
+        ->assertRedirect(route('admin.students.show', $student));
+    expect($student->refresh()->name)->toBe('Updated Student');
+
+    $this->actingAs($teacher)
+        ->put(route('admin.groups.update', $group), [
+            'name' => 'Updated Group',
+            'subject' => 'Science',
+            'level' => null,
+            'description' => 'Updated group.',
+            'is_active' => true,
+            'student_ids' => [$student->id],
+        ])
+        ->assertRedirect(route('admin.groups.show', $group));
+    expect($group->refresh()->name)->toBe('Updated Group');
+
+    $this->actingAs($teacher)
+        ->put(route('admin.sessions.update', $session), [
+            'teaching_group_id' => $group->id,
+            'title' => 'Updated Session',
+            'starts_at' => now()->addDays(2)->format('Y-m-d H:i:s'),
+            'ends_at' => null,
+            'notes' => 'Updated session.',
+        ])
+        ->assertRedirect(route('admin.sessions.show', $session));
+    expect($session->refresh()->title)->toBe('Updated Session');
+
+    $this->actingAs($teacher)
+        ->put(route('admin.exams.update', $exam), [
+            'teaching_group_id' => $group->id,
+            'title' => 'Updated Exam',
+            'exam_date' => now()->addWeek()->toDateString(),
+            'max_score' => 120,
+            'notes' => 'Updated exam.',
+        ])
+        ->assertRedirect(route('admin.exams.show', $exam));
+    expect($exam->refresh()->title)->toBe('Updated Exam');
+
+    $this->actingAs($teacher)->delete(route('admin.exams.destroy', $exam))->assertRedirect(route('admin.exams.index'));
+    $this->actingAs($teacher)->delete(route('admin.sessions.destroy', $session))->assertRedirect(route('admin.sessions.index'));
+    $this->actingAs($teacher)->delete(route('admin.groups.destroy', $group))->assertRedirect(route('admin.groups.index'));
+    $this->actingAs($teacher)->delete(route('admin.students.destroy', $student))->assertRedirect(route('admin.students.index'));
+    $this->actingAs($teacher)->delete(route('admin.parents.destroy', $parent))->assertRedirect(route('admin.parents.index'));
+
+    expect(Exam::query()->whereKey($exam->id)->exists())->toBeFalse();
+    expect(GroupSession::query()->whereKey($session->id)->exists())->toBeFalse();
+    expect(TeachingGroup::query()->whereKey($group->id)->exists())->toBeFalse();
+    expect(Student::query()->whereKey($student->id)->exists())->toBeFalse();
+    expect(User::query()->whereKey($parent->id)->exists())->toBeFalse();
 });
 
 it('creates students, groups, sessions, attendance, exams, grades, and notifications', function () {

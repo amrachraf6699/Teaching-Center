@@ -6,20 +6,25 @@ use App\Http\Controllers\Controller;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Validation\Rule;
-use Illuminate\View\View;
+use Inertia\Inertia;
+use Inertia\Response;
 use Modules\Core\Models\SettingMedia;
 use Modules\Core\Settings\GeneralSettings;
 
 class SettingsController extends Controller
 {
-    public function edit(GeneralSettings $settings): View
+    public function edit(GeneralSettings $settings): Response
     {
         $media = SettingMedia::brand();
 
-        return view('core::settings.edit', [
-            'settings' => $settings,
-            'media' => $media,
+        return Inertia::render('Admin/Settings/Edit', [
+            'settings' => $this->settingsPayload($settings),
+            'media' => [
+                'logoUrl' => $media->getFirstMediaUrl('logo') ?: null,
+                'faviconUrl' => $media->getFirstMediaUrl('favicon') ?: null,
+            ],
             'timezones' => timezone_identifiers_list(),
+            'action' => route('admin.settings.update'),
         ]);
     }
 
@@ -87,6 +92,31 @@ class SettingsController extends Controller
             'timezone' => true,
             'locale' => true,
             'report_footer_text' => true,
+        ];
+    }
+
+    /**
+     * @return array<string, mixed>
+     */
+    private function settingsPayload(GeneralSettings $settings): array
+    {
+        return [
+            'name' => $settings->name,
+            'tagline' => $settings->tagline,
+            'contact_email' => $settings->contact_email,
+            'contact_phone' => $settings->contact_phone,
+            'address' => $settings->address,
+            'city' => $settings->city,
+            'country' => $settings->country,
+            'facebook_url' => $settings->facebook_url,
+            'instagram_url' => $settings->instagram_url,
+            'linkedin_url' => $settings->linkedin_url,
+            'youtube_url' => $settings->youtube_url,
+            'website_url' => $settings->website_url,
+            'timezone' => $settings->timezone,
+            'locale' => $settings->locale,
+            'report_footer_text' => $settings->report_footer_text,
+            'show_logo_on_reports' => $settings->show_logo_on_reports,
         ];
     }
 }

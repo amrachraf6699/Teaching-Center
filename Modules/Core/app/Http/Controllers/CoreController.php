@@ -12,7 +12,7 @@ class CoreController extends Controller
      */
     public function index()
     {
-        return view('core::index');
+        abort(404);
     }
 
     /**
@@ -20,7 +20,7 @@ class CoreController extends Controller
      */
     public function create()
     {
-        return view('core::create');
+        abort(404);
     }
 
     /**
@@ -33,7 +33,7 @@ class CoreController extends Controller
      */
     public function show($id)
     {
-        return view('core::show');
+        abort(404);
     }
 
     /**
@@ -41,7 +41,7 @@ class CoreController extends Controller
      */
     public function edit($id)
     {
-        return view('core::edit');
+        abort(404);
     }
 
     /**

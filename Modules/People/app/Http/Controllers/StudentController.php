@@ -6,22 +6,45 @@ use App\Http\Controllers\Controller;
 use App\Models\User;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
-use Illuminate\View\View;
+use Illuminate\Validation\Rule;
+use Inertia\Inertia;
+use Inertia\Response;
 use Modules\People\Models\Student;
 
 class StudentController extends Controller
 {
-    public function index(): View
+    public function index(): Response
     {
-        return view('people::students.index', [
-            'students' => Student::query()->with('parent')->latest()->paginate(20),
+        return Inertia::render('Admin/Students/Index', [
+            'students' => Student::query()
+                ->with('parent')
+                ->latest()
+                ->paginate(20)
+                ->through(fn (Student $student): array => [
+                    'id' => $student->id,
+                    'name' => $student->name,
+                    'code' => $student->code,
+                    'phone' => $student->phone,
+                    'is_active' => $student->is_active,
+                    'parent' => $student->parent ? [
+                        'id' => $student->parent->id,
+                        'name' => $student->parent->name,
+                        'email' => $student->parent->email,
+                    ] : null,
+                    'show_url' => route('admin.students.show', $student),
+                    'edit_url' => route('admin.students.edit', $student),
+                    'delete_url' => route('admin.students.destroy', $student),
+                    'created_at' => $student->created_at?->toFormattedDateString(),
+                ]),
+            'createUrl' => route('admin.students.create'),
         ]);
     }
 
-    public function create(): View
+    public function create(): Response
     {
-        return view('people::students.create', [
-            'parents' => User::query()->where('role', 'parent')->orderBy('name')->get(),
+        return Inertia::render('Admin/Students/Create', [
+            'parents' => $this->parentOptions(),
+            'action' => route('admin.students.store'),
         ]);
     }
 
@@ -42,5 +65,128 @@ class StudentController extends Controller
         Student::create($data);
 
         return redirect()->route('admin.students.index')->with('status', 'Student created.');
+    }
+
+    public function show(Student $student): Response
+    {
+        $student->load([
+            'parent',
+            'groups.sessions.attendanceRecords',
+            'attendanceRecords.session.group',
+            'examResults.exam.group',
+            'notifications',
+        ]);
+
+        return Inertia::render('Admin/Students/Show', [
+            'student' => [
+                'id' => $student->id,
+                'name' => $student->name,
+                'code' => $student->code,
+                'phone' => $student->phone,
+                'date_of_birth' => $student->date_of_birth?->toFormattedDateString(),
+                'notes' => $student->notes,
+                'is_active' => $student->is_active,
+                'created_at' => $student->created_at?->toDayDateTimeString(),
+                'edit_url' => route('admin.students.edit', $student),
+                'index_url' => route('admin.students.index'),
+                'parent' => $student->parent ? [
+                    'id' => $student->parent->id,
+                    'name' => $student->parent->name,
+                    'email' => $student->parent->email,
+                    'show_url' => route('admin.parents.show', $student->parent),
+                ] : null,
+                'groups' => $student->groups->map(fn ($group): array => [
+                    'id' => $group->id,
+                    'name' => $group->name,
+                    'subject' => $group->subject,
+                    'level' => $group->level,
+                    'show_url' => route('admin.groups.show', $group),
+                    'sessions' => $group->sessions->map(fn ($session): array => [
+                        'id' => $session->id,
+                        'title' => $session->title,
+                        'starts_at' => $session->starts_at?->toDayDateTimeString(),
+                        'attendance' => $session->attendanceRecords->where('student_id', $student->id)->first()?->status,
+                    ]),
+                ]),
+                'attendance' => $student->attendanceRecords->map(fn ($attendance): array => [
+                    'id' => $attendance->id,
+                    'status' => $attendance->status,
+                    'notes' => $attendance->notes,
+                    'session' => $attendance->session?->title,
+                    'group' => $attendance->session?->group?->name,
+                    'starts_at' => $attendance->session?->starts_at?->toDayDateTimeString(),
+                ]),
+                'exam_results' => $student->examResults->map(fn ($result): array => [
+                    'id' => $result->id,
+                    'title' => $result->exam?->title,
+                    'score' => $result->score,
+                    'max_score' => $result->exam?->max_score,
+                    'percentage' => $result->percentage(),
+                    'group' => $result->exam?->group?->name,
+                ]),
+                'notifications' => $student->notifications->map(fn ($notification): array => [
+                    'id' => $notification->id,
+                    'type' => $notification->type,
+                    'title' => $notification->title,
+                    'body' => $notification->body,
+                    'created_at' => $notification->created_at?->toDayDateTimeString(),
+                ]),
+            ],
+        ]);
+    }
+
+    public function edit(Student $student): Response
+    {
+        return Inertia::render('Admin/Students/Edit', [
+            'student' => [
+                'id' => $student->id,
+                'parent_id' => $student->parent_id,
+                'name' => $student->name,
+                'code' => $student->code,
+                'phone' => $student->phone,
+                'date_of_birth' => $student->date_of_birth?->format('Y-m-d'),
+                'notes' => $student->notes,
+                'is_active' => $student->is_active,
+            ],
+            'parents' => $this->parentOptions(),
+            'action' => route('admin.students.update', $student),
+            'showUrl' => route('admin.students.show', $student),
+        ]);
+    }
+
+    public function update(Request $request, Student $student): RedirectResponse
+    {
+        $data = $request->validate([
+            'parent_id' => ['required', 'exists:users,id'],
+            'name' => ['required', 'string', 'max:255'],
+            'code' => ['nullable', 'string', 'max:50', Rule::unique('students', 'code')->ignore($student->id)],
+            'phone' => ['nullable', 'string', 'max:50'],
+            'date_of_birth' => ['nullable', 'date'],
+            'notes' => ['nullable', 'string'],
+            'is_active' => ['boolean'],
+        ]);
+
+        $parent = User::query()->whereKey($data['parent_id'])->where('role', 'parent')->firstOrFail();
+        $data['parent_id'] = $parent->id;
+        $data['is_active'] = (bool) ($data['is_active'] ?? false);
+
+        $student->update($data);
+
+        return redirect()->route('admin.students.show', $student)->with('status', 'Student updated.');
+    }
+
+    public function destroy(Student $student): RedirectResponse
+    {
+        $student->delete();
+
+        return redirect()->route('admin.students.index')->with('status', 'Student deleted.');
+    }
+
+    private function parentOptions()
+    {
+        return User::query()
+            ->where('role', 'parent')
+            ->orderBy('name')
+            ->get(['id', 'name', 'email']);
     }
 }

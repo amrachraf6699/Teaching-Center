@@ -10,6 +10,7 @@ use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
+use Modules\Notifications\Models\ParentNotification;
 use Modules\People\Models\Student;
 
 #[Fillable(['name', 'email', 'password', 'role'])]
@@ -48,5 +49,13 @@ class User extends Authenticatable
     public function children(): HasMany
     {
         return $this->hasMany(Student::class, 'parent_id');
+    }
+
+    /**
+     * @return HasMany<ParentNotification, $this>
+     */
+    public function parentNotifications(): HasMany
+    {
+        return $this->hasMany(ParentNotification::class, 'parent_id');
     }
 }

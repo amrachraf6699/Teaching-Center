@@ -12,7 +12,7 @@ class ExamsController extends Controller
      */
     public function index()
     {
-        return view('exams::index');
+        abort(404);
     }
 
     /**
@@ -20,7 +20,7 @@ class ExamsController extends Controller
      */
     public function create()
     {
-        return view('exams::create');
+        abort(404);
     }
 
     /**
@@ -33,7 +33,7 @@ class ExamsController extends Controller
      */
     public function show($id)
     {
-        return view('exams::show');
+        abort(404);
     }
 
     /**
@@ -41,7 +41,7 @@ class ExamsController extends Controller
      */
     public function edit($id)
     {
-        return view('exams::edit');
+        abort(404);
     }
 
     /**

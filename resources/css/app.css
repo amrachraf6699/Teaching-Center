@@ -4,9 +4,51 @@
 @source '../../storage/framework/views/*.php';
 @source '../**/*.blade.php';
 @source '../**/*.js';
-@source '../../Modules/**/resources/views/**/*.blade.php';
+@source '../**/*.vue';
 
 @theme {
-    --font-sans: 'Instrument Sans', ui-sans-serif, system-ui, sans-serif, 'Apple Color Emoji', 'Segoe UI Emoji',
+    --font-sans: 'Nunito Sans', ui-sans-serif, system-ui, sans-serif, 'Apple Color Emoji', 'Segoe UI Emoji',
         'Segoe UI Symbol', 'Noto Color Emoji';
+
+    --color-teachify-ink: #172033;
+    --color-teachify-muted: #667085;
+    --color-teachify-line: #dbe7f3;
+    --color-teachify-canvas: #f7fbff;
+    --color-teachify-surface: #ffffff;
+    --color-teachify-blue: #2563eb;
+    --color-teachify-blue-soft: #dbeafe;
+    --color-teachify-coral: #fb7185;
+    --color-teachify-coral-soft: #ffe4e6;
+    --color-teachify-mint: #2dd4bf;
+    --color-teachify-mint-soft: #ccfbf1;
+    --color-teachify-yellow: #facc15;
+    --color-teachify-yellow-soft: #fef9c3;
+}
+
+@layer base {
+    html {
+        background: #f7fbff;
+    }
+
+    body {
+        color: #172033;
+        background:
+            radial-gradient(circle at top left, rgba(45, 212, 191, 0.16), transparent 32rem),
+            linear-gradient(180deg, #f7fbff 0%, #ffffff 48%, #f7fbff 100%);
+    }
+
+    button,
+    input,
+    select,
+    textarea {
+        font: inherit;
+    }
+}
+
+@layer components {
+    .teachify-card {
+        border: 1px solid #dbe7f3;
+        background: rgba(255, 255, 255, 0.94);
+        box-shadow: 0 16px 40px rgba(37, 99, 235, 0.08);
+    }
 }

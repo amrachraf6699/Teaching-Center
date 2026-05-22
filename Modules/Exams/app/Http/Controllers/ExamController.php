@@ -5,23 +5,43 @@ namespace Modules\Exams\Http\Controllers;
 use App\Http\Controllers\Controller;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
-use Illuminate\View\View;
+use Inertia\Inertia;
+use Inertia\Response;
 use Modules\Academics\Models\TeachingGroup;
 use Modules\Exams\Models\Exam;
 
 class ExamController extends Controller
 {
-    public function index(): View
+    public function index(): Response
     {
-        return view('exams::exams.index', [
-            'exams' => Exam::query()->with('group')->latest('exam_date')->paginate(20),
+        return Inertia::render('Admin/Exams/Index', [
+            'exams' => Exam::query()
+                ->with('group')
+                ->latest('exam_date')
+                ->paginate(20)
+                ->through(fn (Exam $exam): array => [
+                    'id' => $exam->id,
+                    'title' => $exam->title,
+                    'exam_date' => $exam->exam_date?->toFormattedDateString(),
+                    'max_score' => $exam->max_score,
+                    'group' => $exam->group ? [
+                        'id' => $exam->group->id,
+                        'name' => $exam->group->name,
+                        'subject' => $exam->group->subject,
+                    ] : null,
+                    'show_url' => route('admin.exams.show', $exam),
+                    'edit_url' => route('admin.exams.edit', $exam),
+                    'delete_url' => route('admin.exams.destroy', $exam),
+                ]),
+            'createUrl' => route('admin.exams.create'),
         ]);
     }
 
-    public function create(): View
+    public function create(): Response
     {
-        return view('exams::exams.create', [
-            'groups' => TeachingGroup::query()->orderBy('name')->get(),
+        return Inertia::render('Admin/Exams/Create', [
+            'groups' => TeachingGroup::query()->orderBy('name')->get(['id', 'name', 'subject']),
+            'action' => route('admin.exams.store'),
         ]);
     }
 
@@ -38,5 +58,93 @@ class ExamController extends Controller
         Exam::create($data);
 
         return redirect()->route('admin.exams.index')->with('status', 'Exam created.');
+    }
+
+    public function show(Exam $exam): Response
+    {
+        $exam->load(['group.students.parent', 'results.student.parent']);
+
+        return Inertia::render('Admin/Exams/Show', [
+            'exam' => [
+                'id' => $exam->id,
+                'title' => $exam->title,
+                'exam_date' => $exam->exam_date?->toFormattedDateString(),
+                'max_score' => $exam->max_score,
+                'notes' => $exam->notes,
+                'edit_url' => route('admin.exams.edit', $exam),
+                'index_url' => route('admin.exams.index'),
+                'result_action' => route('admin.exam-results.store', $exam),
+                'group' => $exam->group ? [
+                    'id' => $exam->group->id,
+                    'name' => $exam->group->name,
+                    'subject' => $exam->group->subject,
+                    'show_url' => route('admin.groups.show', $exam->group),
+                ] : null,
+                'students' => $exam->group?->students->map(function ($student) use ($exam): array {
+                    $result = $exam->results->where('student_id', $student->id)->first();
+
+                    return [
+                        'id' => $student->id,
+                        'name' => $student->name,
+                        'code' => $student->code,
+                        'parent' => $student->parent?->name,
+                        'show_url' => route('admin.students.show', $student),
+                        'result' => $result ? [
+                            'id' => $result->id,
+                            'score' => $result->score,
+                            'percentage' => $result->percentage(),
+                            'notes' => $result->notes,
+                        ] : null,
+                    ];
+                })->values() ?? [],
+                'results' => $exam->results->map(fn ($result): array => [
+                    'id' => $result->id,
+                    'student' => $result->student?->name,
+                    'parent' => $result->student?->parent?->name,
+                    'score' => $result->score,
+                    'percentage' => $result->percentage(),
+                    'notes' => $result->notes,
+                ]),
+            ],
+        ]);
+    }
+
+    public function edit(Exam $exam): Response
+    {
+        return Inertia::render('Admin/Exams/Edit', [
+            'exam' => [
+                'id' => $exam->id,
+                'teaching_group_id' => $exam->teaching_group_id,
+                'title' => $exam->title,
+                'exam_date' => $exam->exam_date?->format('Y-m-d'),
+                'max_score' => $exam->max_score,
+                'notes' => $exam->notes,
+            ],
+            'groups' => TeachingGroup::query()->orderBy('name')->get(['id', 'name', 'subject']),
+            'action' => route('admin.exams.update', $exam),
+            'showUrl' => route('admin.exams.show', $exam),
+        ]);
+    }
+
+    public function update(Request $request, Exam $exam): RedirectResponse
+    {
+        $data = $request->validate([
+            'teaching_group_id' => ['required', 'exists:teaching_groups,id'],
+            'title' => ['required', 'string', 'max:255'],
+            'exam_date' => ['required', 'date'],
+            'max_score' => ['required', 'numeric', 'min:1'],
+            'notes' => ['nullable', 'string'],
+        ]);
+
+        $exam->update($data);
+
+        return redirect()->route('admin.exams.show', $exam)->with('status', 'Exam updated.');
+    }
+
+    public function destroy(Exam $exam): RedirectResponse
+    {
+        $exam->delete();
+
+        return redirect()->route('admin.exams.index')->with('status', 'Exam deleted.');
     }
 }

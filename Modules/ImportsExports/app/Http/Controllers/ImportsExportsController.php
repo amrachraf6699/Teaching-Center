@@ -12,7 +12,7 @@ class ImportsExportsController extends Controller
      */
     public function index()
     {
-        return view('importsexports::index');
+        abort(404);
     }
 
     /**
@@ -20,7 +20,7 @@ class ImportsExportsController extends Controller
      */
     public function create()
     {
-        return view('importsexports::create');
+        abort(404);
     }
 
     /**
@@ -33,7 +33,7 @@ class ImportsExportsController extends Controller
      */
     public function show($id)
     {
-        return view('importsexports::show');
+        abort(404);
     }
 
     /**
@@ -41,7 +41,7 @@ class ImportsExportsController extends Controller
      */
     public function edit($id)
     {
-        return view('importsexports::edit');
+        abort(404);
     }
 
     /**
