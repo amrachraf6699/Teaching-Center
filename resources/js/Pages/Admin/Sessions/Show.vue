@@ -9,7 +9,7 @@ defineProps({ session: Object });
 
 <template>
     <Head :title="session.title" />
-    <AppShell :title="session.title" subtitle="Session details, enrolled students, and attendance records.">
+    <AppShell :title="session.title">
         <div class="mb-4 flex flex-wrap gap-3">
             <Button :href="session.edit_url">Edit Session</Button>
             <Button variant="secondary" :href="session.index_url">Back to Sessions</Button>

@@ -14,7 +14,7 @@ function submit() {
 
 <template>
     <Head title="Edit Parent" />
-    <AppShell title="Edit Parent" subtitle="Update parent portal account details.">
+    <AppShell title="Edit Parent">
         <form class="teachify-card max-w-2xl space-y-4 rounded-[1.6rem] p-5" @submit.prevent="submit">
             <TextInput v-model="form.name" label="Name" required :error="form.errors.name" />
             <TextInput v-model="form.email" label="Email" type="email" required :error="form.errors.email" />

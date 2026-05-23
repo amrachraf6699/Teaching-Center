@@ -9,7 +9,7 @@ defineProps({ group: Object });
 
 <template>
     <Head :title="group.name" />
-    <AppShell :title="group.name" subtitle="Group students, sessions, attendance, exams, and results.">
+    <AppShell :title="group.name">
         <div class="mb-4 flex flex-wrap gap-3">
             <Button :href="group.edit_url">Edit Group</Button>
             <Button variant="secondary" :href="group.index_url">Back to Groups</Button>

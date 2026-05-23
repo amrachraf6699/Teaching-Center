@@ -6,7 +6,7 @@ import AppShell from '../../../Layouts/AppShell.vue';
 
 <template>
     <Head title="Imports and Exports" />
-    <AppShell title="Imports and Exports" subtitle="Excel and PDF workflows will live here as the data screens mature.">
+    <AppShell title="Imports and Exports">
         <EmptyState title="Imports and exports are reserved" message="This module is ready for the upcoming Excel import/export and PDF report workflows." />
     </AppShell>
 </template>

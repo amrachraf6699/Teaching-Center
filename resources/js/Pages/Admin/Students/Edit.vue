@@ -24,7 +24,7 @@ function submit() {
 
 <template>
     <Head title="Edit Student" />
-    <AppShell title="Edit Student" subtitle="Update student profile and parent link.">
+    <AppShell title="Edit Student">
         <form class="teachify-card max-w-3xl space-y-4 rounded-[1.6rem] p-5" @submit.prevent="submit">
             <SelectInput v-model="form.parent_id" label="Parent" required :options="parents" :error="form.errors.parent_id" />
             <div class="grid gap-4 sm:grid-cols-2">

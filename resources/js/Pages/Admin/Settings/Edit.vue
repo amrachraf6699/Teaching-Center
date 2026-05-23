@@ -38,7 +38,7 @@ function submit() {
 
 <template>
     <Head title="Settings" />
-    <AppShell title="Settings" subtitle="Brand, contact, social, localization, and report defaults.">
+    <AppShell title="Settings">
         <form class="space-y-5" @submit.prevent="submit">
             <section class="teachify-card rounded-[1.6rem] p-5">
                 <h2 class="text-lg font-black">Brand</h2>

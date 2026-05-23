@@ -12,13 +12,31 @@ use Modules\Exams\Models\Exam;
 
 class ExamController extends Controller
 {
-    public function index(): Response
+    public function index(Request $request): Response
     {
+        $search = trim((string) $request->query('search', ''));
+        $groupId = (string) $request->query('group', '');
+
         return Inertia::render('Admin/Exams/Index', [
             'exams' => Exam::query()
                 ->with('group')
+                ->when($search !== '', function ($query) use ($search): void {
+                    $query->where(function ($query) use ($search): void {
+                        $query
+                            ->where('title', 'like', "%{$search}%")
+                            ->orWhereHas('group', function ($query) use ($search): void {
+                                $query
+                                    ->where('name', 'like', "%{$search}%")
+                                    ->orWhere('subject', 'like', "%{$search}%");
+                            });
+                    });
+                })
+                ->when($groupId !== '', function ($query) use ($groupId): void {
+                    $query->where('teaching_group_id', $groupId);
+                })
                 ->latest('exam_date')
                 ->paginate(20)
+                ->withQueryString()
                 ->through(fn (Exam $exam): array => [
                     'id' => $exam->id,
                     'title' => $exam->title,
@@ -33,6 +51,18 @@ class ExamController extends Controller
                     'edit_url' => route('admin.exams.edit', $exam),
                     'delete_url' => route('admin.exams.destroy', $exam),
                 ]),
+            'filters' => [
+                'search' => $search,
+                'group' => $groupId,
+            ],
+            'groupOptions' => TeachingGroup::query()
+                ->orderBy('name')
+                ->get(['id', 'name'])
+                ->map(fn (TeachingGroup $group): array => [
+                    'value' => (string) $group->id,
+                    'label' => $group->name,
+                ]),
+            'indexUrl' => route('admin.exams.index'),
             'createUrl' => route('admin.exams.create'),
         ]);
     }

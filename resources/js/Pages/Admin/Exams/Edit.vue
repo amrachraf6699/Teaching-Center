@@ -16,7 +16,7 @@ function submit() {
 
 <template>
     <Head title="Edit Exam" />
-    <AppShell title="Edit Exam" subtitle="Update exam details and maximum score.">
+    <AppShell title="Edit Exam">
         <form class="teachify-card max-w-3xl space-y-4 rounded-[1.6rem] p-5" @submit.prevent="submit">
             <SelectInput v-model="form.teaching_group_id" label="Group" required :options="groups" :error="form.errors.teaching_group_id" />
             <div class="grid gap-4 sm:grid-cols-2">

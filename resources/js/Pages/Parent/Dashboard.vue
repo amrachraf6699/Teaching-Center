@@ -11,7 +11,7 @@ defineProps({
 
 <template>
     <Head title="Parent Portal" />
-    <AppShell title="Parent Portal" subtitle="Children, groups, attendance, exam results, and updates.">
+    <AppShell title="Parent Portal">
         <div class="grid gap-5 xl:grid-cols-[1fr_360px]">
             <section class="space-y-5">
                 <article v-for="child in children" :key="child.id" class="teachify-card rounded-[1.6rem] p-5">

@@ -15,7 +15,7 @@ function submit() {
 
 <template>
     <Head title="Add Group" />
-    <AppShell title="Add Group" subtitle="Create a teaching group and enroll students.">
+    <AppShell title="Add Group">
         <form class="teachify-card max-w-3xl space-y-5 rounded-[1.6rem] p-5" @submit.prevent="submit">
             <div class="grid gap-4 sm:grid-cols-2">
                 <TextInput v-model="form.name" label="Name" required :error="form.errors.name" />

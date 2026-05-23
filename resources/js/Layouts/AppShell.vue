@@ -19,10 +19,6 @@ const props = defineProps({
         type: String,
         default: 'Dashboard',
     },
-    subtitle: {
-        type: String,
-        default: '',
-    },
 });
 
 const page = usePage();
@@ -106,7 +102,6 @@ function logout() {
 
                     <div class="hidden lg:block">
                         <h1 class="text-xl font-bold tracking-normal">{{ props.title }}</h1>
-                        <p v-if="props.subtitle" class="mt-0.5 text-sm font-medium text-teachify-muted">{{ props.subtitle }}</p>
                     </div>
 
                     <div class="ml-auto flex items-center gap-3">
@@ -129,7 +124,6 @@ function logout() {
             <main class="mx-auto max-w-7xl px-4 py-5 sm:px-6 lg:px-8 lg:py-8">
                 <div class="mb-5 lg:hidden">
                     <h1 class="text-2xl font-bold tracking-normal">{{ props.title }}</h1>
-                    <p v-if="props.subtitle" class="mt-1 text-sm font-medium text-teachify-muted">{{ props.subtitle }}</p>
                 </div>
 
                 <FlashMessage />

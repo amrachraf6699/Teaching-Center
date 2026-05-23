@@ -12,13 +12,28 @@ use Modules\People\Models\Student;
 
 class TeachingGroupController extends Controller
 {
-    public function index(): Response
+    public function index(Request $request): Response
     {
+        $search = trim((string) $request->query('search', ''));
+        $status = (string) $request->query('status', '');
+
         return Inertia::render('Admin/Groups/Index', [
             'groups' => TeachingGroup::query()
                 ->withCount('students')
+                ->when($search !== '', function ($query) use ($search): void {
+                    $query->where(function ($query) use ($search): void {
+                        $query
+                            ->where('name', 'like', "%{$search}%")
+                            ->orWhere('subject', 'like', "%{$search}%")
+                            ->orWhere('level', 'like', "%{$search}%");
+                    });
+                })
+                ->when(in_array($status, ['active', 'inactive'], true), function ($query) use ($status): void {
+                    $query->where('is_active', $status === 'active');
+                })
                 ->latest()
                 ->paginate(20)
+                ->withQueryString()
                 ->through(fn (TeachingGroup $group): array => [
                     'id' => $group->id,
                     'name' => $group->name,
@@ -31,6 +46,11 @@ class TeachingGroupController extends Controller
                     'delete_url' => route('admin.groups.destroy', $group),
                     'created_at' => $group->created_at?->toFormattedDateString(),
                 ]),
+            'filters' => [
+                'search' => $search,
+                'status' => $status,
+            ],
+            'indexUrl' => route('admin.groups.index'),
             'createUrl' => route('admin.groups.create'),
         ]);
     }

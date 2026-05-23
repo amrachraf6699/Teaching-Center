@@ -12,13 +12,32 @@ use Modules\Academics\Models\TeachingGroup;
 
 class GroupSessionController extends Controller
 {
-    public function index(): Response
+    public function index(Request $request): Response
     {
+        $search = trim((string) $request->query('search', ''));
+        $groupId = (string) $request->query('group', '');
+
         return Inertia::render('Admin/Sessions/Index', [
             'sessions' => GroupSession::query()
                 ->with('group')
+                ->when($search !== '', function ($query) use ($search): void {
+                    $query->where(function ($query) use ($search): void {
+                        $query
+                            ->where('title', 'like', "%{$search}%")
+                            ->orWhere('notes', 'like', "%{$search}%")
+                            ->orWhereHas('group', function ($query) use ($search): void {
+                                $query
+                                    ->where('name', 'like', "%{$search}%")
+                                    ->orWhere('subject', 'like', "%{$search}%");
+                            });
+                    });
+                })
+                ->when($groupId !== '', function ($query) use ($groupId): void {
+                    $query->where('teaching_group_id', $groupId);
+                })
                 ->latest('starts_at')
                 ->paginate(20)
+                ->withQueryString()
                 ->through(fn (GroupSession $session): array => [
                     'id' => $session->id,
                     'title' => $session->title,
@@ -33,6 +52,18 @@ class GroupSessionController extends Controller
                     'edit_url' => route('admin.sessions.edit', $session),
                     'delete_url' => route('admin.sessions.destroy', $session),
                 ]),
+            'filters' => [
+                'search' => $search,
+                'group' => $groupId,
+            ],
+            'groupOptions' => TeachingGroup::query()
+                ->orderBy('name')
+                ->get(['id', 'name'])
+                ->map(fn (TeachingGroup $group): array => [
+                    'value' => (string) $group->id,
+                    'label' => $group->name,
+                ]),
+            'indexUrl' => route('admin.sessions.index'),
             'createUrl' => route('admin.sessions.create'),
         ]);
     }

@@ -9,7 +9,7 @@ defineProps({ student: Object });
 
 <template>
     <Head :title="student.name" />
-    <AppShell :title="student.name" subtitle="Student profile, parent, groups, attendance, exams, and notifications.">
+    <AppShell :title="student.name">
         <div class="mb-4 flex flex-wrap gap-3">
             <Button :href="student.edit_url">Edit Student</Button>
             <Button variant="secondary" :href="student.index_url">Back to Students</Button>

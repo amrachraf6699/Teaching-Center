@@ -15,7 +15,7 @@ defineProps({
 
 <template>
     <Head title="Teacher Dashboard" />
-    <AppShell title="Teacher Dashboard" subtitle="Manage students, groups, sessions, exams, grades, and parent updates.">
+    <AppShell title="Teacher Dashboard">
         <section class="grid gap-4 sm:grid-cols-2 xl:grid-cols-5">
             <StatTile v-for="metric in metrics" :key="metric.label" v-bind="metric" />
         </section>

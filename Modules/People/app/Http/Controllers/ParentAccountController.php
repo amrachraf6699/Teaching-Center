@@ -13,14 +13,31 @@ use Inertia\Response;
 
 class ParentAccountController extends Controller
 {
-    public function index(): Response
+    public function index(Request $request): Response
     {
+        $search = trim((string) $request->query('search', ''));
+        $children = (string) $request->query('children', '');
+
         return Inertia::render('Admin/Parents/Index', [
             'parents' => User::query()
                 ->where('role', 'parent')
                 ->withCount('children')
+                ->when($search !== '', function ($query) use ($search): void {
+                    $query->where(function ($query) use ($search): void {
+                        $query
+                            ->where('name', 'like', "%{$search}%")
+                            ->orWhere('email', 'like', "%{$search}%");
+                    });
+                })
+                ->when($children === 'with', function ($query): void {
+                    $query->has('children');
+                })
+                ->when($children === 'without', function ($query): void {
+                    $query->doesntHave('children');
+                })
                 ->latest()
                 ->paginate(20)
+                ->withQueryString()
                 ->through(fn (User $parent): array => [
                     'id' => $parent->id,
                     'name' => $parent->name,
@@ -31,6 +48,11 @@ class ParentAccountController extends Controller
                     'delete_url' => route('admin.parents.destroy', $parent),
                     'created_at' => $parent->created_at?->toFormattedDateString(),
                 ]),
+            'filters' => [
+                'search' => $search,
+                'children' => $children,
+            ],
+            'indexUrl' => route('admin.parents.index'),
             'createUrl' => route('admin.parents.create'),
         ]);
     }

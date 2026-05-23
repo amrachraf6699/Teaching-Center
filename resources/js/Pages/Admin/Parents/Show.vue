@@ -9,7 +9,7 @@ defineProps({ parent: Object });
 
 <template>
     <Head :title="parent.name" />
-    <AppShell :title="parent.name" subtitle="Parent account, linked children, and portal notifications.">
+    <AppShell :title="parent.name">
         <div class="mb-4 flex flex-wrap gap-3">
             <Button :href="parent.edit_url">Edit Parent</Button>
             <Button variant="secondary" :href="parent.index_url">Back to Parents</Button>

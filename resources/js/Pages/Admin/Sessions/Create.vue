@@ -16,7 +16,7 @@ function submit() {
 
 <template>
     <Head title="Add Session" />
-    <AppShell title="Add Session" subtitle="Plan the next lesson for a group.">
+    <AppShell title="Add Session">
         <form class="teachify-card max-w-3xl space-y-4 rounded-[1.6rem] p-5" @submit.prevent="submit">
             <SelectInput v-model="form.teaching_group_id" label="Group" required :options="groups" :error="form.errors.teaching_group_id" />
             <TextInput v-model="form.title" label="Title" required :error="form.errors.title" />

@@ -9,33 +9,88 @@ use Illuminate\Http\Request;
 use Illuminate\Validation\Rule;
 use Inertia\Inertia;
 use Inertia\Response;
+use Modules\Academics\Models\TeachingGroup;
 use Modules\People\Models\Student;
 
 class StudentController extends Controller
 {
-    public function index(): Response
+    public function index(Request $request): Response
     {
+        $search = trim((string) $request->query('search', ''));
+        $status = (string) $request->query('status', '');
+        $parentId = (string) $request->query('parent_id', '');
+        $groupId = (string) $request->query('group_id', '');
+
         return Inertia::render('Admin/Students/Index', [
             'students' => Student::query()
-                ->with('parent')
+                ->with(['parent', 'groups'])
+                ->when($search !== '', function ($query) use ($search): void {
+                    $query->where(function ($query) use ($search): void {
+                        $query
+                            ->where('name', 'like', "%{$search}%")
+                            ->orWhere('code', 'like', "%{$search}%")
+                            ->orWhere('phone', 'like', "%{$search}%")
+                            ->orWhereHas('parent', function ($query) use ($search): void {
+                                $query
+                                    ->where('name', 'like', "%{$search}%")
+                                    ->orWhere('email', 'like', "%{$search}%");
+                            });
+                    });
+                })
+                ->when(in_array($status, ['active', 'inactive'], true), function ($query) use ($status): void {
+                    $query->where('is_active', $status === 'active');
+                })
+                ->when($parentId !== '', function ($query) use ($parentId): void {
+                    $query->where('parent_id', $parentId);
+                })
+                ->when($groupId !== '', function ($query) use ($groupId): void {
+                    $query->whereHas('groups', fn ($query) => $query->whereKey($groupId));
+                })
                 ->latest()
                 ->paginate(20)
+                ->withQueryString()
                 ->through(fn (Student $student): array => [
                     'id' => $student->id,
                     'name' => $student->name,
                     'code' => $student->code,
                     'phone' => $student->phone,
                     'is_active' => $student->is_active,
+                    'toggle_status_url' => route('admin.students.toggle-status', $student),
                     'parent' => $student->parent ? [
                         'id' => $student->parent->id,
                         'name' => $student->parent->name,
                         'email' => $student->parent->email,
                     ] : null,
+                    'groups' => $student->groups->map(fn (TeachingGroup $group): array => [
+                        'id' => $group->id,
+                        'name' => $group->name,
+                    ])->values()->all(),
                     'show_url' => route('admin.students.show', $student),
                     'edit_url' => route('admin.students.edit', $student),
                     'delete_url' => route('admin.students.destroy', $student),
                     'created_at' => $student->created_at?->toFormattedDateString(),
                 ]),
+            'filters' => [
+                'search' => $search,
+                'status' => $status,
+                'parent_id' => $parentId,
+                'group_id' => $groupId,
+            ],
+            'parentOptions' => $this->parentOptions()
+                ->map(fn (User $parent): array => [
+                    'value' => (string) $parent->id,
+                    'label' => $parent->name,
+                    'description' => $parent->email,
+                ])->values()->all(),
+            'groupOptions' => TeachingGroup::query()
+                ->orderBy('name')
+                ->get(['id', 'name', 'subject'])
+                ->map(fn (TeachingGroup $group): array => [
+                    'value' => (string) $group->id,
+                    'label' => $group->name,
+                    'description' => $group->subject,
+                ])->values()->all(),
+            'indexUrl' => route('admin.students.index'),
             'createUrl' => route('admin.students.create'),
         ]);
     }
@@ -180,6 +235,19 @@ class StudentController extends Controller
         $student->delete();
 
         return redirect()->route('admin.students.index')->with('status', 'Student deleted.');
+    }
+
+    public function toggleStatus(Request $request, Student $student): RedirectResponse
+    {
+        $data = $request->validate([
+            'is_active' => ['required', 'boolean'],
+        ]);
+
+        $student->update([
+            'is_active' => (bool) $data['is_active'],
+        ]);
+
+        return back()->with('status', 'Student status updated.');
     }
 
     private function parentOptions()
