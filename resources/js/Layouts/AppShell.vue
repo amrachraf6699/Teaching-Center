@@ -47,7 +47,19 @@ const parentNav = computed(() => [
     { label: 'Portal', href: routes.value.parentDashboard, icon: UserRound },
 ]);
 
-const navItems = computed(() => (user.value?.role === 'teacher' ? adminNav.value : parentNav.value).filter((item) => typeof item.href === 'string' && item.href.length > 0));
+const studentNav = computed(() => [
+    { label: 'Attendance', href: routes.value.studentDashboard, icon: UserRound },
+]);
+
+const navItems = computed(() => {
+    const items = user.value?.role === 'teacher'
+        ? adminNav.value
+        : user.value?.role === 'student'
+            ? studentNav.value
+            : parentNav.value;
+
+    return items.filter((item) => typeof item.href === 'string' && item.href.length > 0);
+});
 
 function isActive(href) {
     try {
@@ -96,7 +108,7 @@ function logout() {
         <div :class="user?.role === 'teacher' ? 'lg:pl-72' : ''">
             <header class="sticky top-0 z-20 border-b border-teachify-line bg-white/88 backdrop-blur">
                 <div class="mx-auto flex max-w-7xl items-center justify-between px-4 py-3 sm:px-6 lg:px-8">
-                    <Link :href="user?.role === 'parent' ? routes.parentDashboard : routes.adminDashboard" class="flex items-center gap-3 lg:hidden">
+                    <Link :href="user?.role === 'parent' ? routes.parentDashboard : user?.role === 'student' ? routes.studentDashboard : routes.adminDashboard" class="flex items-center gap-3 lg:hidden">
                         <img v-if="brand.logoUrl" :src="brand.logoUrl" :alt="brand.name" class="h-9 w-auto rounded-xl" />
                         <span v-else class="grid h-10 w-10 place-items-center rounded-2xl bg-teachify-blue text-base font-bold text-white">T</span>
                         <span class="font-bold">{{ brand.name }}</span>

@@ -52,7 +52,7 @@ class TeacherDashboardController extends Controller
                 ['label' => 'Add Parent', 'href' => route('admin.parents.create')],
                 ['label' => 'Add Student', 'href' => route('admin.students.create')],
                 ['label' => 'Add Group', 'href' => route('admin.groups.create')],
-                ['label' => 'Add Session', 'href' => route('admin.sessions.create')],
+                ['label' => 'Add Manual Session', 'href' => route('admin.sessions.create')],
                 ['label' => 'Add Exam', 'href' => route('admin.exams.create')],
             ],
         ]);

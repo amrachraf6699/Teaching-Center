@@ -100,15 +100,9 @@ it('only shows a parent their own children in the portal', function () {
             ->where('children.0.name', 'Visible Student'));
 });
 
-it('auto-generates sequential student codes when no code is provided', function () {
+it('auto-generates student codes in the ST-AB-12 format when no code is provided', function () {
     $teacher = User::factory()->teacher()->create();
     $parent = User::factory()->parent()->create();
-
-    Student::create([
-        'parent_id' => $parent->id,
-        'name' => 'Existing Student',
-        'code' => 'ST-009',
-    ]);
 
     $this->actingAs($teacher)
         ->post(route('admin.students.store'), [
@@ -117,7 +111,8 @@ it('auto-generates sequential student codes when no code is provided', function 
         ])
         ->assertRedirect(route('admin.students.index'));
 
-    expect(Student::query()->where('name', 'Auto Coded Student')->firstOrFail()->code)->toBe('ST-010');
+    expect(Student::query()->where('name', 'Auto Coded Student')->firstOrFail()->code)
+        ->toMatch('/^ST-[A-Z]{2}-\d{2}$/');
 });
 
 it('supports full admin crud routes with relationship-rich show pages', function () {
@@ -235,7 +230,6 @@ it('supports full admin crud routes with relationship-rich show pages', function
         ->put(route('admin.students.update', $student), [
             'parent_id' => $parent->id,
             'name' => 'Updated Student',
-            'code' => 'ST-102',
             'phone' => '01011111111',
             'date_of_birth' => null,
             'notes' => 'Updated notes.',
@@ -326,11 +320,11 @@ it('creates students, groups, sessions, attendance, exams, grades, and notificat
         ->post(route('admin.students.store'), [
             'parent_id' => $parent->id,
             'name' => 'Student One',
-            'code' => 'ST-001',
         ])
         ->assertRedirect(route('admin.students.index'));
 
-    $student = Student::query()->where('code', 'ST-001')->firstOrFail();
+    $student = Student::query()->where('name', 'Student One')->firstOrFail();
+    expect($student->code)->toMatch('/^ST-[A-Z]{2}-\d{2}$/');
 
     $this->actingAs($teacher)
         ->post(route('admin.groups.store'), [

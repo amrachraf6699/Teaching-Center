@@ -1,5 +1,5 @@
 <script setup>
-import { Head, useForm } from '@inertiajs/vue3';
+import { Head, Link, useForm } from '@inertiajs/vue3';
 import Button from '../../Components/Button.vue';
 import TextInput from '../../Components/TextInput.vue';
 import AuthLayout from '../../Layouts/AuthLayout.vue';
@@ -38,6 +38,10 @@ function submit() {
             </label>
 
             <Button type="submit" class="w-full" :disabled="form.processing">Sign in</Button>
+            <div class="text-center text-sm font-medium text-teachify-muted">
+                Student attendance scan?
+                <Link href="/student/login" class="font-bold text-teachify-blue">Student login</Link>
+            </div>
         </form>
     </AuthLayout>
 </template>

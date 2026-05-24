@@ -37,6 +37,7 @@ const hasFilters = computed(() => Boolean(search.value || group.value));
 
 const columns = [
     { key: 'title', label: 'Session' },
+    { key: 'source_label', label: 'Source' },
     { key: 'group', label: 'Group' },
     { key: 'starts_at', label: 'Starts' },
     { key: 'ends_at', label: 'Ends' },
@@ -110,13 +111,13 @@ onBeforeUnmount(() => {
                         Session filters
                     </div>
                 </div>
-                <Button :href="createUrl">Add Session</Button>
+                <Button :href="createUrl">Add Manual Session</Button>
             </div>
 
             <form class="border-t border-white/70 bg-white/75 p-4 sm:p-5 lg:p-6" @submit.prevent="submitSearch">
                 <div class="grid gap-3 md:grid-cols-2 xl:grid-cols-[minmax(0,1.5fr)_minmax(0,1fr)]">
                     <div class="w-full">
-                        <TextInput v-model="search" label="Session search" placeholder="Title, notes, or group subject" />
+                        <TextInput v-model="search" label="Session search" placeholder="Title, notes, source, or group subject" />
                     </div>
                     <SearchableSelect
                         v-model="group"
@@ -156,6 +157,11 @@ onBeforeUnmount(() => {
         </section>
 
         <DataTable v-if="sessions.data.length" :columns="columns" :rows="sessions.data">
+            <template #source_label="{ row }">
+                <span class="rounded-full px-3 py-1 text-xs font-black" :class="row.source_type === 'timetable' ? 'bg-teachify-blue-soft text-teachify-blue' : 'bg-amber-50 text-amber-700'">
+                    {{ row.source_label }}
+                </span>
+            </template>
             <template #group="{ row }">{{ row.group?.name || '-' }}</template>
             <template #actions="{ row }">
                 <ResourceActions :show-url="row.show_url" :edit-url="row.edit_url" :delete-url="row.delete_url" :label="row.title" />
@@ -164,7 +170,7 @@ onBeforeUnmount(() => {
         <EmptyState
             v-else
             :title="hasFilters ? 'No sessions found' : 'No sessions yet'"
-            :message="hasFilters ? 'Try a different search term or filter.' : 'Schedule lessons before recording attendance.'"
+            :message="hasFilters ? 'Try a different search term or filter.' : 'Timetables generate weekly sessions automatically. Add a manual session only when you need an exception.'"
         />
         <Pagination :links="sessions.links" />
     </AppShell>

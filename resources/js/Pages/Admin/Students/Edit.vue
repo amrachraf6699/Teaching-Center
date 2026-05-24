@@ -10,11 +10,11 @@ const props = defineProps({ student: Object, parents: Array, action: String, sho
 const form = useForm({
     parent_id: props.student.parent_id,
     name: props.student.name,
-    code: props.student.code,
     phone: props.student.phone,
     date_of_birth: props.student.date_of_birth,
     notes: props.student.notes,
     is_active: props.student.is_active,
+    password: '',
 });
 
 function submit() {
@@ -29,10 +29,11 @@ function submit() {
             <SelectInput v-model="form.parent_id" label="Parent" required :options="parents" :error="form.errors.parent_id" />
             <div class="grid gap-4 sm:grid-cols-2">
                 <TextInput v-model="form.name" label="Name" required :error="form.errors.name" />
-                <TextInput v-model="form.code" label="Code" :error="form.errors.code" />
                 <TextInput v-model="form.phone" label="Phone" :error="form.errors.phone" />
                 <TextInput v-model="form.date_of_birth" label="Date of Birth" type="date" :error="form.errors.date_of_birth" />
             </div>
+            <TextInput v-model="form.password" label="Reset Student Password" type="password" :error="form.errors.password" />
+            <p class="text-sm font-medium text-teachify-muted">Leave this empty to keep the current password unchanged.</p>
             <label class="flex items-center gap-3 text-sm font-bold text-teachify-muted">
                 <input v-model="form.is_active" type="checkbox" class="h-4 w-4 rounded border-teachify-line text-teachify-blue" />
                 Active

@@ -57,4 +57,11 @@ class UserFactory extends Factory
             'role' => 'parent',
         ]);
     }
+
+    public function student(): static
+    {
+        return $this->state(fn (array $attributes) => [
+            'role' => 'student',
+        ]);
+    }
 }

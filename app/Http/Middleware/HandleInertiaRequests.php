@@ -44,6 +44,7 @@ class HandleInertiaRequests extends Middleware
                 'logout' => route('logout'),
                 'adminDashboard' => route('admin.dashboard'),
                 'parentDashboard' => route('parent.dashboard'),
+                'studentDashboard' => route('student.dashboard'),
                 'adminParents' => route('admin.parents.index'),
                 'adminStudents' => route('admin.students.index'),
                 'adminGroups' => route('admin.groups.index'),

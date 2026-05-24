@@ -16,11 +16,12 @@ defineProps({ student: Object });
         </div>
 
         <section class="teachify-card rounded-[1.6rem] p-5">
-            <div class="grid gap-4 sm:grid-cols-4">
+            <div class="grid gap-4 sm:grid-cols-5">
                 <div><div class="text-xs font-black uppercase text-teachify-muted">Code</div><div class="mt-1 font-bold">{{ student.code }}</div></div>
                 <div><div class="text-xs font-black uppercase text-teachify-muted">Phone</div><div class="mt-1 font-bold">{{ student.phone || '-' }}</div></div>
                 <div><div class="text-xs font-black uppercase text-teachify-muted">Birth Date</div><div class="mt-1 font-bold">{{ student.date_of_birth || '-' }}</div></div>
                 <div><div class="text-xs font-black uppercase text-teachify-muted">Status</div><div class="mt-1 font-bold">{{ student.is_active ? 'Active' : 'Inactive' }}</div></div>
+                <div><div class="text-xs font-black uppercase text-teachify-muted">Student Login</div><div class="mt-1 font-bold">{{ student.student_login.ready ? 'Ready' : 'Missing' }}</div></div>
             </div>
             <p v-if="student.notes" class="mt-4 text-sm font-medium text-teachify-muted">{{ student.notes }}</p>
             <p class="mt-4 text-sm font-bold">
@@ -28,6 +29,9 @@ defineProps({ student: Object });
                 <Link v-if="student.parent" :href="student.parent.show_url" class="text-teachify-blue">{{ student.parent.name }}</Link>
                 <span v-else>-</span>
             </p>
+            <div class="mt-4 rounded-2xl bg-slate-50 px-4 py-3 text-sm font-medium text-teachify-muted">
+                Student QR login uses code <span class="font-black text-teachify-ink">{{ student.student_login.code }}</span>. Set or reset the password from the edit screen.
+            </div>
         </section>
 
         <section class="mt-6 grid gap-5 xl:grid-cols-2">

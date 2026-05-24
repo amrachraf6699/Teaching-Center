@@ -142,6 +142,7 @@ class TeachingGroupController extends Controller
                 'sessions' => $group->sessions->map(fn ($session): array => [
                     'id' => $session->id,
                     'title' => $session->title,
+                    'source_label' => $session->isGenerated() ? 'Generated' : 'Manual',
                     'starts_at' => $session->starts_at?->toDayDateTimeString(),
                     'ends_at' => $session->ends_at?->toDayDateTimeString(),
                     'show_url' => route('admin.sessions.show', $session),

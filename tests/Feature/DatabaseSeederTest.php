@@ -21,6 +21,7 @@ it('seeds usable data for every Teachify domain table', function () {
 
     expect(User::query()->where('role', 'teacher')->count())->toBe(1)
         ->and(User::query()->where('role', 'parent')->count())->toBe(3)
+        ->and(User::query()->where('role', 'student')->count())->toBe(6)
         ->and(Student::count())->toBe(6)
         ->and(TeachingGroup::count())->toBe(2)
         ->and(DB::table('group_student')->count())->toBe(8)

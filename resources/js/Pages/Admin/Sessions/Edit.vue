@@ -18,6 +18,10 @@ function submit() {
     <Head title="Edit Session" />
     <AppShell title="Edit Session">
         <form class="teachify-card max-w-3xl space-y-4 rounded-[1.6rem] p-5" @submit.prevent="submit">
+            <div>
+                <h2 class="text-lg font-black">Manual session details</h2>
+                <p class="mt-1 text-sm font-medium text-teachify-muted">Saving here keeps this lesson as a manual exception outside the weekly timetable.</p>
+            </div>
             <SelectInput v-model="form.teaching_group_id" label="Group" required :options="groups" :error="form.errors.teaching_group_id" />
             <TextInput v-model="form.title" label="Title" required :error="form.errors.title" />
             <div class="grid gap-4 sm:grid-cols-2">

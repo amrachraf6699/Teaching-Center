@@ -56,7 +56,12 @@ defineProps({ group: Object });
                 <h2 class="text-lg font-black">Sessions and Attendance</h2>
                 <div v-if="group.sessions.length" class="mt-4 space-y-4">
                     <article v-for="session in group.sessions" :key="session.id" class="rounded-2xl border border-teachify-line bg-white p-4">
-                        <Link :href="session.show_url" class="font-black text-teachify-blue">{{ session.title }}</Link>
+                        <div class="flex flex-wrap items-center justify-between gap-3">
+                            <Link :href="session.show_url" class="font-black text-teachify-blue">{{ session.title }}</Link>
+                            <span class="rounded-full px-3 py-1 text-xs font-black" :class="session.source_label === 'Generated' ? 'bg-teachify-blue-soft text-teachify-blue' : 'bg-amber-50 text-amber-700'">
+                                {{ session.source_label }}
+                            </span>
+                        </div>
                         <div class="text-sm font-semibold text-teachify-muted">{{ session.starts_at }} - {{ session.ends_at || 'No end time' }}</div>
                         <div v-if="session.attendance.length" class="mt-3 space-y-2">
                             <div v-for="attendance in session.attendance" :key="attendance.id" class="rounded-xl bg-teachify-blue-soft/60 px-3 py-2 text-sm">

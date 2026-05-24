@@ -7,6 +7,7 @@ use App\Support\TableExport;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\URL;
 use Inertia\Inertia;
 use Inertia\Response;
 use Modules\Academics\Models\GroupSession;
@@ -27,6 +28,8 @@ class GroupSessionController extends Controller
                 ->through(fn (GroupSession $session): array => [
                     'id' => $session->id,
                     'title' => $session->title,
+                    'source_type' => $session->source_type,
+                    'source_label' => $session->isGenerated() ? 'Generated' : 'Manual',
                     'starts_at' => $session->starts_at?->toDayDateTimeString(),
                     'ends_at' => $session->ends_at?->toDayDateTimeString(),
                     'group' => $session->group ? [
@@ -98,6 +101,9 @@ class GroupSessionController extends Controller
             'notes' => ['nullable', 'string'],
         ]);
 
+        $data['source_type'] = 'manual';
+        $data['session_date'] = substr((string) $data['starts_at'], 0, 10);
+
         GroupSession::create($data);
 
         return redirect()->route('admin.sessions.index')->with('status', 'Session created.');
@@ -111,6 +117,10 @@ class GroupSessionController extends Controller
             'session' => [
                 'id' => $session->id,
                 'title' => $session->title,
+                'source_type' => $session->source_type,
+                'source_label' => $session->isGenerated() ? 'Generated from timetable' : 'Manual session',
+                'scan_url' => URL::signedRoute('student.sessions.scan', ['session' => $session]),
+                'attendance_action' => route('admin.attendance.store'),
                 'starts_at' => $session->starts_at?->toDayDateTimeString(),
                 'ends_at' => $session->ends_at?->toDayDateTimeString(),
                 'notes' => $session->notes,
@@ -128,6 +138,7 @@ class GroupSessionController extends Controller
                     'code' => $student->code,
                     'parent' => $student->parent?->name,
                     'attendance' => $session->attendanceRecords->where('student_id', $student->id)->first()?->status,
+                    'attendance_notes' => $session->attendanceRecords->where('student_id', $student->id)->first()?->notes,
                     'show_url' => route('admin.students.show', $student),
                 ])->values() ?? [],
                 'attendance' => $session->attendanceRecords->map(fn ($attendance): array => [
@@ -168,6 +179,9 @@ class GroupSessionController extends Controller
             'notes' => ['nullable', 'string'],
         ]);
 
+        $data['source_type'] = 'manual';
+        $data['session_date'] = substr((string) $data['starts_at'], 0, 10);
+        $data['timetable_entry_id'] = null;
         $session->update($data);
 
         return redirect()->route('admin.sessions.show', $session)->with('status', 'Session updated.');

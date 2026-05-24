@@ -8,7 +8,7 @@ use App\Support\TableExport;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
-use Illuminate\Validation\Rule;
+use Illuminate\Support\Facades\Hash;
 use Inertia\Inertia;
 use Inertia\Response;
 use Modules\Academics\Models\TeachingGroup;
@@ -112,16 +112,20 @@ class StudentController extends Controller
         $data = $request->validate([
             'parent_id' => ['required', 'exists:users,id'],
             'name' => ['required', 'string', 'max:255'],
-            'code' => ['nullable', 'string', 'max:50', 'unique:students,code'],
             'phone' => ['nullable', 'string', 'max:50'],
             'date_of_birth' => ['nullable', 'date'],
             'notes' => ['nullable', 'string'],
+            'password' => ['nullable', 'string', 'min:6'],
         ]);
 
         $parent = User::query()->whereKey($data['parent_id'])->where('role', 'parent')->firstOrFail();
         $data['parent_id'] = $parent->id;
 
-        Student::create($data);
+        $password = $data['password'] ?? null;
+        unset($data['password']);
+
+        $student = Student::create($data);
+        $this->syncStudentPassword($student, $password);
 
         return redirect()->route('admin.students.index')->with('status', 'Student created.');
     }
@@ -134,6 +138,7 @@ class StudentController extends Controller
             'attendanceRecords.session.group',
             'examResults.exam.group',
             'notifications',
+            'user',
         ]);
 
         return Inertia::render('Admin/Students/Show', [
@@ -146,6 +151,11 @@ class StudentController extends Controller
                 'notes' => $student->notes,
                 'is_active' => $student->is_active,
                 'created_at' => $student->created_at?->toDayDateTimeString(),
+                'student_login' => [
+                    'code' => $student->code,
+                    'email' => $student->user?->email,
+                    'ready' => (bool) $student->user_id,
+                ],
                 'edit_url' => route('admin.students.edit', $student),
                 'index_url' => route('admin.students.index'),
                 'parent' => $student->parent ? [
@@ -204,11 +214,14 @@ class StudentController extends Controller
                 'id' => $student->id,
                 'parent_id' => $student->parent_id,
                 'name' => $student->name,
-                'code' => $student->code,
                 'phone' => $student->phone,
                 'date_of_birth' => $student->date_of_birth?->format('Y-m-d'),
                 'notes' => $student->notes,
                 'is_active' => $student->is_active,
+                'student_login' => [
+                    'code' => $student->code,
+                    'ready' => (bool) $student->user_id,
+                ],
             ],
             'parents' => $this->parentOptions(),
             'action' => route('admin.students.update', $student),
@@ -221,18 +234,21 @@ class StudentController extends Controller
         $data = $request->validate([
             'parent_id' => ['required', 'exists:users,id'],
             'name' => ['required', 'string', 'max:255'],
-            'code' => ['nullable', 'string', 'max:50', Rule::unique('students', 'code')->ignore($student->id)],
             'phone' => ['nullable', 'string', 'max:50'],
             'date_of_birth' => ['nullable', 'date'],
             'notes' => ['nullable', 'string'],
             'is_active' => ['boolean'],
+            'password' => ['nullable', 'string', 'min:6'],
         ]);
 
         $parent = User::query()->whereKey($data['parent_id'])->where('role', 'parent')->firstOrFail();
         $data['parent_id'] = $parent->id;
         $data['is_active'] = (bool) ($data['is_active'] ?? false);
+        $password = $data['password'] ?? null;
+        unset($data['password']);
 
         $student->update($data);
+        $this->syncStudentPassword($student->refresh(), $password);
 
         return redirect()->route('admin.students.show', $student)->with('status', 'Student updated.');
     }
@@ -301,5 +317,16 @@ class StudentController extends Controller
             ->where('role', 'parent')
             ->orderBy('name')
             ->get(['id', 'name', 'email']);
+    }
+
+    private function syncStudentPassword(Student $student, ?string $password): void
+    {
+        if (! $student->user || blank($password)) {
+            return;
+        }
+
+        $student->user->forceFill([
+            'password' => Hash::make($password),
+        ])->save();
     }
 }

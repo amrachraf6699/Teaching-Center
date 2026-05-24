@@ -2,22 +2,26 @@
 
 namespace Modules\Academics\Http\Controllers;
 
-use App\Support\TableExport;
 use App\Http\Controllers\Controller;
+use App\Support\TableExport;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Http\Response as HttpResponse;
-use Symfony\Component\HttpFoundation\StreamedResponse;
 use Illuminate\Validation\ValidationException;
 use Inertia\Inertia;
 use Inertia\Response;
+use Modules\Academics\Actions\GenerateSessionsFromTimetables;
+use Modules\Academics\Models\GroupSession;
 use Modules\Academics\Models\TeachingGroup;
 use Modules\Academics\Models\Timetable;
 use Modules\Academics\Models\TimetableEntry;
+use Symfony\Component\HttpFoundation\StreamedResponse;
 
 class TimetableController extends Controller
 {
+    public function __construct(private readonly GenerateSessionsFromTimetables $generateSessions) {}
+
     public function index(Request $request): Response
     {
         $filters = $this->filters($request);
@@ -121,6 +125,7 @@ class TimetableController extends Controller
         ]);
 
         $timetable->entries()->createMany($activeEntries);
+        $this->generateSessions->handle($timetable->load(['group', 'entries']), now(), 7);
 
         return redirect()->route('admin.timetables.index')->with('status', 'Timetable created.');
     }
@@ -181,15 +186,15 @@ class TimetableController extends Controller
 
         $activeEntries = $this->normalizeEntries($data['entries']);
         $this->ensureNoScheduleConflicts($activeEntries, $timetable);
-
-        $timetable->entries()->delete();
-        $timetable->entries()->createMany($activeEntries);
+        $this->syncEntries($timetable, $activeEntries);
+        $this->generateSessions->handle($timetable->fresh(['group', 'entries']), now(), 7);
 
         return redirect()->route('admin.timetables.show', $timetable)->with('status', 'Timetable updated.');
     }
 
     public function destroy(Timetable $timetable): RedirectResponse
     {
+        $this->deleteFuturePendingGeneratedSessionsForEntryIds($timetable->entries()->pluck('id')->all());
         $timetable->delete();
 
         return redirect()->route('admin.timetables.index')->with('status', 'Timetable deleted.');
@@ -377,5 +382,51 @@ class TimetableController extends Controller
                 ),
             ]);
         }
+    }
+
+    private function syncEntries(Timetable $timetable, array $activeEntries): void
+    {
+        $existingEntries = $timetable->entries()->get()->keyBy('day_of_week');
+        $activeDays = collect($activeEntries)->pluck('day_of_week')->all();
+
+        foreach ($activeEntries as $entry) {
+            $storedEntry = $existingEntries->get($entry['day_of_week']);
+
+            if ($storedEntry) {
+                $storedEntry->update([
+                    'starts_at' => $entry['starts_at'],
+                    'ends_at' => $entry['ends_at'],
+                ]);
+
+                continue;
+            }
+
+            $timetable->entries()->create($entry);
+        }
+
+        $obsoleteEntryIds = $existingEntries
+            ->reject(fn (TimetableEntry $entry): bool => in_array($entry->day_of_week, $activeDays, true))
+            ->pluck('id')
+            ->all();
+
+        $this->deleteFuturePendingGeneratedSessionsForEntryIds($obsoleteEntryIds);
+
+        if ($obsoleteEntryIds !== []) {
+            $timetable->entries()->whereKey($obsoleteEntryIds)->delete();
+        }
+    }
+
+    private function deleteFuturePendingGeneratedSessionsForEntryIds(array $entryIds): void
+    {
+        if ($entryIds === []) {
+            return;
+        }
+
+        GroupSession::query()
+            ->where('source_type', 'timetable')
+            ->whereIn('timetable_entry_id', $entryIds)
+            ->where('starts_at', '>=', now())
+            ->doesntHave('attendanceRecords')
+            ->delete();
     }
 }

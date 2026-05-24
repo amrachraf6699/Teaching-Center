@@ -27,7 +27,7 @@ defineProps({
                         <h2 class="text-lg font-black">Upcoming sessions</h2>
                         <p class="text-sm font-medium text-teachify-muted">The next lessons that need attention.</p>
                     </div>
-                    <Button variant="secondary" href="/admin/sessions/create">Add Session</Button>
+                    <Button variant="secondary" href="/admin/sessions/create">Add Manual Session</Button>
                 </div>
 
                 <div v-if="upcomingSessions.length" class="space-y-3">
@@ -41,7 +41,7 @@ defineProps({
                         </div>
                     </article>
                 </div>
-                <EmptyState v-else title="No sessions scheduled" message="Create the next lesson to keep the week organized." />
+                <EmptyState v-else title="No sessions scheduled" message="Save a timetable to generate weekly lessons automatically, or add a manual exception." />
             </div>
 
             <aside class="teachify-card rounded-[1.6rem] p-5">

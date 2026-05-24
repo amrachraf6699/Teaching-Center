@@ -41,6 +41,10 @@ function submit() {
     <Head title="Add Timetable" />
     <AppShell title="Add Timetable">
         <form v-if="groups.length" class="teachify-card max-w-4xl space-y-5 rounded-[1.6rem] p-5" @submit.prevent="submit">
+            <div>
+                <h2 class="text-lg font-black">Weekly timetable</h2>
+                <p class="mt-1 text-sm font-medium text-teachify-muted">Saving this timetable creates the next 7 days of lesson sessions automatically.</p>
+            </div>
             <SearchableSelect
                 v-model="form.teaching_group_id"
                 label="Group"
@@ -53,7 +57,7 @@ function submit() {
             <section>
                 <div class="flex items-center justify-between gap-3">
                     <h2 class="text-sm font-black">Weekly schedule</h2>
-                    <p class="text-sm font-medium text-teachify-muted">Enable each day the group should meet, then set its time range.</p>
+                    <p class="text-sm font-medium text-teachify-muted">Enable each day the group should meet, then set its weekly time range. Future sessions are generated from this schedule.</p>
                 </div>
 
                 <div class="mt-3 space-y-3">

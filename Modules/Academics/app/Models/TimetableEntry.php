@@ -6,6 +6,7 @@ use Illuminate\Database\Eloquent\Attributes\Fillable;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Database\Eloquent\Relations\HasMany;
 
 #[Fillable(['timetable_id', 'day_of_week', 'starts_at', 'ends_at'])]
 class TimetableEntry extends Model
@@ -18,5 +19,13 @@ class TimetableEntry extends Model
     public function timetable(): BelongsTo
     {
         return $this->belongsTo(Timetable::class);
+    }
+
+    /**
+     * @return HasMany<GroupSession, $this>
+     */
+    public function sessions(): HasMany
+    {
+        return $this->hasMany(GroupSession::class, 'timetable_entry_id');
     }
 }

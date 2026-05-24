@@ -9,6 +9,7 @@ use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 use Illuminate\Database\Eloquent\Relations\HasMany;
+use Illuminate\Support\Facades\Hash;
 use Modules\Academics\Models\Attendance;
 use Modules\Academics\Models\TeachingGroup;
 use Modules\Exams\Models\ExamResult;
@@ -17,7 +18,7 @@ use Modules\People\Database\Factories\StudentFactory;
 use Spatie\Activitylog\LogOptions;
 use Spatie\Activitylog\Traits\LogsActivity;
 
-#[Fillable(['parent_id', 'name', 'code', 'phone', 'date_of_birth', 'notes', 'is_active'])]
+#[Fillable(['parent_id', 'user_id', 'name', 'code', 'phone', 'date_of_birth', 'notes', 'is_active'])]
 class Student extends Model
 {
     use HasFactory, LogsActivity;
@@ -27,6 +28,41 @@ class Student extends Model
         static::creating(function (Student $student): void {
             if (blank($student->code)) {
                 $student->code = static::nextCode();
+            }
+        });
+
+        static::created(function (Student $student): void {
+            if ($student->user_id) {
+                return;
+            }
+
+            $user = User::query()->create([
+                'name' => $student->name,
+                'email' => sprintf('student-%d@students.teachify.local', $student->id),
+                'password' => Hash::make($student->code ?: 'password'),
+                'role' => 'student',
+            ]);
+
+            $student->forceFill([
+                'user_id' => $user->id,
+            ])->saveQuietly();
+        });
+
+        static::updated(function (Student $student): void {
+            if (! $student->user) {
+                return;
+            }
+
+            if ($student->wasChanged('name')) {
+                $student->user->forceFill([
+                    'name' => $student->name,
+                ])->saveQuietly();
+            }
+        });
+
+        static::deleted(function (Student $student): void {
+            if ($student->user) {
+                $student->user->delete();
             }
         });
     }
@@ -45,6 +81,14 @@ class Student extends Model
     public function parent(): BelongsTo
     {
         return $this->belongsTo(User::class, 'parent_id');
+    }
+
+    /**
+     * @return BelongsTo<User, $this>
+     */
+    public function user(): BelongsTo
+    {
+        return $this->belongsTo(User::class, 'user_id');
     }
 
     /**
@@ -90,17 +134,18 @@ class Student extends Model
 
     public static function nextCode(): string
     {
-        $nextNumber = static::query()
-            ->pluck('code')
-            ->filter()
-            ->map(function (string $code): int {
-                preg_match('/^ST-(\d+)$/', $code, $matches);
+        do {
+            $code = sprintf(
+                'ST-%s%s-%d%d',
+                fake()->randomLetter(),
+                fake()->randomLetter(),
+                fake()->numberBetween(0, 9),
+                fake()->numberBetween(0, 9),
+            );
+            $code = strtoupper($code);
+        } while (static::query()->where('code', $code)->exists());
 
-                return (int) ($matches[1] ?? 0);
-            })
-            ->max() + 1;
-
-        return 'ST-'.str_pad((string) $nextNumber, 3, '0', STR_PAD_LEFT);
+        return $code;
     }
 
     protected static function newFactory(): StudentFactory

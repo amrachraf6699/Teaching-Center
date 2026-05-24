@@ -32,6 +32,10 @@ function submit() {
     <Head title="Edit Timetable" />
     <AppShell title="Edit Timetable">
         <form class="teachify-card max-w-4xl space-y-5 rounded-[1.6rem] p-5" @submit.prevent="submit">
+            <div>
+                <h2 class="text-lg font-black">Weekly timetable</h2>
+                <p class="mt-1 text-sm font-medium text-teachify-muted">Saving updates future generated sessions for the next 7 days, while keeping past or already-attended lessons unchanged.</p>
+            </div>
             <section class="rounded-[1.4rem] border border-teachify-line bg-white p-4">
                 <div class="text-xs font-black uppercase tracking-[0.18em] text-teachify-muted">Group</div>
                 <div class="mt-2 text-lg font-black text-teachify-ink">{{ timetable.group?.name }}</div>
