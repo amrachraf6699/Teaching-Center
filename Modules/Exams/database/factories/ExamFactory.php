@@ -15,10 +15,15 @@ class ExamFactory extends Factory
 
     public function definition(): array
     {
+        $startAt = fake()->dateTimeBetween('-1 month', '+1 week');
+        $endAt = (clone $startAt)->modify('+1 hour');
+
         return [
             'teaching_group_id' => TeachingGroup::factory(),
             'title' => fake()->randomElement(['Quiz', 'Midterm', 'Practice Test']).' '.fake()->numberBetween(1, 4),
-            'exam_date' => fake()->dateTimeBetween('-1 month', '+1 week')->format('Y-m-d'),
+            'start_at' => $startAt,
+            'end_at' => $endAt,
+            'max_allowed_time' => 60,
             'max_score' => fake()->randomElement([20, 50, 100]),
             'notes' => fake()->optional()->sentence(),
         ];

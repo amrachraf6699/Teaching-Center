@@ -6,6 +6,7 @@ use Inertia\Testing\AssertableInertia as Assert;
 use Modules\Academics\Models\Attendance;
 use Modules\Academics\Models\GroupSession;
 use Modules\Academics\Models\TeachingGroup;
+use Modules\Exams\Actions\UpsertExam;
 use Modules\Exams\Models\Exam;
 use Modules\Exams\Models\ExamResult;
 use Modules\Notifications\Models\ParentNotification;
@@ -130,12 +131,36 @@ it('supports full admin crud routes with relationship-rich show pages', function
         'title' => 'Original Session',
         'starts_at' => now()->addDay(),
     ]);
-    $exam = Exam::create([
-        'teaching_group_id' => $group->id,
-        'title' => 'Original Exam',
-        'exam_date' => now()->toDateString(),
-        'max_score' => 100,
-    ]);
+    $exam = app(UpsertExam::class)->handle(
+        [
+            'teaching_group_id' => $group->id,
+            'title' => 'Original Exam',
+            'start_at' => now(),
+            'end_at' => now()->copy()->addHour(),
+            'max_allowed_time' => 60,
+            'notes' => null,
+        ],
+        [
+            [
+                'type' => 'true_false',
+                'prompt' => 'Original true or false question',
+                'points' => 40,
+                'options' => [
+                    ['label' => 'True', 'is_correct' => true],
+                    ['label' => 'False', 'is_correct' => false],
+                ],
+            ],
+            [
+                'type' => 'mcq',
+                'prompt' => 'Original multiple choice question',
+                'points' => 60,
+                'options' => [
+                    ['label' => 'A', 'is_correct' => true],
+                    ['label' => 'B', 'is_correct' => false],
+                ],
+            ],
+        ],
+    );
     Attendance::create([
         'teaching_session_id' => $session->id,
         'student_id' => $student->id,
@@ -246,12 +271,39 @@ it('supports full admin crud routes with relationship-rich show pages', function
         ->put(route('admin.exams.update', $exam), [
             'teaching_group_id' => $group->id,
             'title' => 'Updated Exam',
-            'exam_date' => now()->addWeek()->toDateString(),
-            'max_score' => 120,
+            'start_at' => now()->addWeek()->format('Y-m-d H:i:s'),
+            'end_at' => now()->addWeek()->addHour()->format('Y-m-d H:i:s'),
+            'max_allowed_time' => 75,
             'notes' => 'Updated exam.',
+            'questions' => [
+                [
+                    'id' => $exam->questions[0]->id,
+                    'type' => 'true_false',
+                    'prompt' => 'Updated true or false question',
+                    'points' => 50,
+                    'correct_boolean' => 'false',
+                    'options' => $exam->questions[0]->options->map(fn ($option) => [
+                        'id' => $option->id,
+                        'label' => $option->label,
+                        'is_correct' => $option->is_correct,
+                    ])->all(),
+                ],
+                [
+                    'id' => $exam->questions[1]->id,
+                    'type' => 'mcq',
+                    'prompt' => 'Updated multiple choice question',
+                    'points' => 70,
+                    'options' => $exam->questions[1]->options->map(fn ($option, $index) => [
+                        'id' => $option->id,
+                        'label' => $index === 0 ? 'Updated A' : 'Updated B',
+                        'is_correct' => $index === 1,
+                    ])->all(),
+                ],
+            ],
         ])
         ->assertRedirect(route('admin.exams.show', $exam));
-    expect($exam->refresh()->title)->toBe('Updated Exam');
+    expect($exam->refresh()->title)->toBe('Updated Exam')
+        ->and((float) $exam->max_score)->toBe(120.0);
 
     $this->actingAs($teacher)->delete(route('admin.exams.destroy', $exam))->assertRedirect(route('admin.exams.index'));
     $this->actingAs($teacher)->delete(route('admin.sessions.destroy', $session))->assertRedirect(route('admin.sessions.index'));
@@ -315,8 +367,27 @@ it('creates students, groups, sessions, attendance, exams, grades, and notificat
         ->post(route('admin.exams.store'), [
             'teaching_group_id' => $group->id,
             'title' => 'Midterm',
-            'exam_date' => now()->toDateString(),
-            'max_score' => 100,
+            'start_at' => now()->format('Y-m-d H:i:s'),
+            'end_at' => now()->addHour()->format('Y-m-d H:i:s'),
+            'max_allowed_time' => 60,
+            'questions' => [
+                [
+                    'type' => 'true_false',
+                    'prompt' => 'A triangle has three sides.',
+                    'points' => 40,
+                    'correct_boolean' => 'true',
+                    'options' => [],
+                ],
+                [
+                    'type' => 'mcq',
+                    'prompt' => 'What is 6 x 10?',
+                    'points' => 60,
+                    'options' => [
+                        ['label' => '60', 'is_correct' => true],
+                        ['label' => '16', 'is_correct' => false],
+                    ],
+                ],
+            ],
         ])
         ->assertRedirect(route('admin.exams.index'));
 

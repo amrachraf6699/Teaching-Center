@@ -45,7 +45,7 @@ defineProps({ group: Object });
             <div v-if="group.students.length" class="mt-4 grid gap-3 sm:grid-cols-2">
                 <Link v-for="student in group.students" :key="student.id" :href="student.show_url" class="rounded-2xl border border-teachify-line bg-white p-4">
                     <div class="font-black text-teachify-blue">{{ student.name }}</div>
-                    <div class="text-sm font-semibold text-teachify-muted">{{ student.code || '-' }} · {{ student.parent || 'No parent' }}</div>
+                    <div class="text-sm font-semibold text-teachify-muted">{{ student.code || '-' }} - {{ student.parent || 'No parent' }}</div>
                 </Link>
             </div>
             <EmptyState v-else title="No students" message="Enroll students from the edit screen." />
@@ -60,7 +60,7 @@ defineProps({ group: Object });
                         <div class="text-sm font-semibold text-teachify-muted">{{ session.starts_at }} - {{ session.ends_at || 'No end time' }}</div>
                         <div v-if="session.attendance.length" class="mt-3 space-y-2">
                             <div v-for="attendance in session.attendance" :key="attendance.id" class="rounded-xl bg-teachify-blue-soft/60 px-3 py-2 text-sm">
-                                <span class="font-black">{{ attendance.student }}</span> · <span class="capitalize">{{ attendance.status }}</span>
+                                <span class="font-black">{{ attendance.student }}</span> - <span class="capitalize">{{ attendance.status }}</span>
                             </div>
                         </div>
                     </article>
@@ -73,10 +73,10 @@ defineProps({ group: Object });
                 <div v-if="group.exams.length" class="mt-4 space-y-4">
                     <article v-for="exam in group.exams" :key="exam.id" class="rounded-2xl border border-teachify-line bg-white p-4">
                         <Link :href="exam.show_url" class="font-black text-teachify-blue">{{ exam.title }}</Link>
-                        <div class="text-sm font-semibold text-teachify-muted">{{ exam.exam_date }} · Max {{ exam.max_score }}</div>
+                        <div class="text-sm font-semibold text-teachify-muted">{{ exam.schedule }} - Max {{ exam.max_score }}</div>
                         <div v-if="exam.results.length" class="mt-3 space-y-2">
                             <div v-for="result in exam.results" :key="result.id" class="rounded-xl bg-teachify-yellow-soft px-3 py-2 text-sm">
-                                <span class="font-black">{{ result.student }}</span> · {{ result.score }} · {{ result.percentage }}%
+                                <span class="font-black">{{ result.student }}</span> - {{ result.score }} - {{ result.percentage }}%
                             </div>
                         </div>
                     </article>

@@ -1,13 +1,27 @@
 <script setup>
 import { Head, useForm } from '@inertiajs/vue3';
-import Button from '../../../Components/Button.vue';
-import SelectInput from '../../../Components/SelectInput.vue';
-import TextareaInput from '../../../Components/TextareaInput.vue';
-import TextInput from '../../../Components/TextInput.vue';
 import AppShell from '../../../Layouts/AppShell.vue';
+import ExamForm from './Form.vue';
 
-const props = defineProps({ groups: Array, action: String });
-const form = useForm({ teaching_group_id: '', title: '', exam_date: '', max_score: 100, notes: '' });
+const props = defineProps({ groups: Array, action: String, questionTypes: Array });
+
+const form = useForm({
+    teaching_group_id: '',
+    title: '',
+    start_at: '',
+    end_at: '',
+    max_allowed_time: 60,
+    notes: '',
+    questions: [
+        {
+            type: 'true_false',
+            prompt: '',
+            points: 1,
+            correct_boolean: 'true',
+            options: [],
+        },
+    ],
+});
 
 function submit() {
     form.post(props.action);
@@ -17,15 +31,14 @@ function submit() {
 <template>
     <Head title="Add Exam" />
     <AppShell title="Add Exam">
-        <form class="teachify-card max-w-3xl space-y-4 rounded-[1.6rem] p-5" @submit.prevent="submit">
-            <SelectInput v-model="form.teaching_group_id" label="Group" required :options="groups" :error="form.errors.teaching_group_id" />
-            <div class="grid gap-4 sm:grid-cols-2">
-                <TextInput v-model="form.title" label="Title" required :error="form.errors.title" />
-                <TextInput v-model="form.exam_date" label="Exam Date" type="date" required :error="form.errors.exam_date" />
-                <TextInput v-model="form.max_score" label="Max Score" type="number" required :error="form.errors.max_score" />
-            </div>
-            <TextareaInput v-model="form.notes" label="Notes" :error="form.errors.notes" />
-            <Button type="submit" :disabled="form.processing">Create Exam</Button>
-        </form>
+        <ExamForm
+            :form="form"
+            :groups="groups"
+            :question-types="questionTypes"
+            submit-label="Create Exam"
+            heading="Create a new exam"
+            description="Fill in the exam details first, then build the questions underneath. The total score is calculated from the points you assign."
+            @submit="submit"
+        />
     </AppShell>
 </template>

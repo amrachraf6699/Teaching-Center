@@ -52,6 +52,7 @@ defineProps({
                                         <span class="font-black text-teachify-blue">{{ result.percentage }}%</span>
                                     </div>
                                     <div class="mt-1 text-sm font-semibold text-teachify-muted">{{ result.score }} / {{ result.max_score }} - {{ result.group }}</div>
+                                    <div class="mt-1 text-xs font-semibold text-teachify-muted">{{ result.schedule }}</div>
                                 </div>
                             </div>
                             <p v-else class="mt-3 text-sm font-medium text-teachify-muted">No exam results posted yet.</p>

@@ -16,12 +16,34 @@ defineProps({ exam: Object });
         </div>
 
         <section class="teachify-card rounded-[1.6rem] p-5">
-            <div class="grid gap-4 sm:grid-cols-3">
+            <div class="grid gap-4 sm:grid-cols-4">
                 <div><div class="text-xs font-black uppercase text-teachify-muted">Group</div><Link v-if="exam.group" :href="exam.group.show_url" class="mt-1 block font-bold text-teachify-blue">{{ exam.group.name }}</Link></div>
-                <div><div class="text-xs font-black uppercase text-teachify-muted">Date</div><div class="mt-1 font-bold">{{ exam.exam_date }}</div></div>
+                <div><div class="text-xs font-black uppercase text-teachify-muted">Schedule</div><div class="mt-1 font-bold">{{ exam.schedule }}</div></div>
+                <div><div class="text-xs font-black uppercase text-teachify-muted">Allowed Time</div><div class="mt-1 font-bold">{{ exam.max_allowed_time }}</div></div>
                 <div><div class="text-xs font-black uppercase text-teachify-muted">Max Score</div><div class="mt-1 font-bold">{{ exam.max_score }}</div></div>
             </div>
             <p v-if="exam.notes" class="mt-4 text-sm font-medium text-teachify-muted">{{ exam.notes }}</p>
+        </section>
+
+        <section class="mt-6 teachify-card rounded-[1.6rem] p-5">
+            <h2 class="text-lg font-black">Questions</h2>
+            <div v-if="exam.questions.length" class="mt-4 space-y-4">
+                <article v-for="(question, index) in exam.questions" :key="question.id" class="rounded-2xl border border-teachify-line bg-white p-4">
+                    <div class="flex flex-col gap-2 sm:flex-row sm:items-start sm:justify-between">
+                        <div>
+                            <div class="text-xs font-black uppercase text-teachify-muted">Question {{ index + 1 }} · {{ question.type_label }}</div>
+                            <div class="mt-1 font-black text-teachify-ink">{{ question.prompt }}</div>
+                        </div>
+                        <div class="rounded-full bg-teachify-blue-soft px-3 py-1 text-sm font-black text-teachify-blue">{{ question.points }} pts</div>
+                    </div>
+                    <div class="mt-3 space-y-2">
+                        <div v-for="option in question.options" :key="option.id" class="rounded-xl px-3 py-2 text-sm font-semibold" :class="option.is_correct ? 'bg-teachify-mint-soft text-teachify-ink' : 'bg-slate-100 text-slate-700'">
+                            {{ option.label }}
+                        </div>
+                    </div>
+                </article>
+            </div>
+            <EmptyState v-else title="No questions" message="Add questions from the edit screen." />
         </section>
 
         <section class="mt-6 teachify-card rounded-[1.6rem] p-5">

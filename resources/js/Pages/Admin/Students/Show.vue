@@ -36,7 +36,7 @@ defineProps({ student: Object });
                 <div v-if="student.groups.length" class="mt-4 space-y-4">
                     <article v-for="group in student.groups" :key="group.id" class="rounded-2xl border border-teachify-line bg-white p-4">
                         <Link :href="group.show_url" class="font-black text-teachify-blue">{{ group.name }}</Link>
-                        <div class="text-sm font-semibold text-teachify-muted">{{ group.subject || 'General' }} · {{ group.level || '-' }}</div>
+                        <div class="text-sm font-semibold text-teachify-muted">{{ group.subject || 'General' }} - {{ group.level || '-' }}</div>
                         <div class="mt-3 space-y-2">
                             <div v-for="session in group.sessions" :key="session.id" class="flex justify-between gap-3 rounded-xl bg-teachify-blue-soft/60 px-3 py-2 text-sm">
                                 <span class="font-bold">{{ session.title }}</span>
@@ -53,7 +53,8 @@ defineProps({ student: Object });
                 <div v-if="student.exam_results.length" class="mt-4 space-y-3">
                     <div v-for="result in student.exam_results" :key="result.id" class="rounded-2xl border border-teachify-line bg-white p-4">
                         <div class="flex justify-between gap-3"><span class="font-black">{{ result.title }}</span><span class="font-black text-teachify-blue">{{ result.percentage }}%</span></div>
-                        <div class="text-sm font-semibold text-teachify-muted">{{ result.score }} / {{ result.max_score }} · {{ result.group || '-' }}</div>
+                        <div class="text-sm font-semibold text-teachify-muted">{{ result.score }} / {{ result.max_score }} - {{ result.group || '-' }}</div>
+                        <div class="mt-1 text-xs font-semibold text-teachify-muted">{{ result.schedule }}</div>
                     </div>
                 </div>
                 <EmptyState v-else title="No exam results" message="Saved grades will appear here." />
@@ -67,8 +68,8 @@ defineProps({ student: Object });
                     <h3 class="font-black">Attendance</h3>
                     <div v-if="student.attendance.length" class="mt-3 space-y-2">
                         <div v-for="attendance in student.attendance" :key="attendance.id" class="rounded-xl border border-teachify-line bg-white p-3 text-sm">
-                            <div class="font-black capitalize">{{ attendance.status }} · {{ attendance.session }}</div>
-                            <div class="font-semibold text-teachify-muted">{{ attendance.group }} · {{ attendance.starts_at }}</div>
+                            <div class="font-black capitalize">{{ attendance.status }} - {{ attendance.session }}</div>
+                            <div class="font-semibold text-teachify-muted">{{ attendance.group }} - {{ attendance.starts_at }}</div>
                         </div>
                     </div>
                     <p v-else class="mt-3 text-sm font-medium text-teachify-muted">No attendance records.</p>
@@ -78,7 +79,7 @@ defineProps({ student: Object });
                     <div v-if="student.notifications.length" class="mt-3 space-y-2">
                         <div v-for="notification in student.notifications" :key="notification.id" class="rounded-xl border border-teachify-line bg-white p-3 text-sm">
                             <div class="font-black">{{ notification.title }}</div>
-                            <div class="font-semibold text-teachify-muted">{{ notification.type }} · {{ notification.created_at }}</div>
+                            <div class="font-semibold text-teachify-muted">{{ notification.type }} - {{ notification.created_at }}</div>
                         </div>
                     </div>
                     <p v-else class="mt-3 text-sm font-medium text-teachify-muted">No notifications.</p>

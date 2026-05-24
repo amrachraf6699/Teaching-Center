@@ -38,8 +38,10 @@ const hasFilters = computed(() => Boolean(search.value || group.value));
 const columns = [
     { key: 'title', label: 'Exam' },
     { key: 'group', label: 'Group' },
-    { key: 'exam_date', label: 'Date' },
+    { key: 'schedule', label: 'Schedule' },
+    { key: 'max_allowed_time', label: 'Allowed Time' },
     { key: 'max_score', label: 'Max Score' },
+    { key: 'question_count', label: 'Questions' },
     { key: 'actions', label: 'Actions' },
 ];
 

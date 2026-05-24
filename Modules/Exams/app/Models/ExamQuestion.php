@@ -1,0 +1,38 @@
+<?php
+
+namespace Modules\Exams\Models;
+
+use Illuminate\Database\Eloquent\Attributes\Fillable;
+use Illuminate\Database\Eloquent\Factories\HasFactory;
+use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Database\Eloquent\Relations\HasMany;
+
+#[Fillable(['exam_id', 'type', 'prompt', 'points', 'position'])]
+class ExamQuestion extends Model
+{
+    use HasFactory;
+
+    protected function casts(): array
+    {
+        return [
+            'points' => 'decimal:2',
+        ];
+    }
+
+    /**
+     * @return BelongsTo<Exam, $this>
+     */
+    public function exam(): BelongsTo
+    {
+        return $this->belongsTo(Exam::class);
+    }
+
+    /**
+     * @return HasMany<ExamQuestionOption, $this>
+     */
+    public function options(): HasMany
+    {
+        return $this->hasMany(ExamQuestionOption::class)->orderBy('position');
+    }
+}

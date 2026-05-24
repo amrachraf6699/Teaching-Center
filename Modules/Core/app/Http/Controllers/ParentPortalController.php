@@ -54,6 +54,9 @@ class ParentPortalController extends Controller
                         'id' => $result->id,
                         'title' => $result->exam?->title,
                         'group' => $result->exam?->group?->name,
+                        'schedule' => $result->exam?->start_at && $result->exam?->end_at
+                            ? $result->exam->start_at->format('M j, Y g:i A').' - '.$result->exam->end_at->format('g:i A')
+                            : '-',
                         'score' => $result->score,
                         'max_score' => $result->exam?->max_score,
                         'percentage' => $result->percentage(),

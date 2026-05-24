@@ -102,13 +102,17 @@ it('exports filtered parents groups sessions and exams as csv', function () {
     $matchingExam = Exam::create([
         'teaching_group_id' => $activeGroup->id,
         'title' => 'Exam Match',
-        'exam_date' => now()->toDateString(),
+        'start_at' => now(),
+        'end_at' => now()->copy()->addHour(),
+        'max_allowed_time' => 60,
         'max_score' => 100,
     ]);
     Exam::create([
         'teaching_group_id' => $inactiveGroup->id,
         'title' => 'Exam Hidden',
-        'exam_date' => now()->addDay()->toDateString(),
+        'start_at' => now()->addDay(),
+        'end_at' => now()->addDay()->addHour(),
+        'max_allowed_time' => 60,
         'max_score' => 100,
     ]);
 

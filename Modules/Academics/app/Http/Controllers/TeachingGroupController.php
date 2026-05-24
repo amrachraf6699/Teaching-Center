@@ -155,7 +155,9 @@ class TeachingGroupController extends Controller
                 'exams' => $group->exams->map(fn ($exam): array => [
                     'id' => $exam->id,
                     'title' => $exam->title,
-                    'exam_date' => $exam->exam_date?->toFormattedDateString(),
+                    'schedule' => $exam->start_at && $exam->end_at
+                        ? $exam->start_at->format('M j, Y g:i A').' - '.$exam->end_at->format('g:i A')
+                        : '-',
                     'max_score' => $exam->max_score,
                     'show_url' => route('admin.exams.show', $exam),
                     'results' => $exam->results->map(fn ($result): array => [
