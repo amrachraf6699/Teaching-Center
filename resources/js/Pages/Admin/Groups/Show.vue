@@ -27,6 +27,20 @@ defineProps({ group: Object });
         </section>
 
         <section class="mt-6 teachify-card rounded-[1.6rem] p-5">
+            <div class="flex flex-wrap items-center justify-between gap-3">
+                <h2 class="text-lg font-black">Timetable</h2>
+                <Button v-if="group.timetable" variant="secondary" :href="group.timetable.edit_url">Edit Timetable</Button>
+            </div>
+            <div v-if="group.timetable?.entries?.length" class="mt-4 grid gap-3 sm:grid-cols-2 xl:grid-cols-3">
+                <article v-for="entry in group.timetable.entries" :key="entry.day" class="rounded-2xl border border-teachify-line bg-white p-4">
+                    <div class="text-sm font-black text-teachify-blue">{{ entry.day }}</div>
+                    <div class="mt-1 text-sm font-semibold text-teachify-muted">{{ entry.time_range }}</div>
+                </article>
+            </div>
+            <EmptyState v-else title="No timetable yet" message="Create a weekly timetable for this group from the timetables screen." />
+        </section>
+
+        <section class="mt-6 teachify-card rounded-[1.6rem] p-5">
             <h2 class="text-lg font-black">Students</h2>
             <div v-if="group.students.length" class="mt-4 grid gap-3 sm:grid-cols-2">
                 <Link v-for="student in group.students" :key="student.id" :href="student.show_url" class="rounded-2xl border border-teachify-line bg-white p-4">

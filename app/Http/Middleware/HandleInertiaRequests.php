@@ -47,6 +47,7 @@ class HandleInertiaRequests extends Middleware
                 'adminParents' => route('admin.parents.index'),
                 'adminStudents' => route('admin.students.index'),
                 'adminGroups' => route('admin.groups.index'),
+                'adminTimetables' => route('admin.timetables.index'),
                 'adminSessions' => route('admin.sessions.index'),
                 'adminExams' => route('admin.exams.index'),
                 'adminSettings' => route('admin.settings.edit'),

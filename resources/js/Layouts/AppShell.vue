@@ -3,6 +3,7 @@ import { Link, router, usePage } from '@inertiajs/vue3';
 import {
     BookOpen,
     CalendarDays,
+    Clock3,
     FileText,
     GraduationCap,
     LayoutDashboard,
@@ -36,6 +37,7 @@ const adminNav = computed(() => [
     { label: 'Students', href: routes.value.adminStudents, icon: GraduationCap },
     { label: 'Parents', href: routes.value.adminParents, icon: Users },
     { label: 'Groups', href: routes.value.adminGroups, icon: BookOpen },
+    { label: 'Timetables', href: routes.value.adminTimetables, icon: Clock3 },
     { label: 'Sessions', href: routes.value.adminSessions, icon: CalendarDays },
     { label: 'Exams', href: routes.value.adminExams, icon: FileText },
     { label: 'Settings', href: routes.value.adminSettings, icon: Settings },

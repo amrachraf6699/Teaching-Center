@@ -25,12 +25,12 @@ class TableExport
         ]);
     }
 
-    public static function pdf(string $filename, string $title, array $headers, array $rows): Response
+    public static function pdf(string $filename, string $title, array $headers, array $rows, string $orientation = 'portrait'): Response
     {
         return Pdf::loadView('exports.table', [
             'title' => $title,
             'headers' => $headers,
             'rows' => $rows,
-        ])->download($filename);
+        ])->setPaper('a4', $orientation)->download($filename);
     }
 }

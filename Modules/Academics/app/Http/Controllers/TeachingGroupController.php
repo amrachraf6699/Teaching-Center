@@ -107,6 +107,7 @@ class TeachingGroupController extends Controller
             'students.parent',
             'sessions.attendanceRecords.student',
             'exams.results.student',
+            'timetable.entries',
         ])->loadCount(['students', 'sessions', 'exams']);
 
         return Inertia::render('Admin/Groups/Show', [
@@ -123,6 +124,14 @@ class TeachingGroupController extends Controller
                 'created_at' => $group->created_at?->toDayDateTimeString(),
                 'edit_url' => route('admin.groups.edit', $group),
                 'index_url' => route('admin.groups.index'),
+                'timetable' => $group->timetable ? [
+                    'show_url' => route('admin.timetables.show', $group->timetable),
+                    'edit_url' => route('admin.timetables.edit', $group->timetable),
+                    'entries' => $group->timetable->entries->map(fn ($entry): array => [
+                        'day' => ucfirst($entry->day_of_week),
+                        'time_range' => substr((string) $entry->starts_at, 0, 5).' - '.substr((string) $entry->ends_at, 0, 5),
+                    ])->values()->all(),
+                ] : null,
                 'students' => $group->students->map(fn ($student): array => [
                     'id' => $student->id,
                     'name' => $student->name,

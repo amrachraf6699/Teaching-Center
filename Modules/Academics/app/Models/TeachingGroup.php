@@ -7,6 +7,7 @@ use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 use Illuminate\Database\Eloquent\Relations\HasMany;
+use Illuminate\Database\Eloquent\Relations\HasOne;
 use Modules\Exams\Models\Exam;
 use Modules\Academics\Database\Factories\TeachingGroupFactory;
 use Modules\People\Models\Student;
@@ -48,6 +49,14 @@ class TeachingGroup extends Model
     public function exams(): HasMany
     {
         return $this->hasMany(Exam::class, 'teaching_group_id');
+    }
+
+    /**
+     * @return HasOne<Timetable, $this>
+     */
+    public function timetable(): HasOne
+    {
+        return $this->hasOne(Timetable::class, 'teaching_group_id');
     }
 
     public function getActivitylogOptions(): LogOptions
