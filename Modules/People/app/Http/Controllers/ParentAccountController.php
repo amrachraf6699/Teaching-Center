@@ -4,37 +4,24 @@ namespace Modules\People\Http\Controllers;
 
 use App\Http\Controllers\Controller;
 use App\Models\User;
+use App\Support\TableExport;
+use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Validation\Rule;
 use Inertia\Inertia;
 use Inertia\Response;
+use Symfony\Component\HttpFoundation\Response as SymfonyResponse;
 
 class ParentAccountController extends Controller
 {
     public function index(Request $request): Response
     {
-        $search = trim((string) $request->query('search', ''));
-        $children = (string) $request->query('children', '');
+        $filters = $this->filters($request);
 
         return Inertia::render('Admin/Parents/Index', [
-            'parents' => User::query()
-                ->where('role', 'parent')
-                ->withCount('children')
-                ->when($search !== '', function ($query) use ($search): void {
-                    $query->where(function ($query) use ($search): void {
-                        $query
-                            ->where('name', 'like', "%{$search}%")
-                            ->orWhere('email', 'like', "%{$search}%");
-                    });
-                })
-                ->when($children === 'with', function ($query): void {
-                    $query->has('children');
-                })
-                ->when($children === 'without', function ($query): void {
-                    $query->doesntHave('children');
-                })
+            'parents' => $this->filteredIndexQuery($filters)
                 ->latest()
                 ->paginate(20)
                 ->withQueryString()
@@ -48,13 +35,39 @@ class ParentAccountController extends Controller
                     'delete_url' => route('admin.parents.destroy', $parent),
                     'created_at' => $parent->created_at?->toFormattedDateString(),
                 ]),
-            'filters' => [
-                'search' => $search,
-                'children' => $children,
-            ],
+            'filters' => $filters,
             'indexUrl' => route('admin.parents.index'),
             'createUrl' => route('admin.parents.create'),
+            'exportUrls' => [
+                'csv' => route('admin.parents.export', 'csv'),
+                'pdf' => route('admin.parents.export', 'pdf'),
+            ],
         ]);
+    }
+
+    public function export(Request $request, string $format): SymfonyResponse
+    {
+        abort_unless(in_array($format, ['csv', 'pdf'], true), 404);
+
+        $rows = $this->filteredIndexQuery($this->filters($request))
+            ->latest()
+            ->get()
+            ->map(fn (User $parent): array => [
+                $parent->name,
+                $parent->email,
+                (string) $parent->children_count,
+                $parent->created_at?->toFormattedDateString() ?? '-',
+            ])
+            ->all();
+
+        $headers = ['Name', 'Email', 'Children', 'Created'];
+        $filename = 'parents-export-'.now()->format('Ymd_His').'.'.$format;
+
+        if ($format === 'csv') {
+            return TableExport::csv($filename, $headers, $rows);
+        }
+
+        return TableExport::pdf($filename, 'Parents Export', $headers, $rows);
     }
 
     public function create(): Response
@@ -185,5 +198,33 @@ class ParentAccountController extends Controller
     private function ensureParent(User $parent): void
     {
         abort_unless($parent->isParent(), 404);
+    }
+
+    private function filters(Request $request): array
+    {
+        return [
+            'search' => trim((string) $request->query('search', '')),
+            'children' => (string) $request->query('children', ''),
+        ];
+    }
+
+    private function filteredIndexQuery(array $filters): Builder
+    {
+        return User::query()
+            ->where('role', 'parent')
+            ->withCount('children')
+            ->when($filters['search'] !== '', function ($query) use ($filters): void {
+                $query->where(function ($query) use ($filters): void {
+                    $query
+                        ->where('name', 'like', "%{$filters['search']}%")
+                        ->orWhere('email', 'like', "%{$filters['search']}%");
+                });
+            })
+            ->when($filters['children'] === 'with', function ($query): void {
+                $query->has('children');
+            })
+            ->when($filters['children'] === 'without', function ($query): void {
+                $query->doesntHave('children');
+            });
     }
 }

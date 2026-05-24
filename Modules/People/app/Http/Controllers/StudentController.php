@@ -4,6 +4,8 @@ namespace Modules\People\Http\Controllers;
 
 use App\Http\Controllers\Controller;
 use App\Models\User;
+use App\Support\TableExport;
+use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Validation\Rule;
@@ -11,41 +13,16 @@ use Inertia\Inertia;
 use Inertia\Response;
 use Modules\Academics\Models\TeachingGroup;
 use Modules\People\Models\Student;
+use Symfony\Component\HttpFoundation\Response as SymfonyResponse;
 
 class StudentController extends Controller
 {
     public function index(Request $request): Response
     {
-        $search = trim((string) $request->query('search', ''));
-        $status = (string) $request->query('status', '');
-        $parentId = (string) $request->query('parent_id', '');
-        $groupId = (string) $request->query('group_id', '');
+        $search = $this->filters($request);
 
         return Inertia::render('Admin/Students/Index', [
-            'students' => Student::query()
-                ->with(['parent', 'groups'])
-                ->when($search !== '', function ($query) use ($search): void {
-                    $query->where(function ($query) use ($search): void {
-                        $query
-                            ->where('name', 'like', "%{$search}%")
-                            ->orWhere('code', 'like', "%{$search}%")
-                            ->orWhere('phone', 'like', "%{$search}%")
-                            ->orWhereHas('parent', function ($query) use ($search): void {
-                                $query
-                                    ->where('name', 'like', "%{$search}%")
-                                    ->orWhere('email', 'like', "%{$search}%");
-                            });
-                    });
-                })
-                ->when(in_array($status, ['active', 'inactive'], true), function ($query) use ($status): void {
-                    $query->where('is_active', $status === 'active');
-                })
-                ->when($parentId !== '', function ($query) use ($parentId): void {
-                    $query->where('parent_id', $parentId);
-                })
-                ->when($groupId !== '', function ($query) use ($groupId): void {
-                    $query->whereHas('groups', fn ($query) => $query->whereKey($groupId));
-                })
+            'students' => $this->filteredIndexQuery($search)
                 ->latest()
                 ->paginate(20)
                 ->withQueryString()
@@ -70,12 +47,7 @@ class StudentController extends Controller
                     'delete_url' => route('admin.students.destroy', $student),
                     'created_at' => $student->created_at?->toFormattedDateString(),
                 ]),
-            'filters' => [
-                'search' => $search,
-                'status' => $status,
-                'parent_id' => $parentId,
-                'group_id' => $groupId,
-            ],
+            'filters' => $search,
             'parentOptions' => $this->parentOptions()
                 ->map(fn (User $parent): array => [
                     'value' => (string) $parent->id,
@@ -92,7 +64,39 @@ class StudentController extends Controller
                 ])->values()->all(),
             'indexUrl' => route('admin.students.index'),
             'createUrl' => route('admin.students.create'),
+            'exportUrls' => [
+                'csv' => route('admin.students.export', 'csv'),
+                'pdf' => route('admin.students.export', 'pdf'),
+            ],
         ]);
+    }
+
+    public function export(Request $request, string $format): SymfonyResponse
+    {
+        abort_unless(in_array($format, ['csv', 'pdf'], true), 404);
+
+        $rows = $this->filteredIndexQuery($this->filters($request))
+            ->latest()
+            ->get()
+            ->map(fn (Student $student): array => [
+                $student->name,
+                $student->code,
+                $student->parent?->name ?? '-',
+                $student->groups->pluck('name')->join(', '),
+                $student->phone ?? '-',
+                $student->is_active ? 'Active' : 'Inactive',
+                $student->created_at?->toFormattedDateString() ?? '-',
+            ])
+            ->all();
+
+        $headers = ['Student', 'Code', 'Parent', 'Groups', 'Phone', 'Status', 'Created'];
+        $filename = 'students-export-'.now()->format('Ymd_His').'.'.$format;
+
+        if ($format === 'csv') {
+            return TableExport::csv($filename, $headers, $rows);
+        }
+
+        return TableExport::pdf($filename, 'Students Export', $headers, $rows);
     }
 
     public function create(): Response
@@ -248,6 +252,44 @@ class StudentController extends Controller
         ]);
 
         return back()->with('status', 'Student status updated.');
+    }
+
+    private function filters(Request $request): array
+    {
+        return [
+            'search' => trim((string) $request->query('search', '')),
+            'status' => (string) $request->query('status', ''),
+            'parent_id' => (string) $request->query('parent_id', ''),
+            'group_id' => (string) $request->query('group_id', ''),
+        ];
+    }
+
+    private function filteredIndexQuery(array $filters): Builder
+    {
+        return Student::query()
+            ->with(['parent', 'groups'])
+            ->when($filters['search'] !== '', function ($query) use ($filters): void {
+                $query->where(function ($query) use ($filters): void {
+                    $query
+                        ->where('name', 'like', "%{$filters['search']}%")
+                        ->orWhere('code', 'like', "%{$filters['search']}%")
+                        ->orWhere('phone', 'like', "%{$filters['search']}%")
+                        ->orWhereHas('parent', function ($query) use ($filters): void {
+                            $query
+                                ->where('name', 'like', "%{$filters['search']}%")
+                                ->orWhere('email', 'like', "%{$filters['search']}%");
+                        });
+                });
+            })
+            ->when(in_array($filters['status'], ['active', 'inactive'], true), function ($query) use ($filters): void {
+                $query->where('is_active', $filters['status'] === 'active');
+            })
+            ->when($filters['parent_id'] !== '', function ($query) use ($filters): void {
+                $query->where('parent_id', $filters['parent_id']);
+            })
+            ->when($filters['group_id'] !== '', function ($query) use ($filters): void {
+                $query->whereHas('groups', fn ($query) => $query->whereKey($filters['group_id']));
+            });
     }
 
     private function parentOptions()

@@ -3,38 +3,24 @@
 namespace Modules\Academics\Http\Controllers;
 
 use App\Http\Controllers\Controller;
+use App\Support\TableExport;
+use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Inertia\Inertia;
 use Inertia\Response;
 use Modules\Academics\Models\GroupSession;
 use Modules\Academics\Models\TeachingGroup;
+use Symfony\Component\HttpFoundation\Response as SymfonyResponse;
 
 class GroupSessionController extends Controller
 {
     public function index(Request $request): Response
     {
-        $search = trim((string) $request->query('search', ''));
-        $groupId = (string) $request->query('group', '');
+        $filters = $this->filters($request);
 
         return Inertia::render('Admin/Sessions/Index', [
-            'sessions' => GroupSession::query()
-                ->with('group')
-                ->when($search !== '', function ($query) use ($search): void {
-                    $query->where(function ($query) use ($search): void {
-                        $query
-                            ->where('title', 'like', "%{$search}%")
-                            ->orWhere('notes', 'like', "%{$search}%")
-                            ->orWhereHas('group', function ($query) use ($search): void {
-                                $query
-                                    ->where('name', 'like', "%{$search}%")
-                                    ->orWhere('subject', 'like', "%{$search}%");
-                            });
-                    });
-                })
-                ->when($groupId !== '', function ($query) use ($groupId): void {
-                    $query->where('teaching_group_id', $groupId);
-                })
+            'sessions' => $this->filteredIndexQuery($filters)
                 ->latest('starts_at')
                 ->paginate(20)
                 ->withQueryString()
@@ -52,10 +38,7 @@ class GroupSessionController extends Controller
                     'edit_url' => route('admin.sessions.edit', $session),
                     'delete_url' => route('admin.sessions.destroy', $session),
                 ]),
-            'filters' => [
-                'search' => $search,
-                'group' => $groupId,
-            ],
+            'filters' => $filters,
             'groupOptions' => TeachingGroup::query()
                 ->orderBy('name')
                 ->get(['id', 'name'])
@@ -65,7 +48,36 @@ class GroupSessionController extends Controller
                 ]),
             'indexUrl' => route('admin.sessions.index'),
             'createUrl' => route('admin.sessions.create'),
+            'exportUrls' => [
+                'csv' => route('admin.sessions.export', 'csv'),
+                'pdf' => route('admin.sessions.export', 'pdf'),
+            ],
         ]);
+    }
+
+    public function export(Request $request, string $format): SymfonyResponse
+    {
+        abort_unless(in_array($format, ['csv', 'pdf'], true), 404);
+
+        $rows = $this->filteredIndexQuery($this->filters($request))
+            ->latest('starts_at')
+            ->get()
+            ->map(fn (GroupSession $session): array => [
+                $session->title,
+                $session->group?->name ?? '-',
+                $session->starts_at?->toDayDateTimeString() ?? '-',
+                $session->ends_at?->toDayDateTimeString() ?? '-',
+            ])
+            ->all();
+
+        $headers = ['Session', 'Group', 'Starts', 'Ends'];
+        $filename = 'sessions-export-'.now()->format('Ymd_His').'.'.$format;
+
+        if ($format === 'csv') {
+            return TableExport::csv($filename, $headers, $rows);
+        }
+
+        return TableExport::pdf($filename, 'Sessions Export', $headers, $rows);
     }
 
     public function create(): Response
@@ -166,5 +178,34 @@ class GroupSessionController extends Controller
         $session->delete();
 
         return redirect()->route('admin.sessions.index')->with('status', 'Session deleted.');
+    }
+
+    private function filters(Request $request): array
+    {
+        return [
+            'search' => trim((string) $request->query('search', '')),
+            'group' => (string) $request->query('group', ''),
+        ];
+    }
+
+    private function filteredIndexQuery(array $filters): Builder
+    {
+        return GroupSession::query()
+            ->with('group')
+            ->when($filters['search'] !== '', function ($query) use ($filters): void {
+                $query->where(function ($query) use ($filters): void {
+                    $query
+                        ->where('title', 'like', "%{$filters['search']}%")
+                        ->orWhere('notes', 'like', "%{$filters['search']}%")
+                        ->orWhereHas('group', function ($query) use ($filters): void {
+                            $query
+                                ->where('name', 'like', "%{$filters['search']}%")
+                                ->orWhere('subject', 'like', "%{$filters['search']}%");
+                        });
+                });
+            })
+            ->when($filters['group'] !== '', function ($query) use ($filters): void {
+                $query->where('teaching_group_id', $filters['group']);
+            });
     }
 }

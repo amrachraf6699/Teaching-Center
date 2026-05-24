@@ -3,37 +3,24 @@
 namespace Modules\Exams\Http\Controllers;
 
 use App\Http\Controllers\Controller;
+use App\Support\TableExport;
+use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Inertia\Inertia;
 use Inertia\Response;
 use Modules\Academics\Models\TeachingGroup;
 use Modules\Exams\Models\Exam;
+use Symfony\Component\HttpFoundation\Response as SymfonyResponse;
 
 class ExamController extends Controller
 {
     public function index(Request $request): Response
     {
-        $search = trim((string) $request->query('search', ''));
-        $groupId = (string) $request->query('group', '');
+        $filters = $this->filters($request);
 
         return Inertia::render('Admin/Exams/Index', [
-            'exams' => Exam::query()
-                ->with('group')
-                ->when($search !== '', function ($query) use ($search): void {
-                    $query->where(function ($query) use ($search): void {
-                        $query
-                            ->where('title', 'like', "%{$search}%")
-                            ->orWhereHas('group', function ($query) use ($search): void {
-                                $query
-                                    ->where('name', 'like', "%{$search}%")
-                                    ->orWhere('subject', 'like', "%{$search}%");
-                            });
-                    });
-                })
-                ->when($groupId !== '', function ($query) use ($groupId): void {
-                    $query->where('teaching_group_id', $groupId);
-                })
+            'exams' => $this->filteredIndexQuery($filters)
                 ->latest('exam_date')
                 ->paginate(20)
                 ->withQueryString()
@@ -51,10 +38,7 @@ class ExamController extends Controller
                     'edit_url' => route('admin.exams.edit', $exam),
                     'delete_url' => route('admin.exams.destroy', $exam),
                 ]),
-            'filters' => [
-                'search' => $search,
-                'group' => $groupId,
-            ],
+            'filters' => $filters,
             'groupOptions' => TeachingGroup::query()
                 ->orderBy('name')
                 ->get(['id', 'name'])
@@ -64,7 +48,36 @@ class ExamController extends Controller
                 ]),
             'indexUrl' => route('admin.exams.index'),
             'createUrl' => route('admin.exams.create'),
+            'exportUrls' => [
+                'csv' => route('admin.exams.export', 'csv'),
+                'pdf' => route('admin.exams.export', 'pdf'),
+            ],
         ]);
+    }
+
+    public function export(Request $request, string $format): SymfonyResponse
+    {
+        abort_unless(in_array($format, ['csv', 'pdf'], true), 404);
+
+        $rows = $this->filteredIndexQuery($this->filters($request))
+            ->latest('exam_date')
+            ->get()
+            ->map(fn (Exam $exam): array => [
+                $exam->title,
+                $exam->group?->name ?? '-',
+                $exam->exam_date?->toFormattedDateString() ?? '-',
+                (string) $exam->max_score,
+            ])
+            ->all();
+
+        $headers = ['Exam', 'Group', 'Date', 'Max Score'];
+        $filename = 'exams-export-'.now()->format('Ymd_His').'.'.$format;
+
+        if ($format === 'csv') {
+            return TableExport::csv($filename, $headers, $rows);
+        }
+
+        return TableExport::pdf($filename, 'Exams Export', $headers, $rows);
     }
 
     public function create(): Response
@@ -176,5 +189,33 @@ class ExamController extends Controller
         $exam->delete();
 
         return redirect()->route('admin.exams.index')->with('status', 'Exam deleted.');
+    }
+
+    private function filters(Request $request): array
+    {
+        return [
+            'search' => trim((string) $request->query('search', '')),
+            'group' => (string) $request->query('group', ''),
+        ];
+    }
+
+    private function filteredIndexQuery(array $filters): Builder
+    {
+        return Exam::query()
+            ->with('group')
+            ->when($filters['search'] !== '', function ($query) use ($filters): void {
+                $query->where(function ($query) use ($filters): void {
+                    $query
+                        ->where('title', 'like', "%{$filters['search']}%")
+                        ->orWhereHas('group', function ($query) use ($filters): void {
+                            $query
+                                ->where('name', 'like', "%{$filters['search']}%")
+                                ->orWhere('subject', 'like', "%{$filters['search']}%");
+                        });
+                });
+            })
+            ->when($filters['group'] !== '', function ($query) use ($filters): void {
+                $query->where('teaching_group_id', $filters['group']);
+            });
     }
 }

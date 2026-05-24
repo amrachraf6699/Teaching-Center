@@ -1,6 +1,6 @@
 <script setup>
 import { Head, router } from '@inertiajs/vue3';
-import { Filter, RotateCcw, Search } from 'lucide-vue-next';
+import { Download, Filter, RotateCcw, Search } from 'lucide-vue-next';
 import { computed, onBeforeUnmount, ref, watch } from 'vue';
 import Button from '../../../Components/Button.vue';
 import DataTable from '../../../Components/DataTable.vue';
@@ -24,6 +24,10 @@ const props = defineProps({
     groupOptions: {
         type: Array,
         default: () => [],
+    },
+    exportUrls: {
+        type: Object,
+        default: () => ({}),
     },
     filters: {
         type: Object,
@@ -77,6 +81,23 @@ function scheduleApply(delay = 0) {
         submitSearch();
         applyTimer = null;
     }, delay);
+}
+
+function exportUrl(format) {
+    const params = new URLSearchParams();
+
+    if (search.value) params.set('search', search.value);
+    if (status.value) params.set('status', status.value);
+    if (parentId.value) params.set('parent_id', parentId.value);
+    if (groupId.value) params.set('group_id', groupId.value);
+
+    const query = params.toString();
+
+    return query ? `${props.exportUrls[format]}?${query}` : props.exportUrls[format];
+}
+
+function downloadExport(format) {
+    window.location.href = exportUrl(format);
 }
 
 function resetSearch() {
@@ -176,6 +197,14 @@ onBeforeUnmount(() => {
                     </div>
 
                     <div class="flex flex-wrap gap-2">
+                        <Button type="button" variant="secondary" @click="downloadExport('csv')">
+                            <Download class="h-4 w-4" />
+                            CSV
+                        </Button>
+                        <Button type="button" variant="secondary" @click="downloadExport('pdf')">
+                            <Download class="h-4 w-4" />
+                            PDF
+                        </Button>
                         <Button v-if="hasFilters" type="button" variant="secondary" @click="resetSearch">
                             <RotateCcw class="h-4 w-4" />
                             Reset

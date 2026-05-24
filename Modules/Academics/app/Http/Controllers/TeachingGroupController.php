@@ -3,34 +3,24 @@
 namespace Modules\Academics\Http\Controllers;
 
 use App\Http\Controllers\Controller;
+use App\Support\TableExport;
+use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Inertia\Inertia;
 use Inertia\Response;
 use Modules\Academics\Models\TeachingGroup;
 use Modules\People\Models\Student;
+use Symfony\Component\HttpFoundation\Response as SymfonyResponse;
 
 class TeachingGroupController extends Controller
 {
     public function index(Request $request): Response
     {
-        $search = trim((string) $request->query('search', ''));
-        $status = (string) $request->query('status', '');
+        $filters = $this->filters($request);
 
         return Inertia::render('Admin/Groups/Index', [
-            'groups' => TeachingGroup::query()
-                ->withCount('students')
-                ->when($search !== '', function ($query) use ($search): void {
-                    $query->where(function ($query) use ($search): void {
-                        $query
-                            ->where('name', 'like', "%{$search}%")
-                            ->orWhere('subject', 'like', "%{$search}%")
-                            ->orWhere('level', 'like', "%{$search}%");
-                    });
-                })
-                ->when(in_array($status, ['active', 'inactive'], true), function ($query) use ($status): void {
-                    $query->where('is_active', $status === 'active');
-                })
+            'groups' => $this->filteredIndexQuery($filters)
                 ->latest()
                 ->paginate(20)
                 ->withQueryString()
@@ -46,13 +36,41 @@ class TeachingGroupController extends Controller
                     'delete_url' => route('admin.groups.destroy', $group),
                     'created_at' => $group->created_at?->toFormattedDateString(),
                 ]),
-            'filters' => [
-                'search' => $search,
-                'status' => $status,
-            ],
+            'filters' => $filters,
             'indexUrl' => route('admin.groups.index'),
             'createUrl' => route('admin.groups.create'),
+            'exportUrls' => [
+                'csv' => route('admin.groups.export', 'csv'),
+                'pdf' => route('admin.groups.export', 'pdf'),
+            ],
         ]);
+    }
+
+    public function export(Request $request, string $format): SymfonyResponse
+    {
+        abort_unless(in_array($format, ['csv', 'pdf'], true), 404);
+
+        $rows = $this->filteredIndexQuery($this->filters($request))
+            ->latest()
+            ->get()
+            ->map(fn (TeachingGroup $group): array => [
+                $group->name,
+                $group->subject ?? '-',
+                $group->level ?? '-',
+                (string) $group->students_count,
+                $group->is_active ? 'Active' : 'Inactive',
+                $group->created_at?->toFormattedDateString() ?? '-',
+            ])
+            ->all();
+
+        $headers = ['Group', 'Subject', 'Level', 'Students', 'Status', 'Created'];
+        $filename = 'groups-export-'.now()->format('Ymd_His').'.'.$format;
+
+        if ($format === 'csv') {
+            return TableExport::csv($filename, $headers, $rows);
+        }
+
+        return TableExport::pdf($filename, 'Groups Export', $headers, $rows);
     }
 
     public function create(): Response
@@ -187,5 +205,30 @@ class TeachingGroupController extends Controller
         $group->delete();
 
         return redirect()->route('admin.groups.index')->with('status', 'Group deleted.');
+    }
+
+    private function filters(Request $request): array
+    {
+        return [
+            'search' => trim((string) $request->query('search', '')),
+            'status' => (string) $request->query('status', ''),
+        ];
+    }
+
+    private function filteredIndexQuery(array $filters): Builder
+    {
+        return TeachingGroup::query()
+            ->withCount('students')
+            ->when($filters['search'] !== '', function ($query) use ($filters): void {
+                $query->where(function ($query) use ($filters): void {
+                    $query
+                        ->where('name', 'like', "%{$filters['search']}%")
+                        ->orWhere('subject', 'like', "%{$filters['search']}%")
+                        ->orWhere('level', 'like', "%{$filters['search']}%");
+                });
+            })
+            ->when(in_array($filters['status'], ['active', 'inactive'], true), function ($query) use ($filters): void {
+                $query->where('is_active', $filters['status'] === 'active');
+            });
     }
 }
