@@ -37,7 +37,7 @@ class TeacherDashboardController extends Controller
                     'group' => $session->group?->name,
                 ]),
             'recentNotifications' => ParentNotification::query()
-                ->with('student')
+                ->with(['student', 'recipient'])
                 ->latest()
                 ->limit(5)
                 ->get()
@@ -46,6 +46,8 @@ class TeacherDashboardController extends Controller
                     'title' => $notification->title,
                     'body' => $notification->body,
                     'student' => $notification->student?->name,
+                    'recipient_role' => $notification->recipient_role,
+                    'recipient_name' => $notification->recipient?->name,
                     'created_at' => $notification->created_at?->diffForHumans(),
                 ]),
             'quickActions' => [
@@ -54,6 +56,7 @@ class TeacherDashboardController extends Controller
                 ['label' => 'Add Group', 'href' => route('admin.groups.create')],
                 ['label' => 'Add Manual Session', 'href' => route('admin.sessions.create')],
                 ['label' => 'Add Exam', 'href' => route('admin.exams.create')],
+                ['label' => 'Send Notification', 'href' => route('admin.notifications.index')],
             ],
         ]);
     }

@@ -1,8 +1,9 @@
 <?php
 
 use Illuminate\Support\Facades\Route;
-use Modules\Notifications\Http\Controllers\ParentNotificationController;
+use Modules\Notifications\Http\Controllers\NotificationsController;
 
 Route::middleware(['auth', 'role:teacher'])->prefix('admin')->name('admin.')->group(function (): void {
-    Route::post('notifications', [ParentNotificationController::class, 'store'])->name('notifications.store');
+    Route::get('notifications', [NotificationsController::class, 'index'])->name('notifications.index');
+    Route::post('notifications', [NotificationsController::class, 'store'])->name('notifications.store');
 });

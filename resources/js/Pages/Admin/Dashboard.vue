@@ -53,11 +53,20 @@ defineProps({
         </section>
 
         <section class="mt-6 teachify-card rounded-[1.6rem] p-5">
-            <h2 class="text-lg font-black">Recent parent updates</h2>
+            <div class="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+                <div>
+                    <h2 class="text-lg font-black">Recent notifications</h2>
+                    <p class="text-sm font-medium text-teachify-muted">Manual messages plus attendance and exam updates.</p>
+                </div>
+                <Button variant="secondary" href="/admin/notifications">Manage notifications</Button>
+            </div>
             <div v-if="recentNotifications.length" class="mt-4 grid gap-3">
                 <article v-for="notification in recentNotifications" :key="notification.id" class="rounded-2xl border border-teachify-line bg-white p-4">
                     <div class="flex items-start justify-between gap-4">
                         <div>
+                            <div class="text-xs font-black uppercase tracking-[0.14em] text-teachify-blue">
+                                {{ notification.recipient_role }} · {{ notification.student || 'No student' }}
+                            </div>
                             <h3 class="font-black">{{ notification.title }}</h3>
                             <p class="mt-1 text-sm font-medium text-teachify-muted">{{ notification.body }}</p>
                         </div>
@@ -65,7 +74,7 @@ defineProps({
                     </div>
                 </article>
             </div>
-            <EmptyState v-else title="No updates yet" message="Attendance and exam results will create parent notifications here." />
+            <EmptyState v-else title="No notifications yet" message="Attendance, exam results, and manual messages will appear here." />
         </section>
     </AppShell>
 </template>

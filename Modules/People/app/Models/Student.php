@@ -124,6 +124,24 @@ class Student extends Model
         return $this->hasMany(ParentNotification::class);
     }
 
+    /**
+     * @return HasMany<ParentNotification, $this>
+     */
+    public function studentNotifications(): HasMany
+    {
+        return $this->hasMany(ParentNotification::class)
+            ->where('recipient_role', 'student');
+    }
+
+    /**
+     * @return HasMany<ParentNotification, $this>
+     */
+    public function parentNotifications(): HasMany
+    {
+        return $this->hasMany(ParentNotification::class)
+            ->where('recipient_role', 'parent');
+    }
+
     public function getActivitylogOptions(): LogOptions
     {
         return LogOptions::defaults()

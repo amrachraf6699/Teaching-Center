@@ -169,6 +169,8 @@ it('supports full admin crud routes with relationship-rich show pages', function
     ParentNotification::create([
         'parent_id' => $parent->id,
         'student_id' => $student->id,
+        'recipient_user_id' => $parent->id,
+        'recipient_role' => 'parent',
         'type' => 'general',
         'title' => 'Update',
         'body' => 'Relationship data.',

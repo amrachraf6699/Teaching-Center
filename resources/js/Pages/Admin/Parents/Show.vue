@@ -46,7 +46,7 @@ defineProps({ parent: Object });
             <h2 class="text-lg font-black">Notifications</h2>
             <div v-if="parent.notifications.length" class="mt-4 grid gap-3">
                 <article v-for="notification in parent.notifications" :key="notification.id" class="rounded-2xl border border-teachify-line bg-white p-4">
-                    <div class="text-xs font-black uppercase text-teachify-blue">{{ notification.type }} · {{ notification.student || 'No student' }}</div>
+                    <div class="text-xs font-black uppercase text-teachify-blue">{{ notification.recipient_role }} · {{ notification.type }} · {{ notification.student || 'No student' }}</div>
                     <h3 class="mt-1 font-black">{{ notification.title }}</h3>
                     <p class="mt-1 text-sm font-medium text-teachify-muted">{{ notification.body }}</p>
                     <div class="mt-2 text-xs font-bold text-teachify-muted">{{ notification.created_at }}</div>

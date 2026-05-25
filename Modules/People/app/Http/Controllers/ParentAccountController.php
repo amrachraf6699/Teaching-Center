@@ -139,6 +139,7 @@ class ParentAccountController extends Controller
                     ]),
                     'notifications' => $student->notifications->map(fn ($notification): array => [
                         'id' => $notification->id,
+                        'recipient_role' => $notification->recipient_role,
                         'type' => $notification->type,
                         'title' => $notification->title,
                         'created_at' => $notification->created_at?->toDayDateTimeString(),
@@ -146,6 +147,7 @@ class ParentAccountController extends Controller
                 ]),
                 'notifications' => $parent->parentNotifications->map(fn ($notification): array => [
                     'id' => $notification->id,
+                    'recipient_role' => $notification->recipient_role,
                     'type' => $notification->type,
                     'title' => $notification->title,
                     'body' => $notification->body,

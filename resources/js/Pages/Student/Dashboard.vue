@@ -58,7 +58,7 @@ const page = usePage();
         <section class="mt-6">
             <div class="mb-4 flex items-center justify-between gap-3">
                 <div>
-                    <h2 class="text-xl font-black text-teachify-ink">This week’s sessions</h2>
+                    <h2 class="text-xl font-black text-teachify-ink">This week's sessions</h2>
                     <p class="text-sm font-medium text-teachify-muted">Saturday to Friday, grouped by day.</p>
                 </div>
             </div>
@@ -100,6 +100,38 @@ const page = usePage();
 
                     <EmptyState v-else title="No sessions" message="No lessons scheduled for this day." />
                 </article>
+            </div>
+        </section>
+
+        <section class="mt-6 grid gap-5 xl:grid-cols-[1.15fr_0.85fr]">
+            <div class="teachify-card rounded-[1.6rem] p-5">
+                <h2 class="text-lg font-black text-teachify-ink">Recent attendance</h2>
+                <div v-if="student.attendance.length" class="mt-4 space-y-3">
+                    <article v-for="item in student.attendance" :key="item.id" class="rounded-2xl border border-teachify-line bg-white p-4">
+                        <div class="flex items-start justify-between gap-3">
+                            <div>
+                                <div class="font-black capitalize">{{ item.status }}</div>
+                                <div class="mt-1 text-sm font-semibold text-teachify-muted">{{ item.session || '-' }} · {{ item.group || '-' }}</div>
+                            </div>
+                            <div class="text-right text-xs font-bold text-teachify-muted">{{ item.starts_at || '-' }}</div>
+                        </div>
+                        <p v-if="item.notes" class="mt-3 text-sm font-medium text-teachify-muted">{{ item.notes }}</p>
+                    </article>
+                </div>
+                <EmptyState v-else title="No attendance yet" message="Marked attendance will appear here." />
+            </div>
+
+            <div class="teachify-card rounded-[1.6rem] p-5">
+                <h2 class="text-lg font-black text-teachify-ink">Notifications</h2>
+                <div v-if="student.notifications.length" class="mt-4 space-y-3">
+                    <article v-for="notification in student.notifications" :key="notification.id" class="rounded-2xl border border-teachify-line bg-white p-4">
+                        <div class="text-xs font-black uppercase tracking-[0.14em] text-teachify-blue">{{ notification.type }}</div>
+                        <h3 class="mt-2 font-black">{{ notification.title }}</h3>
+                        <p class="mt-1 text-sm font-medium text-teachify-muted">{{ notification.body }}</p>
+                        <div class="mt-3 text-xs font-bold text-teachify-muted">{{ notification.created_at }}</div>
+                    </article>
+                </div>
+                <EmptyState v-else title="No notifications" message="Messages sent to your student account will appear here." />
             </div>
         </section>
     </AppShell>

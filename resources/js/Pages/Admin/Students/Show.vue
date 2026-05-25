@@ -12,6 +12,7 @@ defineProps({ student: Object });
     <AppShell :title="student.name">
         <div class="mb-4 flex flex-wrap gap-3">
             <Button :href="student.edit_url">Edit Student</Button>
+            <Button variant="secondary" :href="`/admin/notifications?student_id=${student.id}`">Send Notification</Button>
             <Button variant="secondary" :href="student.index_url">Back to Students</Button>
         </div>
 
@@ -83,7 +84,7 @@ defineProps({ student: Object });
                     <div v-if="student.notifications.length" class="mt-3 space-y-2">
                         <div v-for="notification in student.notifications" :key="notification.id" class="rounded-xl border border-teachify-line bg-white p-3 text-sm">
                             <div class="font-black">{{ notification.title }}</div>
-                            <div class="font-semibold text-teachify-muted">{{ notification.type }} - {{ notification.created_at }}</div>
+                            <div class="font-semibold text-teachify-muted">{{ notification.recipient_role }} · {{ notification.type }} - {{ notification.created_at }}</div>
                         </div>
                     </div>
                     <p v-else class="mt-3 text-sm font-medium text-teachify-muted">No notifications.</p>

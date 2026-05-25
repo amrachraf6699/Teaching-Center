@@ -65,6 +65,7 @@ class ParentPortalController extends Controller
 
         $notifications = ParentNotification::query()
             ->where('parent_id', $request->user()->id)
+            ->where('recipient_role', 'parent')
             ->latest()
             ->limit(10)
             ->get()

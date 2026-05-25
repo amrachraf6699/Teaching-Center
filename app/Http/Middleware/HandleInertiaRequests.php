@@ -52,6 +52,7 @@ class HandleInertiaRequests extends Middleware
                 'adminTimetables' => route('admin.timetables.index'),
                 'adminSessions' => route('admin.sessions.index'),
                 'adminExams' => route('admin.exams.index'),
+                'adminNotifications' => route('admin.notifications.index'),
                 'adminSettings' => route('admin.settings.edit'),
             ],
         ];

@@ -16,6 +16,7 @@ class StudentDashboardController extends Controller
         $request->user()->load([
             'studentProfile.groups',
             'studentProfile.attendanceRecords.session.group',
+            'studentNotifications',
         ]);
 
         $student = $request->user()->studentProfile;
@@ -88,6 +89,16 @@ class StudentDashboardController extends Controller
                         'group' => $attendance->session?->group?->name,
                         'starts_at' => $attendance->session?->starts_at?->toDayDateTimeString(),
                     ])->values()->all() ?? [],
+                'notifications' => $request->user()->studentNotifications
+                    ->sortByDesc('created_at')
+                    ->take(8)
+                    ->map(fn ($notification): array => [
+                        'id' => $notification->id,
+                        'type' => $notification->type,
+                        'title' => $notification->title,
+                        'body' => $notification->body,
+                        'created_at' => $notification->created_at?->toDayDateTimeString(),
+                    ])->values()->all(),
             ],
         ]);
     }

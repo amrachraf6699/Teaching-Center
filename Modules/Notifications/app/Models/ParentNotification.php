@@ -12,7 +12,7 @@ use Modules\People\Models\Student;
 use Spatie\Activitylog\LogOptions;
 use Spatie\Activitylog\Traits\LogsActivity;
 
-#[Fillable(['parent_id', 'student_id', 'type', 'title', 'body', 'read_at', 'emailed_at'])]
+#[Fillable(['parent_id', 'student_id', 'recipient_user_id', 'recipient_role', 'type', 'title', 'body', 'read_at', 'emailed_at'])]
 class ParentNotification extends Model
 {
     use HasFactory, LogsActivity;
@@ -34,11 +34,29 @@ class ParentNotification extends Model
     }
 
     /**
+     * @return BelongsTo<User, $this>
+     */
+    public function recipient(): BelongsTo
+    {
+        return $this->belongsTo(User::class, 'recipient_user_id');
+    }
+
+    /**
      * @return BelongsTo<Student, $this>
      */
     public function student(): BelongsTo
     {
         return $this->belongsTo(Student::class);
+    }
+
+    public function isForParent(): bool
+    {
+        return $this->recipient_role === 'parent';
+    }
+
+    public function isForStudent(): bool
+    {
+        return $this->recipient_role === 'student';
     }
 
     public function getActivitylogOptions(): LogOptions

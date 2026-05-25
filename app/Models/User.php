@@ -70,6 +70,16 @@ class User extends Authenticatable
      */
     public function parentNotifications(): HasMany
     {
-        return $this->hasMany(ParentNotification::class, 'parent_id');
+        return $this->hasMany(ParentNotification::class, 'recipient_user_id')
+            ->where('recipient_role', 'parent');
+    }
+
+    /**
+     * @return HasMany<ParentNotification, $this>
+     */
+    public function studentNotifications(): HasMany
+    {
+        return $this->hasMany(ParentNotification::class, 'recipient_user_id')
+            ->where('recipient_role', 'student');
     }
 }

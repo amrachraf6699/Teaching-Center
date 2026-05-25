@@ -198,6 +198,7 @@ class StudentController extends Controller
                 ]),
                 'notifications' => $student->notifications->map(fn ($notification): array => [
                     'id' => $notification->id,
+                    'recipient_role' => $notification->recipient_role,
                     'type' => $notification->type,
                     'title' => $notification->title,
                     'body' => $notification->body,
