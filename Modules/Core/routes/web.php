@@ -2,6 +2,10 @@
 
 use Illuminate\Support\Facades\Route;
 use Modules\Core\Http\Controllers\AuthController;
+use Modules\Core\Http\Controllers\ParentAttendanceController;
+use Modules\Core\Http\Controllers\ParentChildPdfController;
+use Modules\Core\Http\Controllers\ParentExamsController;
+use Modules\Core\Http\Controllers\ParentNotificationsController;
 use Modules\Core\Http\Controllers\ParentPortalController;
 use Modules\Core\Http\Controllers\SettingsController;
 use Modules\Core\Http\Controllers\StudentAttendanceScannerController;
@@ -26,9 +30,14 @@ Route::middleware(['auth', 'role:teacher'])->prefix('admin')->name('admin.')->gr
     Route::put('settings', [SettingsController::class, 'update'])->name('settings.update');
 });
 
-Route::get('/parent/dashboard', ParentPortalController::class)
-    ->middleware(['auth', 'role:parent'])
-    ->name('parent.dashboard');
+Route::middleware(['auth', 'role:parent'])->prefix('parent')->name('parent.')->group(function (): void {
+    Route::get('dashboard', ParentPortalController::class)->name('dashboard');
+    Route::get('attendance', ParentAttendanceController::class)->name('attendance');
+    Route::get('exams', ParentExamsController::class)->name('exams');
+    Route::get('notifications', [ParentNotificationsController::class, '__invoke'])->name('notifications');
+    Route::post('notifications/mark-read', [ParentNotificationsController::class, 'markRead'])->name('notifications.mark-read');
+    Route::get('child/{student}/pdf', ParentChildPdfController::class)->name('child.pdf');
+});
 
 Route::get('/student/dashboard', StudentDashboardController::class)
     ->middleware(['auth', 'role:student'])

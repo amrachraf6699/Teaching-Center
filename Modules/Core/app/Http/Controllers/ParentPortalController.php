@@ -7,7 +7,6 @@ use Illuminate\Http\Request;
 use Inertia\Inertia;
 use Inertia\Response;
 use Modules\Exams\Models\ExamResult;
-use Modules\Notifications\Models\ParentNotification;
 
 class ParentPortalController extends Controller
 {
@@ -15,71 +14,38 @@ class ParentPortalController extends Controller
     {
         $children = $request->user()
             ->children()
-            ->with([
-                'groups.sessions.attendanceRecords',
-                'groups.sessions.group',
-                'groups',
-            ])
+            ->with(['groups', 'groups.sessions.attendanceRecords'])
             ->get()
-            ->map(fn ($child): array => [
-                'id' => $child->id,
-                'name' => $child->name,
-                'code' => $child->code,
-                'phone' => $child->phone,
-                'groups' => $child->groups->map(fn ($group): array => [
-                    'id' => $group->id,
-                    'name' => $group->name,
-                    'subject' => $group->subject,
-                    'level' => $group->level,
-                    'sessions' => $group->sessions
-                        ->sortByDesc('starts_at')
-                        ->take(5)
-                        ->map(fn ($session): array => [
-                            'id' => $session->id,
-                            'title' => $session->title,
-                            'starts_at' => $session->starts_at?->toDayDateTimeString(),
-                            'attendance' => $session->attendanceRecords
-                                ->where('student_id', $child->id)
-                                ->first()?->status,
-                        ])
-                        ->values(),
-                ]),
-                'exam_results' => ExamResult::query()
-                    ->with('exam.group')
+            ->map(function ($child): array {
+                $latestSession = $child->groups
+                    ->flatMap(fn ($g) => $g->sessions)
+                    ->sortByDesc('starts_at')
+                    ->first();
+
+                $lastAttendance = $latestSession
+                    ? $latestSession->attendanceRecords->where('student_id', $child->id)->first()?->status
+                    : null;
+
+                $latestExam = ExamResult::query()
+                    ->with('exam')
                     ->where('student_id', $child->id)
                     ->latest()
-                    ->limit(5)
-                    ->get()
-                    ->map(fn (ExamResult $result): array => [
-                        'id' => $result->id,
-                        'title' => $result->exam?->title,
-                        'group' => $result->exam?->group?->name,
-                        'schedule' => $result->exam?->start_at && $result->exam?->end_at
-                            ? $result->exam->start_at->format('M j, Y g:i A').' - '.$result->exam->end_at->format('g:i A')
-                            : '-',
-                        'score' => $result->score,
-                        'max_score' => $result->exam?->max_score,
-                        'percentage' => $result->percentage(),
-                    ]),
-            ]);
+                    ->first();
 
-        $notifications = ParentNotification::query()
-            ->where('parent_id', $request->user()->id)
-            ->where('recipient_role', 'parent')
-            ->latest()
-            ->limit(10)
-            ->get()
-            ->map(fn (ParentNotification $notification): array => [
-                'id' => $notification->id,
-                'type' => $notification->type,
-                'title' => $notification->title,
-                'body' => $notification->body,
-                'created_at' => $notification->created_at?->diffForHumans(),
-            ]);
+                return [
+                    'id' => $child->id,
+                    'name' => $child->name,
+                    'code' => $child->code,
+                    'group_count' => $child->groups->count(),
+                    'last_attendance' => $lastAttendance,
+                    'latest_exam_percentage' => $latestExam?->percentage(),
+                    'latest_exam_title' => $latestExam?->exam?->title,
+                    'pdf_url' => route('parent.child.pdf', $child->id),
+                ];
+            });
 
         return Inertia::render('Parent/Dashboard', [
             'children' => $children,
-            'notifications' => $notifications,
         ]);
     }
 }

@@ -14,7 +14,7 @@ import {
     UserRound,
     Users,
 } from 'lucide-vue-next';
-import { computed } from 'vue';
+import { computed, onMounted, onUnmounted, ref } from 'vue';
 import FlashMessage from '../Components/FlashMessage.vue';
 
 const props = defineProps({
@@ -34,6 +34,27 @@ const currentPath = computed(() => {
     return new URL(url, window.location.origin).pathname;
 });
 
+const unreadCount = computed(() => page.props.parentUnreadCount ?? 0);
+const recentNotifications = computed(() => page.props.parentRecentNotifications ?? []);
+
+const bellOpen = ref(false);
+
+function toggleBell() {
+    bellOpen.value = !bellOpen.value;
+    if (bellOpen.value && unreadCount.value > 0) {
+        router.post(routes.value.parentNotificationsMarkRead, {}, { preserveState: true, preserveScroll: true });
+    }
+}
+
+function closeBell(e) {
+    if (!e.target.closest('[data-bell]')) {
+        bellOpen.value = false;
+    }
+}
+
+onMounted(() => document.addEventListener('click', closeBell));
+onUnmounted(() => document.removeEventListener('click', closeBell));
+
 const adminNav = computed(() => [
     { label: 'Dashboard', href: routes.value.adminDashboard, icon: LayoutDashboard },
     { label: 'Students', href: routes.value.adminStudents, icon: GraduationCap },
@@ -48,6 +69,8 @@ const adminNav = computed(() => [
 
 const parentNav = computed(() => [
     { label: 'Portal', href: routes.value.parentDashboard, icon: UserRound },
+    { label: 'Attendance', href: routes.value.parentAttendance, icon: CalendarDays },
+    { label: 'Exams', href: routes.value.parentExams, icon: FileText },
 ]);
 
 const studentNav = computed(() => [
@@ -127,6 +150,58 @@ function logout() {
                             <div class="text-sm font-bold">{{ user?.name }}</div>
                             <div class="text-xs font-medium capitalize text-teachify-muted">{{ user?.role }}</div>
                         </div>
+
+                        <!-- Bell icon (parents only) -->
+                        <div v-if="user?.role === 'parent'" class="relative" data-bell>
+                            <button
+                                type="button"
+                                class="relative grid h-11 w-11 place-items-center rounded-2xl border border-teachify-line bg-white text-teachify-muted shadow-sm transition hover:border-teachify-blue hover:text-teachify-blue"
+                                aria-label="Notifications"
+                                @click.stop="toggleBell"
+                            >
+                                <Bell class="h-5 w-5" />
+                                <span
+                                    v-if="unreadCount > 0"
+                                    class="absolute -right-1 -top-1 flex h-5 w-5 items-center justify-center rounded-full bg-teachify-blue text-[10px] font-black text-white"
+                                >
+                                    {{ unreadCount > 9 ? '9+' : unreadCount }}
+                                </span>
+                            </button>
+
+                            <!-- Dropdown -->
+                            <div
+                                v-if="bellOpen"
+                                class="absolute right-0 top-full z-50 mt-2 w-80 rounded-[1.4rem] border border-teachify-line bg-white shadow-[0_12px_40px_rgba(37,99,235,0.14)]"
+                                data-bell
+                            >
+                                <div class="flex items-center justify-between border-b border-teachify-line px-4 py-3">
+                                    <span class="font-black">Notifications</span>
+                                    <Link
+                                        :href="routes.parentNotifications"
+                                        class="text-xs font-bold text-teachify-blue hover:underline"
+                                        @click="bellOpen = false"
+                                    >
+                                        View all
+                                    </Link>
+                                </div>
+
+                                <div v-if="recentNotifications.length" class="max-h-80 overflow-y-auto p-3 space-y-2">
+                                    <div
+                                        v-for="n in recentNotifications"
+                                        :key="n.id"
+                                        class="rounded-2xl p-3 transition"
+                                        :class="n.read_at ? 'bg-gray-50' : 'bg-teachify-blue-soft'"
+                                    >
+                                        <div class="text-[10px] font-black uppercase text-teachify-blue">{{ n.type }}</div>
+                                        <div class="mt-0.5 text-sm font-black">{{ n.title }}</div>
+                                        <p class="mt-0.5 text-xs font-medium text-teachify-muted line-clamp-2">{{ n.body }}</p>
+                                        <div class="mt-1 text-[10px] font-bold text-teachify-muted">{{ n.created_at }}</div>
+                                    </div>
+                                </div>
+                                <p v-else class="px-4 py-5 text-sm font-medium text-teachify-muted">No notifications yet.</p>
+                            </div>
+                        </div>
+
                         <button
                             type="button"
                             class="grid h-11 w-11 place-items-center rounded-2xl border border-teachify-line bg-white text-teachify-muted shadow-sm transition hover:border-teachify-coral hover:text-teachify-coral"

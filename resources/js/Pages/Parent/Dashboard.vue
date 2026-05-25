@@ -1,80 +1,168 @@
 <script setup>
-import { Head } from '@inertiajs/vue3';
+import { Head, Link, usePage } from '@inertiajs/vue3';
+import { CalendarDays, Download, FileText } from 'lucide-vue-next';
+import { computed } from 'vue';
 import EmptyState from '../../Components/EmptyState.vue';
 import AppShell from '../../Layouts/AppShell.vue';
 
 defineProps({
     children: Array,
-    notifications: Array,
 });
+
+const page = usePage();
+const routes = computed(() => page.props.routes ?? {});
+
+const themes = [
+    { from: '#2563eb', to: '#1d4ed8' },
+    { from: '#0d9488', to: '#0f766e' },
+    { from: '#7c3aed', to: '#6d28d9' },
+    { from: '#e11d48', to: '#be123c' },
+];
+
+function theme(index) {
+    return themes[index % themes.length];
+}
+
+function initials(name) {
+    return name
+        .split(' ')
+        .slice(0, 2)
+        .map((w) => w[0])
+        .join('')
+        .toUpperCase();
+}
+
+function attendanceColor(status) {
+    if (status === 'present') return '#10b981';
+    if (status) return '#f59e0b';
+    return '#94a3b8';
+}
+
+function examColor(pct) {
+    if (pct == null) return '#94a3b8';
+    if (pct >= 80) return '#10b981';
+    if (pct >= 50) return '#f59e0b';
+    return '#f43f5e';
+}
 </script>
 
 <template>
     <Head title="Parent Portal" />
     <AppShell title="Parent Portal">
-        <div class="grid gap-5 xl:grid-cols-[1fr_360px]">
-            <section class="space-y-5">
-                <article v-for="child in children" :key="child.id" class="teachify-card rounded-[1.6rem] p-5">
-                    <div class="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
-                        <div>
-                            <h2 class="text-2xl font-black">{{ child.name }}</h2>
-                            <p class="mt-1 text-sm font-bold text-teachify-muted">{{ child.groups.length }} groups assigned</p>
+        <div class="grid gap-5 sm:grid-cols-2 xl:grid-cols-3">
+            <article
+                v-for="(child, index) in children"
+                :key="child.id"
+                class="overflow-hidden rounded-[1.6rem] border border-white/60 bg-white shadow-[0_8px_32px_rgba(37,99,235,0.10)]"
+            >
+                <!-- Gradient header -->
+                <div
+                    class="relative overflow-hidden px-5 pb-5 pt-5"
+                    :style="`background: linear-gradient(135deg, ${theme(index).from}, ${theme(index).to})`"
+                >
+                    <!-- Decorative blob -->
+                    <div
+                        class="pointer-events-none absolute -right-6 -top-6 h-32 w-32 rounded-full opacity-20"
+                        :style="`background: white`"
+                    />
+
+                    <div class="relative flex items-start justify-between gap-3">
+                        <!-- Avatar -->
+                        <div class="flex h-12 w-12 items-center justify-center rounded-xl bg-white/20 text-base font-black text-white ring-1 ring-white/30">
+                            {{ initials(child.name) }}
                         </div>
-                        <span v-if="child.code" class="rounded-full bg-teachify-blue-soft px-3 py-1 text-sm font-black text-teachify-blue">{{ child.code }}</span>
+                        <div class="flex items-center gap-2">
+                            <!-- Code -->
+                            <span
+                                v-if="child.code"
+                                class="rounded-full bg-white/25 px-3 py-1 text-[11px] font-bold tracking-wide text-white"
+                            >
+                                {{ child.code }}
+                            </span>
+                            <!-- Download PDF -->
+                            <a
+                                :href="child.pdf_url"
+                                target="_blank"
+                                rel="noopener"
+                                title="Download full profile PDF"
+                                class="flex h-7 w-7 items-center justify-center rounded-full bg-white/20 text-white transition hover:bg-white hover:text-teachify-blue"
+                            >
+                                <Download class="h-3.5 w-3.5" />
+                            </a>
+                        </div>
                     </div>
 
-                    <div class="mt-5 grid gap-4 lg:grid-cols-2">
-                        <section class="rounded-[1.3rem] border border-teachify-line bg-white p-4">
-                            <h3 class="font-black">Groups and sessions</h3>
-                            <div v-if="child.groups.length" class="mt-3 space-y-3">
-                                <div v-for="group in child.groups" :key="group.id" class="rounded-2xl bg-teachify-blue-soft/60 p-3">
-                                    <div class="font-black">{{ group.name }}</div>
-                                    <div class="text-sm font-semibold text-teachify-muted">{{ group.subject || 'General' }}</div>
-                                    <div class="mt-3 space-y-2">
-                                        <div v-for="session in group.sessions" :key="session.id" class="flex items-center justify-between gap-3 rounded-xl bg-white px-3 py-2 text-sm">
-                                            <span class="font-bold">{{ session.title }}</span>
-                                            <span class="rounded-full px-2 py-1 text-xs font-black capitalize" :class="session.attendance === 'present' ? 'bg-teachify-mint-soft text-teachify-ink' : 'bg-teachify-yellow-soft text-teachify-ink'">
-                                                {{ session.attendance || 'pending' }}
-                                            </span>
-                                        </div>
-                                    </div>
-                                </div>
-                            </div>
-                            <p v-else class="mt-3 text-sm font-medium text-teachify-muted">No groups assigned yet.</p>
-                        </section>
-
-                        <section class="rounded-[1.3rem] border border-teachify-line bg-white p-4">
-                            <h3 class="font-black">Exam Results</h3>
-                            <div v-if="child.exam_results.length" class="mt-3 space-y-3">
-                                <div v-for="result in child.exam_results" :key="result.id" class="rounded-2xl border border-teachify-line p-3">
-                                    <div class="flex justify-between gap-3">
-                                        <span class="font-black">{{ result.title }}</span>
-                                        <span class="font-black text-teachify-blue">{{ result.percentage }}%</span>
-                                    </div>
-                                    <div class="mt-1 text-sm font-semibold text-teachify-muted">{{ result.score }} / {{ result.max_score }} - {{ result.group }}</div>
-                                    <div class="mt-1 text-xs font-semibold text-teachify-muted">{{ result.schedule }}</div>
-                                </div>
-                            </div>
-                            <p v-else class="mt-3 text-sm font-medium text-teachify-muted">No exam results posted yet.</p>
-                        </section>
+                    <div class="relative mt-3">
+                        <h2 class="text-[1.35rem] font-black leading-tight text-white">{{ child.name }}</h2>
+                        <p class="mt-0.5 text-sm font-medium text-white/65">
+                            {{ child.group_count }} {{ child.group_count === 1 ? 'group' : 'groups' }} enrolled
+                        </p>
                     </div>
-                </article>
-
-                <EmptyState v-if="!children.length" title="No children linked" message="Ask the teacher to link students to this parent account." />
-            </section>
-
-            <aside class="teachify-card h-fit rounded-[1.6rem] p-5">
-                <h2 class="text-lg font-black">Notifications</h2>
-                <div v-if="notifications.length" class="mt-4 space-y-3">
-                    <article v-for="notification in notifications" :key="notification.id" class="rounded-2xl border border-teachify-line bg-white p-4">
-                        <div class="text-xs font-black uppercase text-teachify-blue">{{ notification.type }}</div>
-                        <h3 class="mt-1 font-black">{{ notification.title }}</h3>
-                        <p class="mt-1 text-sm font-medium text-teachify-muted">{{ notification.body }}</p>
-                        <div class="mt-2 text-xs font-bold text-teachify-muted">{{ notification.created_at }}</div>
-                    </article>
                 </div>
-                <p v-else class="mt-4 text-sm font-medium text-teachify-muted">No notifications yet.</p>
-            </aside>
+
+                <!-- Stats row -->
+                <div class="grid grid-cols-3 divide-x divide-teachify-line border-b border-teachify-line">
+                    <!-- Groups -->
+                    <div class="flex flex-col items-center gap-0.5 py-4">
+                        <span class="text-xl font-black text-teachify-ink">{{ child.group_count }}</span>
+                        <span class="text-[11px] font-semibold text-teachify-muted">Groups</span>
+                    </div>
+
+                    <!-- Attendance -->
+                    <div class="flex flex-col items-center gap-0.5 py-4">
+                        <span
+                            class="text-sm font-black capitalize"
+                            :style="`color: ${attendanceColor(child.last_attendance)}`"
+                        >
+                            {{ child.last_attendance || 'N/A' }}
+                        </span>
+                        <span class="text-[11px] font-semibold text-teachify-muted">Attendance</span>
+                    </div>
+
+                    <!-- Last exam -->
+                    <div class="flex flex-col items-center gap-0.5 py-4">
+                        <span
+                            class="text-xl font-black"
+                            :style="`color: ${examColor(child.latest_exam_percentage)}`"
+                        >
+                            {{ child.latest_exam_percentage != null ? `${child.latest_exam_percentage}%` : '—' }}
+                        </span>
+                        <span class="text-[11px] font-semibold text-teachify-muted">Last Exam</span>
+                    </div>
+                </div>
+
+                <!-- Exam title hint -->
+                <div v-if="child.latest_exam_title" class="border-b border-teachify-line px-5 py-2.5">
+                    <p class="truncate text-xs text-teachify-muted">
+                        <span class="font-bold text-teachify-ink">Latest:</span>
+                        {{ child.latest_exam_title }}
+                    </p>
+                </div>
+
+                <!-- Action buttons -->
+                <div class="grid grid-cols-2 divide-x divide-teachify-line">
+                    <Link
+                        :href="routes.parentAttendance"
+                        class="flex items-center justify-center gap-1.5 py-3.5 text-sm font-bold text-teachify-blue transition hover:bg-teachify-blue-soft"
+                    >
+                        <CalendarDays class="h-4 w-4" />
+                        Attendance
+                    </Link>
+                    <Link
+                        :href="routes.parentExams"
+                        class="flex items-center justify-center gap-1.5 py-3.5 text-sm font-bold text-teachify-blue transition hover:bg-teachify-blue-soft"
+                    >
+                        <FileText class="h-4 w-4" />
+                        Exams
+                    </Link>
+                </div>
+            </article>
+
+            <EmptyState
+                v-if="!children.length"
+                title="No children linked"
+                message="Ask the teacher to link students to this parent account."
+            />
         </div>
     </AppShell>
 </template>
