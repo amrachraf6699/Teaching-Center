@@ -3,6 +3,7 @@ import { Link, router, usePage } from '@inertiajs/vue3';
 import {
     BookOpen,
     CalendarDays,
+    Camera,
     Clock3,
     FileText,
     GraduationCap,
@@ -48,7 +49,8 @@ const parentNav = computed(() => [
 ]);
 
 const studentNav = computed(() => [
-    { label: 'Attendance', href: routes.value.studentDashboard, icon: UserRound },
+    { label: 'My Week', href: routes.value.studentDashboard, icon: CalendarDays },
+    { label: 'Scan Attendance', href: routes.value.studentScanAttendance, icon: Camera },
 ]);
 
 const navItems = computed(() => {
@@ -79,15 +81,15 @@ function logout() {
 <template>
     <div class="min-h-screen pb-24 text-teachify-ink lg:pb-0">
         <aside
-            v-if="user?.role === 'teacher'"
+            v-if="user?.role === 'teacher' || user?.role === 'student'"
             class="fixed inset-y-0 left-0 z-30 hidden w-72 border-r border-teachify-line bg-white/92 px-5 py-5 shadow-[12px_0_35px_rgba(37,99,235,0.06)] backdrop-blur lg:block"
         >
-            <Link :href="routes.adminDashboard" class="flex items-center gap-3">
+            <Link :href="user?.role === 'student' ? routes.studentDashboard : routes.adminDashboard" class="flex items-center gap-3">
                 <img v-if="brand.logoUrl" :src="brand.logoUrl" :alt="brand.name" class="h-10 w-auto rounded-xl" />
                 <span v-else class="grid h-11 w-11 place-items-center rounded-2xl bg-teachify-blue text-lg font-bold text-white">T</span>
                 <span>
                     <span class="block text-lg font-bold">{{ brand.name }}</span>
-                    <span class="block text-xs font-medium text-teachify-muted">{{ brand.tagline || 'Teacher workspace' }}</span>
+                    <span class="block text-xs font-medium text-teachify-muted">{{ user?.role === 'student' ? 'Student workspace' : brand.tagline || 'Teacher workspace' }}</span>
                 </span>
             </Link>
 
@@ -105,7 +107,7 @@ function logout() {
             </nav>
         </aside>
 
-        <div :class="user?.role === 'teacher' ? 'lg:pl-72' : ''">
+        <div :class="user?.role === 'teacher' || user?.role === 'student' ? 'lg:pl-72' : ''">
             <header class="sticky top-0 z-20 border-b border-teachify-line bg-white/88 backdrop-blur">
                 <div class="mx-auto flex max-w-7xl items-center justify-between px-4 py-3 sm:px-6 lg:px-8">
                     <Link :href="user?.role === 'parent' ? routes.parentDashboard : user?.role === 'student' ? routes.studentDashboard : routes.adminDashboard" class="flex items-center gap-3 lg:hidden">

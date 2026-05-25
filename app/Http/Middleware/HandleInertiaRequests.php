@@ -45,6 +45,7 @@ class HandleInertiaRequests extends Middleware
                 'adminDashboard' => route('admin.dashboard'),
                 'parentDashboard' => route('parent.dashboard'),
                 'studentDashboard' => route('student.dashboard'),
+                'studentScanAttendance' => route('student.scan-attendance'),
                 'adminParents' => route('admin.parents.index'),
                 'adminStudents' => route('admin.students.index'),
                 'adminGroups' => route('admin.groups.index'),

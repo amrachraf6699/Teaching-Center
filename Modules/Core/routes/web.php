@@ -4,6 +4,7 @@ use Illuminate\Support\Facades\Route;
 use Modules\Core\Http\Controllers\AuthController;
 use Modules\Core\Http\Controllers\ParentPortalController;
 use Modules\Core\Http\Controllers\SettingsController;
+use Modules\Core\Http\Controllers\StudentAttendanceScannerController;
 use Modules\Core\Http\Controllers\StudentDashboardController;
 use Modules\Core\Http\Controllers\TeacherDashboardController;
 
@@ -32,3 +33,7 @@ Route::get('/parent/dashboard', ParentPortalController::class)
 Route::get('/student/dashboard', StudentDashboardController::class)
     ->middleware(['auth', 'role:student'])
     ->name('student.dashboard');
+
+Route::get('/student/scan-attendance', StudentAttendanceScannerController::class)
+    ->middleware(['auth', 'role:student'])
+    ->name('student.scan-attendance');
