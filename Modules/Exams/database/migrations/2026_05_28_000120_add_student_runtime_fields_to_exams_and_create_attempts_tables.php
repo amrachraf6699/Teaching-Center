@@ -16,9 +16,9 @@ return new class extends Migration
             $table->id();
             $table->foreignId('exam_id')->constrained('exams')->cascadeOnDelete();
             $table->foreignId('student_id')->constrained('students')->cascadeOnDelete();
-            $table->timestamp('started_at');
-            $table->timestamp('submitted_at')->nullable();
-            $table->timestamp('expires_at');
+            $table->dateTime('started_at');
+            $table->dateTime('submitted_at')->nullable();
+            $table->dateTime('expires_at');
             $table->string('status', 32)->default('in_progress');
             $table->timestamps();
 
