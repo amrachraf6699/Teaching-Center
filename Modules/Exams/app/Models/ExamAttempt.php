@@ -2,17 +2,17 @@
 
 namespace Modules\Exams\Models;
 
-use Illuminate\Database\Eloquent\Attributes\Fillable;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Modules\People\Models\Student;
 
-#[Fillable(['exam_id', 'student_id', 'started_at', 'submitted_at', 'expires_at', 'status'])]
 class ExamAttempt extends Model
 {
     use HasFactory;
+
+    protected $fillable = ['exam_id', 'student_id', 'started_at', 'submitted_at', 'expires_at', 'status'];
 
     protected function casts(): array
     {

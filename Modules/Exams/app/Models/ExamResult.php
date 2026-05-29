@@ -2,7 +2,6 @@
 
 namespace Modules\Exams\Models;
 
-use Illuminate\Database\Eloquent\Attributes\Fillable;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
@@ -11,10 +10,11 @@ use Modules\People\Models\Student;
 use Spatie\Activitylog\LogOptions;
 use Spatie\Activitylog\Traits\LogsActivity;
 
-#[Fillable(['exam_id', 'student_id', 'score', 'notes'])]
 class ExamResult extends Model
 {
     use HasFactory, LogsActivity;
+
+    protected $fillable = ['exam_id', 'student_id', 'score', 'notes'];
 
     protected function casts(): array
     {

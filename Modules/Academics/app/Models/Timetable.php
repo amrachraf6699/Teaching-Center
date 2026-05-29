@@ -2,7 +2,6 @@
 
 namespace Modules\Academics\Models;
 
-use Illuminate\Database\Eloquent\Attributes\Fillable;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
@@ -10,10 +9,11 @@ use Illuminate\Database\Eloquent\Relations\HasMany;
 use Spatie\Activitylog\LogOptions;
 use Spatie\Activitylog\Traits\LogsActivity;
 
-#[Fillable(['teaching_group_id'])]
 class Timetable extends Model
 {
     use HasFactory, LogsActivity;
+
+    protected $fillable = ['teaching_group_id'];
 
     /**
      * @return BelongsTo<TeachingGroup, $this>

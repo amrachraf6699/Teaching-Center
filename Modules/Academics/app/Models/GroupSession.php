@@ -2,7 +2,6 @@
 
 namespace Modules\Academics\Models;
 
-use Illuminate\Database\Eloquent\Attributes\Fillable;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
@@ -11,12 +10,13 @@ use Modules\Academics\Database\Factories\GroupSessionFactory;
 use Spatie\Activitylog\LogOptions;
 use Spatie\Activitylog\Traits\LogsActivity;
 
-#[Fillable(['teaching_group_id', 'source_type', 'timetable_entry_id', 'title', 'starts_at', 'ends_at', 'session_date', 'attendance_entry_enabled', 'manual_attendance_code', 'notes'])]
 class GroupSession extends Model
 {
     use HasFactory, LogsActivity;
 
     protected $table = 'teaching_sessions';
+
+    protected $fillable = ['teaching_group_id', 'source_type', 'timetable_entry_id', 'title', 'starts_at', 'ends_at', 'session_date', 'attendance_entry_enabled', 'manual_attendance_code', 'notes'];
 
     protected static function booted(): void
     {

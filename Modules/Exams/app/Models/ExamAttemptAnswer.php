@@ -2,15 +2,15 @@
 
 namespace Modules\Exams\Models;
 
-use Illuminate\Database\Eloquent\Attributes\Fillable;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 
-#[Fillable(['exam_attempt_id', 'exam_question_id', 'selected_option_id', 'is_correct', 'earned_points'])]
 class ExamAttemptAnswer extends Model
 {
     use HasFactory;
+
+    protected $fillable = ['exam_attempt_id', 'exam_question_id', 'selected_option_id', 'is_correct', 'earned_points'];
 
     protected function casts(): array
     {

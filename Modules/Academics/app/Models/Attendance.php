@@ -2,7 +2,6 @@
 
 namespace Modules\Academics\Models;
 
-use Illuminate\Database\Eloquent\Attributes\Fillable;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
@@ -11,10 +10,11 @@ use Modules\People\Models\Student;
 use Spatie\Activitylog\LogOptions;
 use Spatie\Activitylog\Traits\LogsActivity;
 
-#[Fillable(['teaching_session_id', 'student_id', 'status', 'notes'])]
 class Attendance extends Model
 {
     use HasFactory, LogsActivity;
+
+    protected $fillable = ['teaching_session_id', 'student_id', 'status', 'notes'];
 
     /**
      * @return BelongsTo<GroupSession, $this>

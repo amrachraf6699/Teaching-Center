@@ -3,7 +3,6 @@
 namespace Modules\People\Models;
 
 use App\Models\User;
-use Illuminate\Database\Eloquent\Attributes\Fillable;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
@@ -17,10 +16,11 @@ use Modules\People\Database\Factories\StudentFactory;
 use Spatie\Activitylog\LogOptions;
 use Spatie\Activitylog\Traits\LogsActivity;
 
-#[Fillable(['parent_id', 'user_id', 'name', 'code', 'phone', 'date_of_birth', 'notes', 'is_active'])]
 class Student extends Model
 {
     use HasFactory, LogsActivity;
+
+    protected $fillable = ['parent_id', 'user_id', 'name', 'code', 'phone', 'date_of_birth', 'notes', 'is_active'];
 
     protected static function booted(): void
     {
