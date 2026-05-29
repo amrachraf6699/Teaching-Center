@@ -3,11 +3,9 @@
 namespace Modules\Academics\Http\Controllers;
 
 use App\Http\Controllers\Controller;
-use App\Support\TableExport;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
-use Illuminate\Http\Response as HttpResponse;
 use Illuminate\Validation\ValidationException;
 use Inertia\Inertia;
 use Inertia\Response;
@@ -16,7 +14,6 @@ use Modules\Academics\Models\GroupSession;
 use Modules\Academics\Models\TeachingGroup;
 use Modules\Academics\Models\Timetable;
 use Modules\Academics\Models\TimetableEntry;
-use Symfony\Component\HttpFoundation\StreamedResponse;
 
 class TimetableController extends Controller
 {
@@ -60,33 +57,6 @@ class TimetableController extends Controller
                 'pdf' => route('admin.timetables.export', 'pdf'),
             ],
         ]);
-    }
-
-    public function export(Request $request, string $format): StreamedResponse|HttpResponse
-    {
-        abort_unless(in_array($format, ['csv', 'pdf'], true), 404);
-
-        $filters = $this->filters($request);
-        $headers = collect($this->orderedWeekdayOptions())->pluck('label')->all();
-
-        $timetables = $this->filteredIndexQuery($filters)
-            ->orderBy(
-                TeachingGroup::query()
-                    ->select('name')
-                    ->whereColumn('teaching_groups.id', 'timetables.teaching_group_id')
-                    ->limit(1)
-            )
-            ->get();
-
-        $rows = $this->exportScheduleGridRows($timetables);
-
-        $filename = 'timetables-export.'.$format;
-
-        if ($format === 'csv') {
-            return TableExport::csv($filename, $headers, $rows);
-        }
-
-        return TableExport::pdf($filename, 'Timetables Export', $headers, $rows, 'landscape');
     }
 
     public function create(): Response
@@ -242,65 +212,9 @@ class TimetableController extends Controller
         return collect($this->weekdayOptions())->firstWhere('value', $day)['label'] ?? ucfirst($day);
     }
 
-    private function orderedWeekdayOptions(): array
-    {
-        return [
-            ['value' => 'saturday', 'label' => 'Saturday'],
-            ['value' => 'sunday', 'label' => 'Sunday'],
-            ['value' => 'monday', 'label' => 'Monday'],
-            ['value' => 'tuesday', 'label' => 'Tuesday'],
-            ['value' => 'wednesday', 'label' => 'Wednesday'],
-            ['value' => 'thursday', 'label' => 'Thursday'],
-            ['value' => 'friday', 'label' => 'Friday'],
-        ];
-    }
-
     private function formatTime(?string $value): string
     {
         return $value ? substr($value, 0, 5) : '-';
-    }
-
-    private function exportScheduleGridRows($timetables): array
-    {
-        $dayEntries = collect($this->orderedWeekdayOptions())
-            ->mapWithKeys(fn (array $day): array => [$day['value'] => collect()]);
-
-        foreach ($timetables as $timetable) {
-            foreach ($timetable->entries as $entry) {
-                if (! $dayEntries->has($entry->day_of_week)) {
-                    continue;
-                }
-
-                $dayEntries[$entry->day_of_week]->push([
-                    'starts_at' => $entry->starts_at,
-                    'label' => $this->exportEntryLabel($timetable, $entry->starts_at, $entry->ends_at),
-                ]);
-            }
-        }
-
-        $dayEntries = $dayEntries->map(fn ($entries) => $entries
-            ->sortBy([
-                ['starts_at', 'asc'],
-                ['label', 'asc'],
-            ])
-            ->pluck('label')
-            ->values());
-
-        $maxRows = max(1, ...$dayEntries->map->count()->values()->all());
-
-        return collect(range(0, $maxRows - 1))
-            ->map(fn (int $index): array => collect($this->orderedWeekdayOptions())
-                ->map(fn (array $day): string => $dayEntries[$day['value']]->get($index, ''))
-                ->all())
-            ->all();
-    }
-
-    private function exportEntryLabel(Timetable $timetable, ?string $startsAt, ?string $endsAt): string
-    {
-        $groupName = $timetable->group?->name ?? 'Unknown group';
-        $timeRange = $this->formatTime($startsAt).' - '.$this->formatTime($endsAt);
-
-        return $groupName.' ('.$timeRange.')';
     }
 
     private function entriesForForm(Timetable $timetable): array

@@ -1,0 +1,11 @@
+{
+    "name": "Imports",
+    "alias": "imports",
+    "description": "CSV and Excel imports for Teachify admin resources.",
+    "keywords": [],
+    "priority": 0,
+    "providers": [
+        "Modules\\Imports\\Providers\\ImportsServiceProvider"
+    ],
+    "files": []
+}

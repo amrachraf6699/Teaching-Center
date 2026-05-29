@@ -3,7 +3,6 @@
 namespace Modules\Academics\Http\Controllers;
 
 use App\Http\Controllers\Controller;
-use App\Support\TableExport;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
@@ -11,7 +10,6 @@ use Inertia\Inertia;
 use Inertia\Response;
 use Modules\Academics\Models\TeachingGroup;
 use Modules\People\Models\Student;
-use Symfony\Component\HttpFoundation\Response as SymfonyResponse;
 
 class TeachingGroupController extends Controller
 {
@@ -44,33 +42,6 @@ class TeachingGroupController extends Controller
                 'pdf' => route('admin.groups.export', 'pdf'),
             ],
         ]);
-    }
-
-    public function export(Request $request, string $format): SymfonyResponse
-    {
-        abort_unless(in_array($format, ['csv', 'pdf'], true), 404);
-
-        $rows = $this->filteredIndexQuery($this->filters($request))
-            ->latest()
-            ->get()
-            ->map(fn (TeachingGroup $group): array => [
-                $group->name,
-                $group->subject ?? '-',
-                $group->level ?? '-',
-                (string) $group->students_count,
-                $group->is_active ? 'Active' : 'Inactive',
-                $group->created_at?->toFormattedDateString() ?? '-',
-            ])
-            ->all();
-
-        $headers = ['Group', 'Subject', 'Level', 'Students', 'Status', 'Created'];
-        $filename = 'groups-export-'.now()->format('Ymd_His').'.'.$format;
-
-        if ($format === 'csv') {
-            return TableExport::csv($filename, $headers, $rows);
-        }
-
-        return TableExport::pdf($filename, 'Groups Export', $headers, $rows);
     }
 
     public function create(): Response

@@ -3,7 +3,6 @@
 namespace Modules\Academics\Http\Controllers;
 
 use App\Http\Controllers\Controller;
-use App\Support\TableExport;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
@@ -12,7 +11,6 @@ use Inertia\Inertia;
 use Inertia\Response;
 use Modules\Academics\Models\GroupSession;
 use Modules\Academics\Models\TeachingGroup;
-use Symfony\Component\HttpFoundation\Response as SymfonyResponse;
 
 class GroupSessionController extends Controller
 {
@@ -56,31 +54,6 @@ class GroupSessionController extends Controller
                 'pdf' => route('admin.sessions.export', 'pdf'),
             ],
         ]);
-    }
-
-    public function export(Request $request, string $format): SymfonyResponse
-    {
-        abort_unless(in_array($format, ['csv', 'pdf'], true), 404);
-
-        $rows = $this->filteredIndexQuery($this->filters($request))
-            ->latest('starts_at')
-            ->get()
-            ->map(fn (GroupSession $session): array => [
-                $session->title,
-                $session->group?->name ?? '-',
-                $session->starts_at?->toDayDateTimeString() ?? '-',
-                $session->ends_at?->toDayDateTimeString() ?? '-',
-            ])
-            ->all();
-
-        $headers = ['Session', 'Group', 'Starts', 'Ends'];
-        $filename = 'sessions-export-'.now()->format('Ymd_His').'.'.$format;
-
-        if ($format === 'csv') {
-            return TableExport::csv($filename, $headers, $rows);
-        }
-
-        return TableExport::pdf($filename, 'Sessions Export', $headers, $rows);
     }
 
     public function create(): Response

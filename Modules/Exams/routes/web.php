@@ -7,7 +7,6 @@ use Modules\Exams\Http\Controllers\StudentExamAttemptController;
 use Modules\Exams\Http\Controllers\StudentExamController;
 
 Route::middleware(['auth', 'role:teacher'])->prefix('admin')->name('admin.')->group(function (): void {
-    Route::get('exams/export/{format}', [ExamController::class, 'export'])->name('exams.export');
     Route::resource('exams', ExamController::class);
     Route::post('exams/{exam}/results', [ExamResultController::class, 'store'])->name('exam-results.store');
 });

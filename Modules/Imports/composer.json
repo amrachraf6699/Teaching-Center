@@ -1,0 +1,23 @@
+{
+    "name": "nwidart/imports",
+    "description": "Teachify imports module.",
+    "authors": [],
+    "extra": {
+        "laravel": {
+            "providers": [],
+            "aliases": {}
+        }
+    },
+    "autoload": {
+        "psr-4": {
+            "Modules\\Imports\\": "app/",
+            "Modules\\Imports\\Database\\Factories\\": "database/factories/",
+            "Modules\\Imports\\Database\\Seeders\\": "database/seeders/"
+        }
+    },
+    "autoload-dev": {
+        "psr-4": {
+            "Modules\\Imports\\Tests\\": "tests/"
+        }
+    }
+}

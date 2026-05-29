@@ -3,7 +3,6 @@
 namespace Modules\Exams\Http\Controllers;
 
 use App\Http\Controllers\Controller;
-use App\Support\TableExport;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
@@ -15,7 +14,6 @@ use Modules\Exams\Actions\UpsertExam;
 use Modules\Exams\Models\Exam;
 use Modules\Exams\Models\ExamAttempt;
 use Modules\Exams\Models\ExamQuestion;
-use Symfony\Component\HttpFoundation\Response as SymfonyResponse;
 
 class ExamController extends Controller
 {
@@ -61,33 +59,6 @@ class ExamController extends Controller
                 'pdf' => route('admin.exams.export', 'pdf'),
             ],
         ]);
-    }
-
-    public function export(Request $request, string $format): SymfonyResponse
-    {
-        abort_unless(in_array($format, ['csv', 'pdf'], true), 404);
-
-        $rows = $this->filteredIndexQuery($this->filters($request))
-            ->latest('start_at')
-            ->get()
-            ->map(fn (Exam $exam): array => [
-                $exam->title,
-                $exam->group?->name ?? '-',
-                $this->scheduleSummary($exam),
-                $this->allowedTimeLabel($exam->max_allowed_time),
-                (string) $exam->questions_count,
-                (string) $exam->max_score,
-            ])
-            ->all();
-
-        $headers = ['Exam', 'Group', 'Schedule', 'Allowed Time', 'Questions', 'Max Score'];
-        $filename = 'exams-export-'.now()->format('Ymd_His').'.'.$format;
-
-        if ($format === 'csv') {
-            return TableExport::csv($filename, $headers, $rows);
-        }
-
-        return TableExport::pdf($filename, 'Exams Export', $headers, $rows);
     }
 
     public function create(): Response

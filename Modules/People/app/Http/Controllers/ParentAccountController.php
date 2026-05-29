@@ -4,7 +4,6 @@ namespace Modules\People\Http\Controllers;
 
 use App\Http\Controllers\Controller;
 use App\Models\User;
-use App\Support\TableExport;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
@@ -14,7 +13,6 @@ use Illuminate\Validation\Rule;
 use Inertia\Inertia;
 use Inertia\Response;
 use Modules\Notifications\Support\PortalNotificationData;
-use Symfony\Component\HttpFoundation\Response as SymfonyResponse;
 
 class ParentAccountController extends Controller
 {
@@ -45,31 +43,6 @@ class ParentAccountController extends Controller
                 'pdf' => route('admin.parents.export', 'pdf'),
             ],
         ]);
-    }
-
-    public function export(Request $request, string $format): SymfonyResponse
-    {
-        abort_unless(in_array($format, ['csv', 'pdf'], true), 404);
-
-        $rows = $this->filteredIndexQuery($this->filters($request))
-            ->latest()
-            ->get()
-            ->map(fn (User $parent): array => [
-                $parent->name,
-                $parent->email,
-                (string) $parent->children_count,
-                $parent->created_at?->toFormattedDateString() ?? '-',
-            ])
-            ->all();
-
-        $headers = ['Name', 'Email', 'Children', 'Created'];
-        $filename = 'parents-export-'.now()->format('Ymd_His').'.'.$format;
-
-        if ($format === 'csv') {
-            return TableExport::csv($filename, $headers, $rows);
-        }
-
-        return TableExport::pdf($filename, 'Parents Export', $headers, $rows);
     }
 
     public function create(): Response

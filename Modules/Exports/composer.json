@@ -1,0 +1,23 @@
+{
+    "name": "nwidart/exports",
+    "description": "Teachify exports module.",
+    "authors": [],
+    "extra": {
+        "laravel": {
+            "providers": [],
+            "aliases": {}
+        }
+    },
+    "autoload": {
+        "psr-4": {
+            "Modules\\Exports\\": "app/",
+            "Modules\\Exports\\Database\\Factories\\": "database/factories/",
+            "Modules\\Exports\\Database\\Seeders\\": "database/seeders/"
+        }
+    },
+    "autoload-dev": {
+        "psr-4": {
+            "Modules\\Exports\\Tests\\": "tests/"
+        }
+    }
+}

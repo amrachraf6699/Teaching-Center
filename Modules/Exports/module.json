@@ -1,0 +1,11 @@
+{
+    "name": "Exports",
+    "alias": "exports",
+    "description": "CSV and PDF exports for Teachify admin resources.",
+    "keywords": [],
+    "priority": 0,
+    "providers": [
+        "Modules\\Exports\\Providers\\ExportsServiceProvider"
+    ],
+    "files": []
+}

@@ -4,7 +4,6 @@ namespace Modules\People\Http\Controllers;
 
 use App\Http\Controllers\Controller;
 use App\Models\User;
-use App\Support\TableExport;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
@@ -15,7 +14,6 @@ use Inertia\Response;
 use Modules\Academics\Models\TeachingGroup;
 use Modules\Notifications\Support\PortalNotificationData;
 use Modules\People\Models\Student;
-use Symfony\Component\HttpFoundation\Response as SymfonyResponse;
 
 class StudentController extends Controller
 {
@@ -71,34 +69,6 @@ class StudentController extends Controller
                 'pdf' => route('admin.students.export', 'pdf'),
             ],
         ]);
-    }
-
-    public function export(Request $request, string $format): SymfonyResponse
-    {
-        abort_unless(in_array($format, ['csv', 'pdf'], true), 404);
-
-        $rows = $this->filteredIndexQuery($this->filters($request))
-            ->latest()
-            ->get()
-            ->map(fn (Student $student): array => [
-                $student->name,
-                $student->code,
-                $student->parent?->name ?? '-',
-                $student->groups->pluck('name')->join(', '),
-                $student->phone ?? '-',
-                $student->is_active ? 'Active' : 'Inactive',
-                $student->created_at?->toFormattedDateString() ?? '-',
-            ])
-            ->all();
-
-        $headers = ['Student', 'Code', 'Parent', 'Groups', 'Phone', 'Status', 'Created'];
-        $filename = 'students-export-'.now()->format('Ymd_His').'.'.$format;
-
-        if ($format === 'csv') {
-            return TableExport::csv($filename, $headers, $rows);
-        }
-
-        return TableExport::pdf($filename, 'Students Export', $headers, $rows);
     }
 
     public function create(): Response

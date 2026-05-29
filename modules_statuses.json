@@ -4,5 +4,6 @@
     "Academics": true,
     "Exams": true,
     "Notifications": true,
-    "ImportsExports": true
+    "Imports": true,
+    "Exports": true
 }

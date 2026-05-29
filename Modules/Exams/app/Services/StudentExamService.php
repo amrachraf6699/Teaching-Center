@@ -163,7 +163,7 @@ class StudentExamService
             'remaining_seconds' => $attempt->isSubmitted()
                 ? 0
                 : max(0, ($attempt->expires_at?->timestamp ?? 0) - now()->timestamp),
-            'questions' => $attempt->exam->questions->map(function (ExamQuestion $question) use ($attempt): array {
+            'questions' => $attempt->exam->questions->map(function (ExamQuestion $question) use ($attempt, $canReviewQuestions): array {
                 $answer = $attempt->answers->firstWhere('exam_question_id', $question->id);
 
                 return [
