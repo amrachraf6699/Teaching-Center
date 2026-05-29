@@ -126,14 +126,16 @@ class Student extends Model
     public static function nextCode(): string
     {
         do {
+            $firstLetter = chr(random_int(65, 90));
+            $secondLetter = chr(random_int(65, 90));
+
             $code = sprintf(
                 'ST-%s%s-%d%d',
-                fake()->randomLetter(),
-                fake()->randomLetter(),
-                fake()->numberBetween(0, 9),
-                fake()->numberBetween(0, 9),
+                $firstLetter,
+                $secondLetter,
+                random_int(0, 9),
+                random_int(0, 9),
             );
-            $code = strtoupper($code);
         } while (static::query()->where('code', $code)->exists());
 
         return $code;

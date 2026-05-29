@@ -19,8 +19,8 @@ class ExamResultFactory extends Factory
         return [
             'exam_id' => Exam::factory(),
             'student_id' => Student::factory(),
-            'score' => fake()->randomFloat(2, 0, 100),
-            'notes' => fake()->optional()->sentence(),
+            'score' => $this->faker->randomFloat(2, 0, 100),
+            'notes' => $this->faker->optional()->sentence(),
         ];
     }
 
@@ -29,7 +29,7 @@ class ExamResultFactory extends Factory
         return $this->state(fn (array $attributes): array => [
             'exam_id' => $exam->id,
             'student_id' => $student->id,
-            'score' => fake()->randomFloat(2, 0, (float) $exam->max_score),
+            'score' => $this->faker->randomFloat(2, 0, (float) $exam->max_score),
         ]);
     }
 }

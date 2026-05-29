@@ -19,8 +19,8 @@ class AttendanceFactory extends Factory
         return [
             'teaching_session_id' => GroupSession::factory(),
             'student_id' => Student::factory(),
-            'status' => fake()->randomElement(['present', 'present', 'present', 'late', 'absent', 'excused']),
-            'notes' => fake()->optional()->sentence(),
+            'status' => $this->faker->randomElement(['present', 'present', 'present', 'late', 'absent', 'excused']),
+            'notes' => $this->faker->optional()->sentence(),
         ];
     }
 

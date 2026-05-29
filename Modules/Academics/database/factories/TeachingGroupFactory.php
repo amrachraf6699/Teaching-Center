@@ -15,10 +15,10 @@ class TeachingGroupFactory extends Factory
     public function definition(): array
     {
         return [
-            'name' => fake()->words(3, true),
-            'subject' => fake()->randomElement(['Mathematics', 'Science', 'English']),
-            'level' => fake()->randomElement(['Grade 8', 'Grade 9', 'Grade 10']),
-            'description' => fake()->sentence(),
+            'name' => $this->faker->words(3, true),
+            'subject' => $this->faker->randomElement(['Mathematics', 'Science', 'English']),
+            'level' => $this->faker->randomElement(['Grade 8', 'Grade 9', 'Grade 10']),
+            'description' => $this->faker->sentence(),
             'is_active' => true,
         ];
     }

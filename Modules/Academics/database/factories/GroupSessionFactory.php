@@ -15,16 +15,16 @@ class GroupSessionFactory extends Factory
 
     public function definition(): array
     {
-        $startsAt = fake()->dateTimeBetween('-1 week', '+1 week');
+        $startsAt = $this->faker->dateTimeBetween('-1 week', '+1 week');
 
         return [
             'teaching_group_id' => TeachingGroup::factory(),
             'source_type' => 'manual',
-            'title' => fake()->sentence(3),
+            'title' => $this->faker->sentence(3),
             'starts_at' => $startsAt,
             'ends_at' => (clone $startsAt)->modify('+90 minutes'),
             'session_date' => $startsAt->format('Y-m-d'),
-            'notes' => fake()->optional()->sentence(),
+            'notes' => $this->faker->optional()->sentence(),
         ];
     }
 

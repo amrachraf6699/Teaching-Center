@@ -88,7 +88,7 @@ class GroupSession extends Model
     public function generateManualAttendanceCode(): string
     {
         do {
-            $code = 'SES-'.strtoupper(fake()->bothify('####'));
+            $code = 'SES-'.random_int(1000, 9999);
         } while (static::query()
             ->where('manual_attendance_code', $code)
             ->whereKeyNot($this->getKey())
