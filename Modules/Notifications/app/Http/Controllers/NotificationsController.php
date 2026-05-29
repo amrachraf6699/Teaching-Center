@@ -5,10 +5,11 @@ namespace Modules\Notifications\Http\Controllers;
 use App\Http\Controllers\Controller;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
+use Illuminate\Notifications\DatabaseNotification;
 use Inertia\Inertia;
 use Inertia\Response;
-use Modules\Notifications\Models\ParentNotification;
-use Modules\Notifications\Services\ParentNotificationService;
+use Modules\Notifications\Services\PortalNotificationService;
+use Modules\Notifications\Support\PortalNotificationData;
 use Modules\People\Models\Student;
 
 class NotificationsController extends Controller
@@ -42,30 +43,35 @@ class NotificationsController extends Controller
                 ['value' => 'parent', 'label' => 'Parent account'],
                 ['value' => 'student', 'label' => 'Student account'],
             ],
-            'notifications' => ParentNotification::query()
-                ->with(['student:id,name,code', 'recipient:id,name', 'parent:id,name'])
-                ->when($filters['student_id'] !== '', fn ($query) => $query->where('student_id', $filters['student_id']))
-                ->when(in_array($filters['recipient'], ['parent', 'student'], true), fn ($query) => $query->where('recipient_role', $filters['recipient']))
+            'notifications' => DatabaseNotification::query()
+                ->with('notifiable')
+                ->where('type', PortalNotificationData::type())
+                ->when($filters['student_id'] !== '', fn ($query) => $query->where('data->student_id', (int) $filters['student_id']))
+                ->when(in_array($filters['recipient'], ['parent', 'student'], true), fn ($query) => $query->where('data->audience', $filters['recipient']))
                 ->latest()
                 ->paginate(20)
                 ->withQueryString()
-                ->through(fn (ParentNotification $notification): array => [
+                ->through(function (DatabaseNotification $notification): array {
+                    $data = PortalNotificationData::from($notification);
+
+                    return [
                     'id' => $notification->id,
-                    'title' => $notification->title,
-                    'body' => $notification->body,
-                    'type' => $notification->type,
-                    'recipient_role' => $notification->recipient_role,
-                    'recipient_name' => $notification->recipient?->name,
-                    'student_name' => $notification->student?->name,
-                    'student_code' => $notification->student?->code,
+                    'title' => $data['title'],
+                    'body' => $data['body'],
+                    'type' => $data['type'],
+                    'recipient_role' => $data['audience'],
+                    'recipient_name' => $notification->notifiable?->name,
+                    'student_name' => $data['student_name'],
+                    'student_code' => $data['student_code'],
                     'created_at' => $notification->created_at?->toDayDateTimeString(),
-                ]),
+                    ];
+                }),
             'indexUrl' => route('admin.notifications.index'),
             'storeUrl' => route('admin.notifications.store'),
         ]);
     }
 
-    public function store(Request $request, ParentNotificationService $notifications): RedirectResponse
+    public function store(Request $request, PortalNotificationService $notifications): RedirectResponse
     {
         $data = $request->validate([
             'student_id' => ['required', 'exists:students,id'],

@@ -13,7 +13,6 @@ use Illuminate\Support\Facades\Hash;
 use Modules\Academics\Models\Attendance;
 use Modules\Academics\Models\TeachingGroup;
 use Modules\Exams\Models\ExamResult;
-use Modules\Notifications\Models\ParentNotification;
 use Modules\People\Database\Factories\StudentFactory;
 use Spatie\Activitylog\LogOptions;
 use Spatie\Activitylog\Traits\LogsActivity;
@@ -114,32 +113,6 @@ class Student extends Model
     public function examResults(): HasMany
     {
         return $this->hasMany(ExamResult::class);
-    }
-
-    /**
-     * @return HasMany<ParentNotification, $this>
-     */
-    public function notifications(): HasMany
-    {
-        return $this->hasMany(ParentNotification::class);
-    }
-
-    /**
-     * @return HasMany<ParentNotification, $this>
-     */
-    public function studentNotifications(): HasMany
-    {
-        return $this->hasMany(ParentNotification::class)
-            ->where('recipient_role', 'student');
-    }
-
-    /**
-     * @return HasMany<ParentNotification, $this>
-     */
-    public function parentNotifications(): HasMany
-    {
-        return $this->hasMany(ParentNotification::class)
-            ->where('recipient_role', 'parent');
     }
 
     public function getActivitylogOptions(): LogOptions

@@ -2,12 +2,13 @@
 
 use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
+use Illuminate\Notifications\DatabaseNotification;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\URL;
 use Modules\Academics\Models\Attendance;
 use Modules\Academics\Models\GroupSession;
 use Modules\Academics\Models\TeachingGroup;
-use Modules\Notifications\Models\ParentNotification;
+use Modules\Notifications\Notifications\PortalNotification;
 use Modules\People\Models\Student;
 
 uses(RefreshDatabase::class);
@@ -36,6 +37,7 @@ it('allows a student to log in with code and mark attendance from a signed qr li
         'title' => 'Chemistry Session',
         'starts_at' => now()->addDay()->setTime(17, 0),
         'ends_at' => now()->addDay()->setTime(18, 30),
+        'attendance_entry_enabled' => true,
     ]);
 
     $scanUrl = URL::signedRoute('student.sessions.scan', ['session' => $session]);
@@ -60,7 +62,7 @@ it('allows a student to log in with code and mark attendance from a signed qr li
         ->assertRedirect();
 
     expect(Attendance::query()->where('teaching_session_id', $session->id)->where('student_id', $student->id)->firstOrFail()->status)->toBe('present')
-        ->and(ParentNotification::count())->toBe(0);
+        ->and(DatabaseNotification::count())->toBe(0);
 
     $this->actingAs($student->user)
         ->post($submitUrl)
@@ -78,5 +80,52 @@ it('allows a student to log in with code and mark attendance from a signed qr li
         ->assertRedirect();
 
     expect(Attendance::query()->where('teaching_session_id', $session->id)->where('student_id', $student->id)->firstOrFail()->status)->toBe('late')
-        ->and(ParentNotification::count())->toBe(1);
+        ->and(DatabaseNotification::query()
+            ->where('type', PortalNotification::class)
+            ->where('notifiable_id', $parent->id)
+            ->where('notifiable_type', User::class)
+            ->where('data->student_id', $student->id)
+            ->count())->toBe(1);
+});
+
+it('blocks disabled self check-in and allows resolving a session by manual code', function () {
+    $parent = User::factory()->parent()->create();
+    $student = Student::create([
+        'parent_id' => $parent->id,
+        'name' => 'Manual Code Student',
+        'code' => 'ST-777',
+    ]);
+
+    $student->user->forceFill([
+        'password' => Hash::make('secret123'),
+    ])->save();
+
+    $group = TeachingGroup::create([
+        'name' => 'Biology Group',
+        'subject' => 'Biology',
+    ]);
+    $group->students()->sync([$student->id]);
+
+    $session = GroupSession::create([
+        'teaching_group_id' => $group->id,
+        'title' => 'Biology Session',
+        'starts_at' => now()->addDay()->setTime(17, 0),
+        'ends_at' => now()->addDay()->setTime(18, 30),
+        'attendance_entry_enabled' => false,
+    ]);
+    $session->ensureManualAttendanceCode();
+
+    $this->actingAs($student->user)
+        ->post(route('student.attendance.lookup-by-code'), [
+            'code' => $session->manual_attendance_code,
+        ])
+        ->assertForbidden();
+
+    $session->update(['attendance_entry_enabled' => true]);
+
+    $this->actingAs($student->user)
+        ->post(route('student.attendance.lookup-by-code'), [
+            'code' => $session->manual_attendance_code,
+        ])
+        ->assertRedirect(URL::signedRoute('student.sessions.scan', ['session' => $session]));
 });

@@ -13,6 +13,7 @@ use Inertia\Response;
 use Modules\Academics\Models\TeachingGroup;
 use Modules\Exams\Actions\UpsertExam;
 use Modules\Exams\Models\Exam;
+use Modules\Exams\Models\ExamAttempt;
 use Modules\Exams\Models\ExamQuestion;
 use Symfony\Component\HttpFoundation\Response as SymfonyResponse;
 
@@ -95,6 +96,7 @@ class ExamController extends Controller
             'groups' => TeachingGroup::query()->orderBy('name')->get(['id', 'name', 'subject']),
             'action' => route('admin.exams.store'),
             'questionTypes' => $this->questionTypes(),
+            'reviewModes' => $this->reviewModes(),
         ]);
     }
 
@@ -109,7 +111,7 @@ class ExamController extends Controller
 
     public function show(Exam $exam): Response
     {
-        $exam->load(['group.students.parent', 'results.student.parent', 'questions.options']);
+        $exam->load(['group.students.parent', 'results.student.parent', 'questions.options', 'attempts.student']);
 
         return Inertia::render('Admin/Exams/Show', [
             'exam' => [
@@ -121,6 +123,8 @@ class ExamController extends Controller
                 'max_allowed_time' => $this->allowedTimeLabel($exam->max_allowed_time),
                 'max_score' => $exam->max_score,
                 'notes' => $exam->notes,
+                'student_review_mode' => $exam->student_review_mode,
+                'student_review_mode_label' => $exam->canStudentReviewQuestions() ? 'Question review' : 'Score only',
                 'edit_url' => route('admin.exams.edit', $exam),
                 'index_url' => route('admin.exams.index'),
                 'result_action' => route('admin.exam-results.store', $exam),
@@ -158,6 +162,12 @@ class ExamController extends Controller
                             'percentage' => $result->percentage(),
                             'notes' => $result->notes,
                         ] : null,
+                        'attempt' => ($attempt = $exam->attempts->where('student_id', $student->id)->first()) ? [
+                            'id' => $attempt->id,
+                            'status' => $attempt->status,
+                            'started_at' => $attempt->started_at?->toDayDateTimeString(),
+                            'submitted_at' => $attempt->submitted_at?->toDayDateTimeString(),
+                        ] : null,
                     ];
                 })->values() ?? [],
                 'results' => $exam->results->map(fn ($result): array => [
@@ -168,6 +178,13 @@ class ExamController extends Controller
                     'percentage' => $result->percentage(),
                     'notes' => $result->notes,
                 ]),
+                'attempts' => $exam->attempts->map(fn (ExamAttempt $attempt): array => [
+                    'id' => $attempt->id,
+                    'student' => $attempt->student?->name,
+                    'status' => $attempt->status,
+                    'started_at' => $attempt->started_at?->toDayDateTimeString(),
+                    'submitted_at' => $attempt->submitted_at?->toDayDateTimeString(),
+                ])->values()->all(),
             ],
         ]);
     }
@@ -186,6 +203,7 @@ class ExamController extends Controller
                 'max_allowed_time' => $exam->max_allowed_time,
                 'max_score' => $exam->max_score,
                 'notes' => $exam->notes,
+                'student_review_mode' => $exam->student_review_mode,
                 'questions' => $exam->questions->map(fn (ExamQuestion $question): array => [
                     'id' => $question->id,
                     'type' => $question->type,
@@ -211,6 +229,7 @@ class ExamController extends Controller
             'action' => route('admin.exams.update', $exam),
             'showUrl' => route('admin.exams.show', $exam),
             'questionTypes' => $this->questionTypes(),
+            'reviewModes' => $this->reviewModes(),
         ]);
     }
 
@@ -268,6 +287,7 @@ class ExamController extends Controller
             'end_at' => ['required', 'date', 'after:start_at'],
             'max_allowed_time' => ['required', 'integer', 'min:1'],
             'notes' => ['nullable', 'string'],
+            'student_review_mode' => ['nullable', 'in:score_only,question_review'],
             'questions' => ['required', 'array', 'min:1'],
             'questions.*.id' => ['nullable', 'integer'],
             'questions.*.type' => ['required', 'in:true_false,mcq'],
@@ -338,6 +358,7 @@ class ExamController extends Controller
             'end_at' => $data['end_at'],
             'max_allowed_time' => $data['max_allowed_time'],
             'notes' => $data['notes'] ?? null,
+            'student_review_mode' => $data['student_review_mode'] ?? 'score_only',
         ], $questions];
     }
 
@@ -364,6 +385,14 @@ class ExamController extends Controller
         return [
             ['value' => 'true_false', 'label' => 'True / False'],
             ['value' => 'mcq', 'label' => 'MCQ'],
+        ];
+    }
+
+    private function reviewModes(): array
+    {
+        return [
+            ['value' => 'score_only', 'label' => 'Score Only'],
+            ['value' => 'question_review', 'label' => 'Question Review'],
         ];
     }
 }

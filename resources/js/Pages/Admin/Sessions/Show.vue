@@ -4,6 +4,7 @@ import { reactive } from 'vue';
 import Button from '../../../Components/Button.vue';
 import EmptyState from '../../../Components/EmptyState.vue';
 import QrCodePanel from '../../../Components/QrCodePanel.vue';
+import ToggleSwitch from '../../../Components/ToggleSwitch.vue';
 import AppShell from '../../../Layouts/AppShell.vue';
 
 const props = defineProps({ session: Object });
@@ -25,6 +26,18 @@ function saveAttendance(studentId) {
         student_id: studentId,
         status: attendanceForms[studentId].status,
         notes: attendanceForms[studentId].notes,
+    }, {
+        preserveScroll: true,
+    });
+}
+
+function regenerateAttendanceCode() {
+    router.post(props.session.regenerate_attendance_code_url, {}, { preserveScroll: true });
+}
+
+function toggleSelfCheckIn(nextValue) {
+    router.patch(props.session.update_attendance_entry_url, {
+        attendance_entry_enabled: nextValue,
     }, {
         preserveScroll: true,
     });
@@ -53,9 +66,27 @@ function saveAttendance(studentId) {
             <div class="flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
                 <div>
                     <h2 class="text-lg font-black">Session QR code</h2>
-                    <p class="mt-1 text-sm font-medium text-teachify-muted">Students scan this code, sign in with their student code and password, then mark themselves present.</p>
+                    <p class="mt-1 text-sm font-medium text-teachify-muted">Students scan this code or use the session code below, sign in with their student code and password, then mark themselves present.</p>
                 </div>
                 <QrCodePanel :value="session.scan_url" />
+            </div>
+
+            <div class="mt-5 grid gap-4 lg:grid-cols-[minmax(0,1fr)_auto]">
+                <div class="rounded-[1.4rem] border border-teachify-line bg-white p-4">
+                    <div class="text-xs font-black uppercase text-teachify-muted">Manual session code</div>
+                    <div class="mt-2 text-2xl font-black tracking-[0.2em] text-teachify-ink">{{ session.manual_attendance_code }}</div>
+                    <div class="mt-2 text-sm font-medium text-teachify-muted">Students can enter this code from the global student scan modal.</div>
+                </div>
+                <div class="flex flex-col gap-3">
+                    <label class="flex items-center justify-between gap-4 rounded-[1.4rem] border border-teachify-line bg-white px-4 py-3">
+                        <span>
+                            <span class="block text-sm font-bold text-teachify-ink">Self check-in enabled</span>
+                            <span class="block text-xs font-medium text-teachify-muted">Controls both QR and code entry.</span>
+                        </span>
+                        <ToggleSwitch :model-value="session.attendance_entry_enabled" @change="toggleSelfCheckIn" />
+                    </label>
+                    <Button type="button" variant="secondary" @click="regenerateAttendanceCode">Regenerate Code</Button>
+                </div>
             </div>
         </section>
 

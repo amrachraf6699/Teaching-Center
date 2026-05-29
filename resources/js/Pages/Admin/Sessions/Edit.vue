@@ -4,6 +4,7 @@ import Button from '../../../Components/Button.vue';
 import SelectInput from '../../../Components/SelectInput.vue';
 import TextareaInput from '../../../Components/TextareaInput.vue';
 import TextInput from '../../../Components/TextInput.vue';
+import ToggleSwitch from '../../../Components/ToggleSwitch.vue';
 import AppShell from '../../../Layouts/AppShell.vue';
 
 const props = defineProps({ session: Object, groups: Array, action: String, showUrl: String });
@@ -28,6 +29,13 @@ function submit() {
                 <TextInput v-model="form.starts_at" label="Starts At" type="datetime-local" required :error="form.errors.starts_at" />
                 <TextInput v-model="form.ends_at" label="Ends At" type="datetime-local" :error="form.errors.ends_at" />
             </div>
+            <label class="flex items-center justify-between rounded-2xl border border-teachify-line bg-slate-50 px-4 py-3">
+                <span>
+                    <span class="block text-sm font-bold text-teachify-ink">Student self check-in</span>
+                    <span class="block text-xs font-medium text-teachify-muted">Turn QR/code self check-in on or off for this session.</span>
+                </span>
+                <ToggleSwitch v-model="form.attendance_entry_enabled" />
+            </label>
             <TextareaInput v-model="form.notes" label="Notes" :error="form.errors.notes" />
             <div class="flex gap-3">
                 <Button type="submit" :disabled="form.processing">Save Session</Button>

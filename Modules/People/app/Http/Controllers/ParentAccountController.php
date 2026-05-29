@@ -8,10 +8,12 @@ use App\Support\TableExport;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
+use Illuminate\Notifications\DatabaseNotification;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Validation\Rule;
 use Inertia\Inertia;
 use Inertia\Response;
+use Modules\Notifications\Support\PortalNotificationData;
 use Symfony\Component\HttpFoundation\Response as SymfonyResponse;
 
 class ParentAccountController extends Controller
@@ -102,8 +104,8 @@ class ParentAccountController extends Controller
         $parent->load([
             'children.groups.sessions.attendanceRecords',
             'children.examResults.exam.group',
-            'children.notifications',
-            'parentNotifications.student',
+            'children.user.notifications',
+            'parentNotifications',
         ])->loadCount('children');
 
         return Inertia::render('Admin/Parents/Show', [
@@ -137,23 +139,35 @@ class ParentAccountController extends Controller
                             ? $result->exam->start_at->format('M j, Y g:i A').' - '.$result->exam->end_at->format('g:i A')
                             : '-',
                     ]),
-                    'notifications' => $student->notifications->map(fn ($notification): array => [
+                    'notifications' => $student->user?->notifications
+                        ->where('type', PortalNotificationData::type())
+                        ->map(function (DatabaseNotification $notification): array {
+                            $data = PortalNotificationData::from($notification);
+
+                            return [
+                                'id' => $notification->id,
+                                'recipient_role' => $data['audience'],
+                                'type' => $data['type'],
+                                'title' => $data['title'],
+                                'created_at' => $notification->created_at?->toDayDateTimeString(),
+                            ];
+                        })
+                        ->values()
+                        ->all() ?? [],
+                ]),
+                'notifications' => $parent->parentNotifications->map(function (DatabaseNotification $notification): array {
+                    $data = PortalNotificationData::from($notification);
+
+                    return [
                         'id' => $notification->id,
-                        'recipient_role' => $notification->recipient_role,
-                        'type' => $notification->type,
-                        'title' => $notification->title,
+                        'recipient_role' => $data['audience'],
+                        'type' => $data['type'],
+                        'title' => $data['title'],
+                        'body' => $data['body'],
+                        'student' => $data['student_name'],
                         'created_at' => $notification->created_at?->toDayDateTimeString(),
-                    ]),
-                ]),
-                'notifications' => $parent->parentNotifications->map(fn ($notification): array => [
-                    'id' => $notification->id,
-                    'recipient_role' => $notification->recipient_role,
-                    'type' => $notification->type,
-                    'title' => $notification->title,
-                    'body' => $notification->body,
-                    'student' => $notification->student?->name,
-                    'created_at' => $notification->created_at?->toDayDateTimeString(),
-                ]),
+                    ];
+                }),
             ],
         ]);
     }

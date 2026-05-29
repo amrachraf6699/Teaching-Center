@@ -9,7 +9,7 @@ use Modules\People\Models\Student;
 
 uses(RefreshDatabase::class);
 
-it('shows the student weekly timetable from saturday to friday and exposes the scanner page', function () {
+it('shows the student home and sessions pages with the weekly timetable from saturday to friday', function () {
     $this->travelTo(now()->setDate(2026, 5, 26)->setTime(10, 0));
 
     $parent = User::factory()->parent()->create();
@@ -37,10 +37,19 @@ it('shows the student weekly timetable from saturday to friday and exposes the s
     ]);
 
     $this->actingAs($student->user)
-        ->get(route('student.dashboard'))
+        ->get(route('student.home'))
         ->assertOk()
         ->assertInertia(fn (Assert $page) => $page
-            ->component('Student/Dashboard')
+            ->component('Student/Home')
+            ->where('student.code', $student->code)
+            ->where('student.week.starts_at', 'May 23, 2026')
+            ->where('student.week.days.0.sessions.0.title', 'Saturday Session'));
+
+    $this->actingAs($student->user)
+        ->get(route('student.sessions'))
+        ->assertOk()
+        ->assertInertia(fn (Assert $page) => $page
+            ->component('Student/Sessions')
             ->where('student.week.starts_at', 'May 23, 2026')
             ->where('student.week.ends_at', 'May 29, 2026')
             ->has('student.week.days', 7)
@@ -51,6 +60,5 @@ it('shows the student weekly timetable from saturday to friday and exposes the s
 
     $this->actingAs($student->user)
         ->get(route('student.scan-attendance'))
-        ->assertOk()
-        ->assertInertia(fn (Assert $page) => $page->component('Student/ScanAttendance'));
+        ->assertRedirect(route('student.home'));
 });

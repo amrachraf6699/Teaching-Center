@@ -3,7 +3,7 @@ import { Head, useForm } from '@inertiajs/vue3';
 import AppShell from '../../../Layouts/AppShell.vue';
 import ExamForm from './Form.vue';
 
-const props = defineProps({ exam: Object, groups: Array, action: String, showUrl: String, questionTypes: Array });
+const props = defineProps({ exam: Object, groups: Array, action: String, showUrl: String, questionTypes: Array, reviewModes: Array });
 const form = useForm({
     ...props.exam,
     questions: props.exam.questions.length
@@ -31,6 +31,7 @@ function submit() {
             :form="form"
             :groups="groups"
             :question-types="questionTypes"
+            :review-modes="reviewModes"
             submit-label="Save Exam"
             :cancel-url="showUrl"
             heading="Update exam"

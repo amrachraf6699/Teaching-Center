@@ -8,10 +8,12 @@ use App\Support\TableExport;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
+use Illuminate\Notifications\DatabaseNotification;
 use Illuminate\Support\Facades\Hash;
 use Inertia\Inertia;
 use Inertia\Response;
 use Modules\Academics\Models\TeachingGroup;
+use Modules\Notifications\Support\PortalNotificationData;
 use Modules\People\Models\Student;
 use Symfony\Component\HttpFoundation\Response as SymfonyResponse;
 
@@ -137,8 +139,8 @@ class StudentController extends Controller
             'groups.sessions.attendanceRecords',
             'attendanceRecords.session.group',
             'examResults.exam.group',
-            'notifications',
             'user',
+            'user.notifications',
         ]);
 
         return Inertia::render('Admin/Students/Show', [
@@ -196,14 +198,22 @@ class StudentController extends Controller
                         ? $result->exam->start_at->format('M j, Y g:i A').' - '.$result->exam->end_at->format('g:i A')
                         : '-',
                 ]),
-                'notifications' => $student->notifications->map(fn ($notification): array => [
-                    'id' => $notification->id,
-                    'recipient_role' => $notification->recipient_role,
-                    'type' => $notification->type,
-                    'title' => $notification->title,
-                    'body' => $notification->body,
-                    'created_at' => $notification->created_at?->toDayDateTimeString(),
-                ]),
+                'notifications' => $student->user?->notifications
+                    ->where('type', PortalNotificationData::type())
+                    ->map(function (DatabaseNotification $notification): array {
+                        $data = PortalNotificationData::from($notification);
+
+                        return [
+                            'id' => $notification->id,
+                            'recipient_role' => $data['audience'],
+                            'type' => $data['type'],
+                            'title' => $data['title'],
+                            'body' => $data['body'],
+                            'created_at' => $notification->created_at?->toDayDateTimeString(),
+                        ];
+                    })
+                    ->values()
+                    ->all() ?? [],
             ],
         ]);
     }

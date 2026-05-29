@@ -3,6 +3,7 @@
 use App\Models\User;
 use Database\Seeders\DatabaseSeeder;
 use Illuminate\Foundation\Testing\RefreshDatabase;
+use Illuminate\Notifications\DatabaseNotification;
 use Illuminate\Support\Facades\DB;
 use Modules\Academics\Models\Attendance;
 use Modules\Academics\Models\GroupSession;
@@ -10,7 +11,6 @@ use Modules\Academics\Models\TeachingGroup;
 use Modules\Core\Settings\GeneralSettings;
 use Modules\Exams\Models\Exam;
 use Modules\Exams\Models\ExamResult;
-use Modules\Notifications\Models\ParentNotification;
 use Modules\People\Models\Student;
 
 uses(RefreshDatabase::class);
@@ -29,7 +29,7 @@ it('seeds usable data for every Teachify domain table', function () {
         ->and(Attendance::count())->toBe(4)
         ->and(Exam::count())->toBe(1)
         ->and(ExamResult::count())->toBe(4)
-        ->and(ParentNotification::count())->toBe(6)
+        ->and(DatabaseNotification::count())->toBe(10)
         ->and($settings->name)->toBe('Teachify')
         ->and($settings->contact_email)->toBe('teacher@teachify.test')
         ->and($settings->timezone)->toBe('Africa/Cairo')

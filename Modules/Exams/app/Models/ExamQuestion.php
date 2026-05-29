@@ -7,6 +7,7 @@ use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
+use Illuminate\Database\Eloquent\Relations\HasOne;
 
 #[Fillable(['exam_id', 'type', 'prompt', 'points', 'position'])]
 class ExamQuestion extends Model
@@ -34,5 +35,13 @@ class ExamQuestion extends Model
     public function options(): HasMany
     {
         return $this->hasMany(ExamQuestionOption::class)->orderBy('position');
+    }
+
+    /**
+     * @return HasOne<ExamQuestionOption, $this>
+     */
+    public function correctOption(): HasOne
+    {
+        return $this->hasOne(ExamQuestionOption::class)->where('is_correct', true);
     }
 }

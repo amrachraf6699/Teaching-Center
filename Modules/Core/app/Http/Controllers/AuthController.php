@@ -79,7 +79,7 @@ class AuthController extends Controller
             return redirect()->to($redirect);
         }
 
-        return redirect()->intended(route('student.dashboard'));
+        return redirect()->intended(route('student.home'));
     }
 
     public function logout(Request $request): RedirectResponse
@@ -95,7 +95,7 @@ class AuthController extends Controller
     {
         return match ($role) {
             'teacher' => route('admin.dashboard'),
-            'student' => route('student.dashboard'),
+            'student' => route('student.home'),
             default => route('parent.dashboard'),
         };
     }

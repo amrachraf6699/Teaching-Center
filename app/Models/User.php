@@ -7,11 +7,12 @@ use Database\Factories\UserFactory;
 use Illuminate\Database\Eloquent\Attributes\Fillable;
 use Illuminate\Database\Eloquent\Attributes\Hidden;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
-use Illuminate\Database\Eloquent\Relations\HasOne;
 use Illuminate\Database\Eloquent\Relations\HasMany;
+use Illuminate\Database\Eloquent\Relations\HasOne;
+use Illuminate\Database\Eloquent\Relations\MorphMany;
 use Illuminate\Foundation\Auth\User as Authenticatable;
+use Illuminate\Notifications\DatabaseNotification;
 use Illuminate\Notifications\Notifiable;
-use Modules\Notifications\Models\ParentNotification;
 use Modules\People\Models\Student;
 
 #[Fillable(['name', 'email', 'password', 'role'])]
@@ -66,20 +67,22 @@ class User extends Authenticatable
     }
 
     /**
-     * @return HasMany<ParentNotification, $this>
+     * @return MorphMany<DatabaseNotification, $this>
      */
-    public function parentNotifications(): HasMany
+    public function parentNotifications(): MorphMany
     {
-        return $this->hasMany(ParentNotification::class, 'recipient_user_id')
-            ->where('recipient_role', 'parent');
+        return $this->notifications()
+            ->where('type', \Modules\Notifications\Notifications\PortalNotification::class)
+            ->where('data->audience', 'parent');
     }
 
     /**
-     * @return HasMany<ParentNotification, $this>
+     * @return MorphMany<DatabaseNotification, $this>
      */
-    public function studentNotifications(): HasMany
+    public function studentNotifications(): MorphMany
     {
-        return $this->hasMany(ParentNotification::class, 'recipient_user_id')
-            ->where('recipient_role', 'student');
+        return $this->notifications()
+            ->where('type', \Modules\Notifications\Notifications\PortalNotification::class)
+            ->where('data->audience', 'student');
     }
 }

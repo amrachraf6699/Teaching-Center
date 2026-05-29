@@ -98,13 +98,16 @@ class GroupSessionController extends Controller
             'title' => ['required', 'string', 'max:255'],
             'starts_at' => ['required', 'date'],
             'ends_at' => ['nullable', 'date', 'after_or_equal:starts_at'],
+            'attendance_entry_enabled' => ['nullable', 'boolean'],
             'notes' => ['nullable', 'string'],
         ]);
 
         $data['source_type'] = 'manual';
         $data['session_date'] = substr((string) $data['starts_at'], 0, 10);
+        $data['attendance_entry_enabled'] = $request->boolean('attendance_entry_enabled', true);
 
-        GroupSession::create($data);
+        $session = GroupSession::create($data);
+        $session->ensureManualAttendanceCode();
 
         return redirect()->route('admin.sessions.index')->with('status', 'Session created.');
     }
@@ -120,6 +123,10 @@ class GroupSessionController extends Controller
                 'source_type' => $session->source_type,
                 'source_label' => $session->isGenerated() ? 'Generated from timetable' : 'Manual session',
                 'scan_url' => URL::signedRoute('student.sessions.scan', ['session' => $session]),
+                'attendance_entry_enabled' => $session->attendance_entry_enabled,
+                'manual_attendance_code' => $session->ensureManualAttendanceCode(),
+                'regenerate_attendance_code_url' => route('admin.sessions.regenerate-attendance-code', $session),
+                'update_attendance_entry_url' => route('admin.sessions.update-attendance-entry', $session),
                 'attendance_action' => route('admin.attendance.store'),
                 'starts_at' => $session->starts_at?->toDayDateTimeString(),
                 'ends_at' => $session->ends_at?->toDayDateTimeString(),
@@ -161,6 +168,7 @@ class GroupSessionController extends Controller
                 'title' => $session->title,
                 'starts_at' => $session->starts_at?->format('Y-m-d\TH:i'),
                 'ends_at' => $session->ends_at?->format('Y-m-d\TH:i'),
+                'attendance_entry_enabled' => $session->attendance_entry_enabled,
                 'notes' => $session->notes,
             ],
             'groups' => TeachingGroup::query()->orderBy('name')->get(['id', 'name', 'subject']),
@@ -176,15 +184,40 @@ class GroupSessionController extends Controller
             'title' => ['required', 'string', 'max:255'],
             'starts_at' => ['required', 'date'],
             'ends_at' => ['nullable', 'date', 'after_or_equal:starts_at'],
+            'attendance_entry_enabled' => ['nullable', 'boolean'],
             'notes' => ['nullable', 'string'],
         ]);
 
         $data['source_type'] = 'manual';
         $data['session_date'] = substr((string) $data['starts_at'], 0, 10);
         $data['timetable_entry_id'] = null;
+        $data['attendance_entry_enabled'] = $request->boolean('attendance_entry_enabled', true);
         $session->update($data);
+        $session->ensureManualAttendanceCode();
 
         return redirect()->route('admin.sessions.show', $session)->with('status', 'Session updated.');
+    }
+
+    public function regenerateAttendanceCode(GroupSession $session): RedirectResponse
+    {
+        $session->update([
+            'manual_attendance_code' => $session->generateManualAttendanceCode(),
+        ]);
+
+        return back()->with('status', 'Attendance code regenerated.');
+    }
+
+    public function updateAttendanceEntry(Request $request, GroupSession $session): RedirectResponse
+    {
+        $data = $request->validate([
+            'attendance_entry_enabled' => ['required', 'boolean'],
+        ]);
+
+        $session->update([
+            'attendance_entry_enabled' => $data['attendance_entry_enabled'],
+        ]);
+
+        return back()->with('status', 'Session self check-in updated.');
     }
 
     public function destroy(GroupSession $session): RedirectResponse

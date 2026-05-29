@@ -2,7 +2,8 @@
 
 use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
-use Modules\Notifications\Models\ParentNotification;
+use Illuminate\Notifications\DatabaseNotification;
+use Modules\Notifications\Notifications\PortalNotification;
 use Modules\People\Models\Student;
 
 uses(RefreshDatabase::class);
@@ -35,21 +36,22 @@ it('lets a teacher send a notification to a parent account from admin', function
             'recipient' => 'parent',
         ]));
 
-    expect(ParentNotification::query()->count())->toBe(1);
+    expect(DatabaseNotification::query()->where('type', PortalNotification::class)->count())->toBe(1);
 
-    $notification = ParentNotification::query()->firstOrFail();
+    $notification = DatabaseNotification::query()->where('type', PortalNotification::class)->firstOrFail();
+    $data = $notification->data;
 
-    expect($notification->recipient_role)->toBe('parent')
-        ->and($notification->recipient_user_id)->toBe($parent->id)
-        ->and($notification->parent_id)->toBe($parent->id);
+    expect($data['audience'])->toBe('parent')
+        ->and($notification->notifiable_id)->toBe($parent->id)
+        ->and($data['parent_id'])->toBe($parent->id);
 
     $this->actingAs($parent)
         ->get(route('parent.dashboard'))
         ->assertOk()
         ->assertInertia(fn ($page) => $page
             ->component('Parent/Dashboard')
-            ->has('notifications', 1)
-            ->where('notifications.0.title', 'Parent alert'));
+            ->has('parentRecentNotifications', 1)
+            ->where('parentRecentNotifications.0.title', 'Parent alert'));
 });
 
 it('lets a teacher send a notification to a student account without exposing it to the parent feed', function () {
@@ -73,17 +75,18 @@ it('lets a teacher send a notification to a student account without exposing it 
             'recipient' => 'student',
         ]));
 
-    $notification = ParentNotification::query()->firstOrFail();
+    $notification = DatabaseNotification::query()->where('type', PortalNotification::class)->firstOrFail();
+    $data = $notification->data;
 
-    expect($notification->recipient_role)->toBe('student')
-        ->and($notification->recipient_user_id)->toBe($student->user_id)
-        ->and($notification->parent_id)->toBe($parent->id);
+    expect($data['audience'])->toBe('student')
+        ->and($notification->notifiable_id)->toBe($student->user_id)
+        ->and($data['parent_id'])->toBe($parent->id);
 
     $this->actingAs($student->user)
-        ->get(route('student.dashboard'))
+        ->get(route('student.home'))
         ->assertOk()
         ->assertInertia(fn ($page) => $page
-            ->component('Student/Dashboard')
+            ->component('Student/Home')
             ->has('student.notifications', 1)
             ->where('student.notifications.0.title', 'Bring your notebook'));
 
@@ -92,5 +95,5 @@ it('lets a teacher send a notification to a student account without exposing it 
         ->assertOk()
         ->assertInertia(fn ($page) => $page
             ->component('Parent/Dashboard')
-            ->has('notifications', 0));
+            ->has('parentRecentNotifications', 0));
 });

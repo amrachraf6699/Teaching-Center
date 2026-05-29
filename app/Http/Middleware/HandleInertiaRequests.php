@@ -3,10 +3,11 @@
 namespace App\Http\Middleware;
 
 use Illuminate\Http\Request;
+use Illuminate\Notifications\DatabaseNotification;
 use Inertia\Middleware;
 use Modules\Core\Models\SettingMedia;
 use Modules\Core\Settings\GeneralSettings;
-use Modules\Notifications\Models\ParentNotification;
+use Modules\Notifications\Support\PortalNotificationData;
 
 class HandleInertiaRequests extends Middleware
 {
@@ -49,8 +50,12 @@ class HandleInertiaRequests extends Middleware
                 'parentExams' => route('parent.exams'),
                 'parentNotifications' => route('parent.notifications'),
                 'parentNotificationsMarkRead' => route('parent.notifications.mark-read'),
+                'studentHome' => route('student.home'),
                 'studentDashboard' => route('student.dashboard'),
-                'studentScanAttendance' => route('student.scan-attendance'),
+                'studentSessions' => route('student.sessions'),
+                'studentExams' => route('student.exams.index'),
+                'studentPassword' => route('student.password.edit'),
+                'studentAttendanceLookupByCode' => route('student.attendance.lookup-by-code'),
                 'adminParents' => route('admin.parents.index'),
                 'adminStudents' => route('admin.students.index'),
                 'adminGroups' => route('admin.groups.index'),
@@ -61,25 +66,27 @@ class HandleInertiaRequests extends Middleware
                 'adminSettings' => route('admin.settings.edit'),
             ],
             'parentUnreadCount' => fn () => $user?->role === 'parent'
-                ? ParentNotification::where('parent_id', $user->id)
-                    ->where('recipient_role', 'parent')
+                ? $user->parentNotifications()
                     ->whereNull('read_at')
                     ->count()
                 : null,
             'parentRecentNotifications' => fn () => $user?->role === 'parent'
-                ? ParentNotification::where('parent_id', $user->id)
-                    ->where('recipient_role', 'parent')
+                ? $user->parentNotifications()
                     ->latest()
                     ->limit(5)
                     ->get()
-                    ->map(fn (ParentNotification $n): array => [
-                        'id' => $n->id,
-                        'type' => $n->type,
-                        'title' => $n->title,
-                        'body' => $n->body,
-                        'read_at' => $n->read_at,
-                        'created_at' => $n->created_at?->diffForHumans(),
-                    ])
+                    ->map(function (DatabaseNotification $notification): array {
+                        $data = PortalNotificationData::from($notification);
+
+                        return [
+                            'id' => $notification->id,
+                            'type' => $data['type'],
+                            'title' => $data['title'],
+                            'body' => $data['body'],
+                            'read_at' => $notification->read_at,
+                            'created_at' => $notification->created_at?->diffForHumans(),
+                        ];
+                    })
                 : null,
         ];
     }

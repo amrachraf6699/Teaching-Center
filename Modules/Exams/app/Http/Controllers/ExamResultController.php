@@ -7,11 +7,11 @@ use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Modules\Exams\Models\Exam;
 use Modules\Exams\Models\ExamResult;
-use Modules\Notifications\Services\ParentNotificationService;
+use Modules\Notifications\Services\PortalNotificationService;
 
 class ExamResultController extends Controller
 {
-    public function store(Request $request, Exam $exam, ParentNotificationService $notifications): RedirectResponse
+    public function store(Request $request, Exam $exam, PortalNotificationService $notifications): RedirectResponse
     {
         $data = $request->validate([
             'student_id' => ['required', 'exists:students,id'],

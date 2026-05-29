@@ -9,7 +9,7 @@ Route::get('/', function () {
 
     return match (auth()->user()->role) {
         'parent' => redirect()->route('parent.dashboard'),
-        'student' => redirect()->route('student.dashboard'),
+        'student' => redirect()->route('student.home'),
         default => redirect()->route('admin.dashboard'),
     };
 });

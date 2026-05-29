@@ -11,7 +11,7 @@ use Modules\Academics\Database\Factories\GroupSessionFactory;
 use Spatie\Activitylog\LogOptions;
 use Spatie\Activitylog\Traits\LogsActivity;
 
-#[Fillable(['teaching_group_id', 'source_type', 'timetable_entry_id', 'title', 'starts_at', 'ends_at', 'session_date', 'notes'])]
+#[Fillable(['teaching_group_id', 'source_type', 'timetable_entry_id', 'title', 'starts_at', 'ends_at', 'session_date', 'attendance_entry_enabled', 'manual_attendance_code', 'notes'])]
 class GroupSession extends Model
 {
     use HasFactory, LogsActivity;
@@ -39,6 +39,7 @@ class GroupSession extends Model
             'starts_at' => 'datetime',
             'ends_at' => 'datetime',
             'session_date' => 'date',
+            'attendance_entry_enabled' => 'boolean',
         ];
     }
 
@@ -69,6 +70,31 @@ class GroupSession extends Model
     public function isGenerated(): bool
     {
         return $this->source_type === 'timetable';
+    }
+
+    public function ensureManualAttendanceCode(): string
+    {
+        if (filled($this->manual_attendance_code)) {
+            return $this->manual_attendance_code;
+        }
+
+        $this->forceFill([
+            'manual_attendance_code' => $this->generateManualAttendanceCode(),
+        ])->saveQuietly();
+
+        return $this->manual_attendance_code;
+    }
+
+    public function generateManualAttendanceCode(): string
+    {
+        do {
+            $code = 'SES-'.strtoupper(fake()->bothify('####'));
+        } while (static::query()
+            ->where('manual_attendance_code', $code)
+            ->whereKeyNot($this->getKey())
+            ->exists());
+
+        return $code;
     }
 
     public function getActivitylogOptions(): LogOptions

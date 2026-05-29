@@ -7,11 +7,11 @@ use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Modules\Academics\Models\Attendance;
 use Modules\Academics\Models\GroupSession;
-use Modules\Notifications\Services\ParentNotificationService;
+use Modules\Notifications\Services\PortalNotificationService;
 
 class AttendanceController extends Controller
 {
-    public function store(Request $request, ParentNotificationService $notifications): RedirectResponse
+    public function store(Request $request, PortalNotificationService $notifications): RedirectResponse
     {
         $data = $request->validate([
             'teaching_session_id' => ['required', 'exists:teaching_sessions,id'],

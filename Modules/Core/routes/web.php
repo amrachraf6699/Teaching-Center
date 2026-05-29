@@ -9,7 +9,9 @@ use Modules\Core\Http\Controllers\ParentNotificationsController;
 use Modules\Core\Http\Controllers\ParentPortalController;
 use Modules\Core\Http\Controllers\SettingsController;
 use Modules\Core\Http\Controllers\StudentAttendanceScannerController;
-use Modules\Core\Http\Controllers\StudentDashboardController;
+use Modules\Core\Http\Controllers\StudentHomeController;
+use Modules\Core\Http\Controllers\StudentPasswordController;
+use Modules\Core\Http\Controllers\StudentSessionsController;
 use Modules\Core\Http\Controllers\TeacherDashboardController;
 
 Route::middleware('guest')->group(function (): void {
@@ -39,10 +41,11 @@ Route::middleware(['auth', 'role:parent'])->prefix('parent')->name('parent.')->g
     Route::get('child/{student}/pdf', ParentChildPdfController::class)->name('child.pdf');
 });
 
-Route::get('/student/dashboard', StudentDashboardController::class)
-    ->middleware(['auth', 'role:student'])
-    ->name('student.dashboard');
-
-Route::get('/student/scan-attendance', StudentAttendanceScannerController::class)
-    ->middleware(['auth', 'role:student'])
-    ->name('student.scan-attendance');
+Route::middleware(['auth', 'role:student'])->prefix('student')->name('student.')->group(function (): void {
+    Route::get('home', StudentHomeController::class)->name('home');
+    Route::get('dashboard', StudentHomeController::class)->name('dashboard');
+    Route::get('sessions', StudentSessionsController::class)->name('sessions');
+    Route::get('password', [StudentPasswordController::class, 'edit'])->name('password.edit');
+    Route::put('password', [StudentPasswordController::class, 'update'])->name('password.update');
+    Route::get('scan-attendance', StudentAttendanceScannerController::class)->name('scan-attendance');
+});

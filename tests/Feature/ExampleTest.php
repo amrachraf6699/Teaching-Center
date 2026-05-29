@@ -2,6 +2,7 @@
 
 use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
+use Illuminate\Notifications\DatabaseNotification;
 use Inertia\Testing\AssertableInertia as Assert;
 use Modules\Academics\Models\Attendance;
 use Modules\Academics\Models\GroupSession;
@@ -9,7 +10,7 @@ use Modules\Academics\Models\TeachingGroup;
 use Modules\Exams\Actions\UpsertExam;
 use Modules\Exams\Models\Exam;
 use Modules\Exams\Models\ExamResult;
-use Modules\Notifications\Models\ParentNotification;
+use Modules\Notifications\Notifications\PortalNotification;
 use Modules\People\Models\Student;
 
 uses(RefreshDatabase::class);
@@ -81,7 +82,7 @@ it('separates teacher admin access from parent portal access', function () {
         ->assertInertia(fn (Assert $page) => $page
             ->component('Parent/Dashboard')
             ->has('children')
-            ->has('notifications'));
+            ->has('parentRecentNotifications'));
 });
 
 it('only shows a parent their own children in the portal', function () {
@@ -166,15 +167,17 @@ it('supports full admin crud routes with relationship-rich show pages', function
         'student_id' => $student->id,
         'score' => 95,
     ]);
-    ParentNotification::create([
-        'parent_id' => $parent->id,
-        'student_id' => $student->id,
-        'recipient_user_id' => $parent->id,
-        'recipient_role' => 'parent',
-        'type' => 'general',
-        'title' => 'Update',
+    $parent->notify(new PortalNotification([
+        'audience' => 'parent',
         'body' => 'Relationship data.',
-    ]);
+        'parent_id' => $parent->id,
+        'reference_key' => 'test:relationship-update',
+        'student_code' => $student->code,
+        'student_id' => $student->id,
+        'student_name' => $student->name,
+        'title' => 'Update',
+        'type' => 'general',
+    ]));
 
     $this->actingAs($teacher)
         ->get(route('admin.parents.show', $parent))
@@ -397,5 +400,9 @@ it('creates students, groups, sessions, attendance, exams, grades, and notificat
         ->assertRedirect();
 
     expect(ExamResult::query()->where('exam_id', $exam->id)->where('score', 92)->exists())->toBeTrue();
-    expect(ParentNotification::query()->where('parent_id', $parent->id)->count())->toBe(2);
+    expect(DatabaseNotification::query()
+        ->where('type', PortalNotification::class)
+        ->where('notifiable_id', $parent->id)
+        ->where('notifiable_type', User::class)
+        ->count())->toBe(2);
 });

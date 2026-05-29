@@ -28,6 +28,7 @@ class StudentSessionAttendanceController extends Controller
 
         $session->load(['group.students', 'attendanceRecords']);
         abort_unless($session->group?->students->contains('id', $student->id), 403);
+        abort_unless($session->attendance_entry_enabled, 403);
 
         $attendance = $session->attendanceRecords->firstWhere('student_id', $student->id);
 
@@ -47,6 +48,7 @@ class StudentSessionAttendanceController extends Controller
                     'status' => $attendance->status,
                     'notes' => $attendance->notes,
                 ] : null,
+                'attendance_entry_enabled' => $session->attendance_entry_enabled,
                 'submit_url' => \URL::signedRoute('student.sessions.attendance.store', ['session' => $session]),
             ],
         ]);
@@ -60,6 +62,7 @@ class StudentSessionAttendanceController extends Controller
 
         $session->load('group.students');
         abort_unless($session->group?->students->contains('id', $student->id), 403);
+        abort_unless($session->attendance_entry_enabled, 403);
 
         $existingAttendance = Attendance::query()
             ->where('teaching_session_id', $session->id)
@@ -78,5 +81,26 @@ class StudentSessionAttendanceController extends Controller
         ]);
 
         return back()->with('status', 'Attendance recorded successfully.');
+    }
+
+    public function lookupByCode(Request $request): RedirectResponse
+    {
+        $data = $request->validate([
+            'code' => ['required', 'string'],
+        ]);
+
+        $student = $request->user()->studentProfile;
+
+        abort_unless($student, 403);
+
+        $session = GroupSession::query()
+            ->with('group.students')
+            ->where('manual_attendance_code', strtoupper(trim($data['code'])))
+            ->firstOrFail();
+
+        abort_unless($session->attendance_entry_enabled, 403);
+        abort_unless($session->group?->students->contains('id', $student->id), 403);
+
+        return redirect()->to(\URL::signedRoute('student.sessions.scan', ['session' => $session]));
     }
 }

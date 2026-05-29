@@ -22,6 +22,7 @@ defineProps({ exam: Object });
                 <div><div class="text-xs font-black uppercase text-teachify-muted">Allowed Time</div><div class="mt-1 font-bold">{{ exam.max_allowed_time }}</div></div>
                 <div><div class="text-xs font-black uppercase text-teachify-muted">Max Score</div><div class="mt-1 font-bold">{{ exam.max_score }}</div></div>
             </div>
+            <div class="mt-4 text-sm font-semibold text-teachify-muted">Student review mode: <span class="font-black text-teachify-ink">{{ exam.student_review_mode_label }}</span></div>
             <p v-if="exam.notes" class="mt-4 text-sm font-medium text-teachify-muted">{{ exam.notes }}</p>
         </section>
 
@@ -56,9 +57,29 @@ defineProps({ exam: Object });
                         <span v-if="student.result">{{ student.result.score }} / {{ exam.max_score }} · {{ student.result.percentage }}%</span>
                         <span v-else class="text-teachify-muted">No result</span>
                     </div>
+                    <div class="mt-1 text-xs font-semibold text-teachify-muted">Attempt: {{ student.attempt?.status || 'No attempt' }}</div>
                 </Link>
             </div>
             <EmptyState v-else title="No students" message="Students assigned to the group will appear here." />
+        </section>
+
+        <section class="mt-6 teachify-card rounded-[1.6rem] p-5">
+            <h2 class="text-lg font-black">Attempts</h2>
+            <div v-if="exam.attempts.length" class="mt-4 grid gap-3">
+                <article v-for="attempt in exam.attempts" :key="attempt.id" class="rounded-2xl border border-teachify-line bg-white p-4">
+                    <div class="flex justify-between gap-3">
+                        <div>
+                            <div class="font-black">{{ attempt.student }}</div>
+                            <div class="text-sm font-semibold text-teachify-muted">{{ attempt.started_at || '-' }}</div>
+                        </div>
+                        <div class="text-right">
+                            <div class="font-black capitalize text-teachify-blue">{{ attempt.status }}</div>
+                            <div class="text-xs font-semibold text-teachify-muted">{{ attempt.submitted_at || 'Not submitted yet' }}</div>
+                        </div>
+                    </div>
+                </article>
+            </div>
+            <EmptyState v-else title="No attempts" message="Student attempts will appear here after the exam opens." />
         </section>
 
         <section class="mt-6 teachify-card rounded-[1.6rem] p-5">

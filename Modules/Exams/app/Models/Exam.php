@@ -12,7 +12,7 @@ use Modules\Exams\Database\Factories\ExamFactory;
 use Spatie\Activitylog\LogOptions;
 use Spatie\Activitylog\Traits\LogsActivity;
 
-#[Fillable(['teaching_group_id', 'title', 'start_at', 'end_at', 'max_allowed_time', 'max_score', 'notes'])]
+#[Fillable(['teaching_group_id', 'title', 'start_at', 'end_at', 'max_allowed_time', 'max_score', 'notes', 'student_review_mode'])]
 class Exam extends Model
 {
     use HasFactory, LogsActivity;
@@ -51,9 +51,22 @@ class Exam extends Model
         return $this->hasMany(ExamQuestion::class)->orderBy('position');
     }
 
+    /**
+     * @return HasMany<ExamAttempt, $this>
+     */
+    public function attempts(): HasMany
+    {
+        return $this->hasMany(ExamAttempt::class);
+    }
+
     public function recalculateMaxScore(): void
     {
         $this->max_score = (float) $this->questions()->sum('points');
+    }
+
+    public function canStudentReviewQuestions(): bool
+    {
+        return $this->student_review_mode === 'question_review';
     }
 
     public function getActivitylogOptions(): LogOptions

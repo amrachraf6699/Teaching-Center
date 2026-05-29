@@ -10,6 +10,7 @@ const props = defineProps({
     form: Object,
     groups: Array,
     questionTypes: Array,
+    reviewModes: Array,
     submitLabel: String,
     cancelUrl: {
         type: String,
@@ -222,6 +223,7 @@ watch(
                         <TextInput v-model="form.start_at" label="Starts At" type="datetime-local" required :error="form.errors.start_at" />
                         <TextInput v-model="form.end_at" label="Ends At" type="datetime-local" required :error="form.errors.end_at" />
                         <TextInput v-model="form.max_allowed_time" label="Student Time Limit (minutes)" type="number" required :error="form.errors.max_allowed_time" />
+                        <SelectInput v-model="form.student_review_mode" label="Student Review Mode" required :options="reviewModes" :error="form.errors.student_review_mode" />
                         <label class="block">
                             <span class="text-sm font-bold text-teachify-ink">Exam Window</span>
                             <div class="mt-2 flex min-h-12 items-center rounded-2xl border border-teachify-line bg-slate-50 px-4 text-sm font-medium text-teachify-muted">

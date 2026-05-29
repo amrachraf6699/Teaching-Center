@@ -4,12 +4,13 @@ namespace Modules\Core\Http\Controllers;
 
 use App\Http\Controllers\Controller;
 use App\Models\User;
+use Illuminate\Notifications\DatabaseNotification;
 use Inertia\Inertia;
 use Inertia\Response;
 use Modules\Academics\Models\GroupSession;
 use Modules\Academics\Models\TeachingGroup;
 use Modules\Exams\Models\Exam;
-use Modules\Notifications\Models\ParentNotification;
+use Modules\Notifications\Support\PortalNotificationData;
 use Modules\People\Models\Student;
 
 class TeacherDashboardController extends Controller
@@ -36,20 +37,25 @@ class TeacherDashboardController extends Controller
                     'starts_at' => $session->starts_at?->toDayDateTimeString(),
                     'group' => $session->group?->name,
                 ]),
-            'recentNotifications' => ParentNotification::query()
-                ->with(['student', 'recipient'])
+            'recentNotifications' => DatabaseNotification::query()
+                ->with('notifiable')
+                ->where('type', PortalNotificationData::type())
                 ->latest()
                 ->limit(5)
                 ->get()
-                ->map(fn (ParentNotification $notification): array => [
-                    'id' => $notification->id,
-                    'title' => $notification->title,
-                    'body' => $notification->body,
-                    'student' => $notification->student?->name,
-                    'recipient_role' => $notification->recipient_role,
-                    'recipient_name' => $notification->recipient?->name,
-                    'created_at' => $notification->created_at?->diffForHumans(),
-                ]),
+                ->map(function (DatabaseNotification $notification): array {
+                    $data = PortalNotificationData::from($notification);
+
+                    return [
+                        'id' => $notification->id,
+                        'title' => $data['title'],
+                        'body' => $data['body'],
+                        'student' => $data['student_name'],
+                        'recipient_role' => $data['audience'],
+                        'recipient_name' => $notification->notifiable?->name,
+                        'created_at' => $notification->created_at?->diffForHumans(),
+                    ];
+                }),
             'quickActions' => [
                 ['label' => 'Add Parent', 'href' => route('admin.parents.create')],
                 ['label' => 'Add Student', 'href' => route('admin.students.create')],
