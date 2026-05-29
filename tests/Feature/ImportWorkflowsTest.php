@@ -4,6 +4,7 @@ use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Http\UploadedFile;
 use Illuminate\Support\Facades\Route;
+use Inertia\Testing\AssertableInertia as Assert;
 use Modules\Academics\Models\Attendance;
 use Modules\Academics\Models\GroupSession;
 use Modules\Academics\Models\TeachingGroup;
@@ -26,6 +27,32 @@ it('registers preserved export route names from the Exports module', function ()
     expect(Route::getRoutes()->getByName('admin.students.export')->getActionName())->toContain(ResourceExportController::class)
         ->and(Route::getRoutes()->getByName('admin.groups.export')->getActionName())->toContain(ResourceExportController::class)
         ->and(Route::getRoutes()->getByName('admin.exams.export')->getActionName())->toContain(ResourceExportController::class);
+});
+
+it('keeps imports and exports on related index pages instead of center pages', function () {
+    $teacher = User::factory()->teacher()->create();
+
+    expect(Route::has('admin.imports.index'))->toBeFalse()
+        ->and(Route::has('admin.exports.index'))->toBeFalse();
+
+    $this->actingAs($teacher)
+        ->get(route('admin.students.index'))
+        ->assertOk()
+        ->assertInertia(fn (Assert $page) => $page
+            ->component('Admin/Students/Index')
+            ->where('importOptions.0.value', 'students')
+            ->where('importOptions.1.value', 'enrollments')
+            ->where('exportUrls.csv', route('admin.students.export', 'csv')));
+
+    $this->actingAs($teacher)
+        ->get(route('admin.exams.index'))
+        ->assertOk()
+        ->assertInertia(fn (Assert $page) => $page
+            ->component('Admin/Exams/Index')
+            ->where('importOptions.0.value', 'exams')
+            ->where('importOptions.1.value', 'exam_questions')
+            ->where('importOptions.2.value', 'exam_results')
+            ->where('exportUrls.pdf', route('admin.exams.export', 'pdf')));
 });
 
 it('imports parents and updates existing parents by email', function () {

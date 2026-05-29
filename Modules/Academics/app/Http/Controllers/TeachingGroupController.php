@@ -41,6 +41,10 @@ class TeachingGroupController extends Controller
                 'csv' => route('admin.groups.export', 'csv'),
                 'pdf' => route('admin.groups.export', 'pdf'),
             ],
+            'importOptions' => [
+                $this->importOption('groups', 'Groups'),
+                $this->importOption('enrollments', 'Enrollments'),
+            ],
         ]);
     }
 
@@ -213,5 +217,16 @@ class TeachingGroupController extends Controller
             ->when(in_array($filters['status'], ['active', 'inactive'], true), function ($query) use ($filters): void {
                 $query->where('is_active', $filters['status'] === 'active');
             });
+    }
+
+    private function importOption(string $type, string $label): array
+    {
+        return [
+            'value' => $type,
+            'label' => $label,
+            'store_url' => route('admin.imports.store', $type),
+            'template_csv_url' => route('admin.imports.template', ['type' => $type, 'format' => 'csv']),
+            'template_xlsx_url' => route('admin.imports.template', ['type' => $type, 'format' => 'xlsx']),
+        ];
     }
 }

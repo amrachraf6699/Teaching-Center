@@ -66,7 +66,7 @@ it('separates teacher admin access from parent portal access', function () {
         ->assertOk()
         ->assertInertia(fn (Assert $page) => $page
             ->component('Admin/Dashboard')
-            ->has('metrics', 5));
+            ->has('metrics', 6));
 
     $this->actingAs($teacher)
         ->get(route('parent.dashboard'))

@@ -18,18 +18,6 @@ use Symfony\Component\HttpFoundation\StreamedResponse;
 
 class ImportController extends Controller
 {
-    public function index(ImportTemplateRegistry $templates): Response
-    {
-        return Inertia::render('Admin/Imports/Index', [
-            'importTypes' => $templates->options(),
-            'batches' => ImportBatch::query()
-                ->latest()
-                ->limit(30)
-                ->get()
-                ->map(fn (ImportBatch $batch): array => $this->batchPayload($batch)),
-        ]);
-    }
-
     public function show(ImportBatch $batch): Response
     {
         return Inertia::render('Admin/Imports/Show', [

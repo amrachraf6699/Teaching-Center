@@ -1,23 +1,186 @@
 <script setup>
 import { Head } from '@inertiajs/vue3';
+import {
+    ArcElement,
+    BarElement,
+    CategoryScale,
+    Chart as ChartJS,
+    Filler,
+    Legend,
+    LinearScale,
+    LineElement,
+    PointElement,
+    Tooltip,
+} from 'chart.js';
+import { Bar, Doughnut, Line } from 'vue-chartjs';
+import { computed } from 'vue';
 import Button from '../../Components/Button.vue';
 import EmptyState from '../../Components/EmptyState.vue';
 import StatTile from '../../Components/StatTile.vue';
 import AppShell from '../../Layouts/AppShell.vue';
 
-defineProps({
+ChartJS.register(CategoryScale, LinearScale, PointElement, LineElement, BarElement, ArcElement, Tooltip, Legend, Filler);
+
+const props = defineProps({
     metrics: Array,
+    charts: {
+        type: Object,
+        default: () => ({}),
+    },
     upcomingSessions: Array,
     recentNotifications: Array,
     quickActions: Array,
 });
+
+const palette = {
+    blue: '#2563eb',
+    mint: '#10b981',
+    yellow: '#f59e0b',
+    coral: '#f97316',
+    ink: '#111827',
+    muted: '#64748b',
+    line: '#e2e8f0',
+};
+
+const chartOptions = {
+    responsive: true,
+    maintainAspectRatio: false,
+    plugins: {
+        legend: {
+            labels: {
+                boxWidth: 10,
+                color: palette.muted,
+                font: { family: 'Nunito Sans', weight: '700' },
+            },
+        },
+        tooltip: {
+            backgroundColor: palette.ink,
+            titleFont: { family: 'Nunito Sans', weight: '800' },
+            bodyFont: { family: 'Nunito Sans', weight: '700' },
+        },
+    },
+    scales: {
+        x: {
+            grid: { display: false },
+            ticks: { color: palette.muted, font: { family: 'Nunito Sans', weight: '700' } },
+        },
+        y: {
+            beginAtZero: true,
+            ticks: { precision: 0, color: palette.muted, font: { family: 'Nunito Sans', weight: '700' } },
+            grid: { color: palette.line },
+        },
+    },
+};
+
+const doughnutOptions = {
+    responsive: true,
+    maintainAspectRatio: false,
+    cutout: '68%',
+    plugins: chartOptions.plugins,
+};
+
+function withBarColors(chart, colors = [palette.blue]) {
+    return {
+        labels: chart?.labels ?? [],
+        datasets: (chart?.datasets ?? []).map((dataset, index) => ({
+            ...dataset,
+            borderRadius: 12,
+            backgroundColor: colors[index] ?? colors[0],
+            borderColor: colors[index] ?? colors[0],
+        })),
+    };
+}
+
+const attendanceTrendData = computed(() => ({
+    labels: props.charts.attendanceTrend?.labels ?? [],
+    datasets: (props.charts.attendanceTrend?.datasets ?? []).map((dataset, index) => {
+        const colors = [palette.mint, palette.coral, palette.yellow, palette.blue];
+        const color = colors[index] ?? palette.blue;
+
+        return {
+            ...dataset,
+            borderColor: color,
+            backgroundColor: `${color}22`,
+            pointBackgroundColor: color,
+            pointBorderColor: '#ffffff',
+            borderWidth: 3,
+            tension: 0.35,
+            fill: true,
+        };
+    }),
+}));
+
+const weeklySessionsData = computed(() => withBarColors(props.charts.weeklySessions, [palette.blue]));
+const studentGrowthData = computed(() => withBarColors(props.charts.studentGrowth, [palette.mint]));
+const groupLoadData = computed(() => withBarColors(props.charts.groupLoad, [palette.coral]));
+const examPipelineData = computed(() => ({
+    labels: props.charts.examPipeline?.labels ?? [],
+    datasets: (props.charts.examPipeline?.datasets ?? []).map((dataset) => ({
+        ...dataset,
+        backgroundColor: [palette.blue, palette.coral, palette.yellow, palette.mint],
+        borderColor: '#ffffff',
+        borderWidth: 4,
+    })),
+}));
 </script>
 
 <template>
     <Head title="Teacher Dashboard" />
     <AppShell title="Teacher Dashboard">
-        <section class="grid gap-4 sm:grid-cols-2 xl:grid-cols-5">
+        <section class="grid gap-4 sm:grid-cols-2 xl:grid-cols-6">
             <StatTile v-for="metric in metrics" :key="metric.label" v-bind="metric" />
+        </section>
+
+        <section class="mt-6 grid gap-5 xl:grid-cols-2">
+            <article class="teachify-card rounded-[1.6rem] p-5">
+                <div>
+                    <h2 class="text-lg font-black">Attendance trend</h2>
+                    <p class="text-sm font-medium text-teachify-muted">Last 14 days by attendance status.</p>
+                </div>
+                <div class="mt-5 h-80">
+                    <Line :data="attendanceTrendData" :options="chartOptions" />
+                </div>
+            </article>
+
+            <article class="teachify-card rounded-[1.6rem] p-5">
+                <div>
+                    <h2 class="text-lg font-black">This week's sessions</h2>
+                    <p class="text-sm font-medium text-teachify-muted">Saturday-to-Friday teaching load.</p>
+                </div>
+                <div class="mt-5 h-80">
+                    <Bar :data="weeklySessionsData" :options="chartOptions" />
+                </div>
+            </article>
+
+            <article class="teachify-card rounded-[1.6rem] p-5">
+                <div>
+                    <h2 class="text-lg font-black">Student growth</h2>
+                    <p class="text-sm font-medium text-teachify-muted">New students created over the last 6 months.</p>
+                </div>
+                <div class="mt-5 h-80">
+                    <Bar :data="studentGrowthData" :options="chartOptions" />
+                </div>
+            </article>
+
+            <article class="teachify-card rounded-[1.6rem] p-5">
+                <div>
+                    <h2 class="text-lg font-black">Exam pipeline</h2>
+                    <p class="text-sm font-medium text-teachify-muted">Exam windows and student attempt progress.</p>
+                </div>
+                <div class="mt-5 h-80">
+                    <Doughnut :data="examPipelineData" :options="doughnutOptions" />
+                </div>
+            </article>
+
+            <article class="teachify-card rounded-[1.6rem] p-5 xl:col-span-2">
+                <div>
+                    <h2 class="text-lg font-black">Top groups by load</h2>
+                    <p class="text-sm font-medium text-teachify-muted">The five groups with the most enrolled students.</p>
+                </div>
+                <div class="mt-5 h-80">
+                    <Bar :data="groupLoadData" :options="chartOptions" />
+                </div>
+            </article>
         </section>
 
         <section class="mt-6 grid gap-5 xl:grid-cols-[1.4fr_0.8fr]">

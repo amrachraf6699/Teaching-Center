@@ -58,6 +58,11 @@ class ExamController extends Controller
                 'csv' => route('admin.exams.export', 'csv'),
                 'pdf' => route('admin.exams.export', 'pdf'),
             ],
+            'importOptions' => [
+                $this->importOption('exams', 'Exams'),
+                $this->importOption('exam_questions', 'Exam Questions'),
+                $this->importOption('exam_results', 'Exam Results'),
+            ],
         ]);
     }
 
@@ -364,6 +369,17 @@ class ExamController extends Controller
         return [
             ['value' => 'score_only', 'label' => 'Score Only'],
             ['value' => 'question_review', 'label' => 'Question Review'],
+        ];
+    }
+
+    private function importOption(string $type, string $label): array
+    {
+        return [
+            'value' => $type,
+            'label' => $label,
+            'store_url' => route('admin.imports.store', $type),
+            'template_csv_url' => route('admin.imports.template', ['type' => $type, 'format' => 'csv']),
+            'template_xlsx_url' => route('admin.imports.template', ['type' => $type, 'format' => 'xlsx']),
         ];
     }
 }

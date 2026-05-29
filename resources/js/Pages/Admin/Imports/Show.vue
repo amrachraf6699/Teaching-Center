@@ -1,5 +1,5 @@
 <script setup>
-import { Head, Link } from '@inertiajs/vue3';
+import { Head } from '@inertiajs/vue3';
 import EmptyState from '../../../Components/EmptyState.vue';
 import AppShell from '../../../Layouts/AppShell.vue';
 
@@ -23,9 +23,13 @@ defineProps({
                     <p class="mt-1 text-sm font-medium text-teachify-muted">{{ batch.file_name }} · {{ batch.created_at }}</p>
                 </div>
 
-                <Link :href="$page.props.routes.adminImports" class="rounded-2xl border border-teachify-line px-4 py-2 text-sm font-bold text-teachify-ink hover:border-teachify-blue hover:text-teachify-blue">
-                    Back to imports
-                </Link>
+                <button
+                    type="button"
+                    class="rounded-2xl border border-teachify-line px-4 py-2 text-sm font-bold text-teachify-ink hover:border-teachify-blue hover:text-teachify-blue"
+                    @click="window.history.back()"
+                >
+                    Back
+                </button>
             </div>
 
             <section class="grid gap-4 md:grid-cols-4">

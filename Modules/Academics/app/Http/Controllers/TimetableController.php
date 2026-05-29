@@ -56,6 +56,9 @@ class TimetableController extends Controller
                 'csv' => route('admin.timetables.export', 'csv'),
                 'pdf' => route('admin.timetables.export', 'pdf'),
             ],
+            'importOptions' => [
+                $this->importOption('timetables', 'Timetables'),
+            ],
         ]);
     }
 
@@ -342,5 +345,16 @@ class TimetableController extends Controller
             ->where('starts_at', '>=', now())
             ->doesntHave('attendanceRecords')
             ->delete();
+    }
+
+    private function importOption(string $type, string $label): array
+    {
+        return [
+            'value' => $type,
+            'label' => $label,
+            'store_url' => route('admin.imports.store', $type),
+            'template_csv_url' => route('admin.imports.template', ['type' => $type, 'format' => 'csv']),
+            'template_xlsx_url' => route('admin.imports.template', ['type' => $type, 'format' => 'xlsx']),
+        ];
     }
 }

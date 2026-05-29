@@ -4,7 +4,6 @@ import {
     Bell,
     BookOpen,
     CalendarDays,
-    Download,
     FileText,
     GraduationCap,
     House,
@@ -13,7 +12,6 @@ import {
     LogOut,
     ScanLine,
     Settings,
-    Upload,
     Users,
     UserRound,
     X,
@@ -182,8 +180,6 @@ const adminNav = computed(() => [
     { label: 'Sessions', href: routes.value.adminSessions, icon: CalendarDays },
     { label: 'Exams', href: routes.value.adminExams, icon: FileText },
     { label: 'Notifications', href: routes.value.adminNotifications, icon: Bell },
-    { label: 'Imports', href: routes.value.adminImports, icon: Upload },
-    { label: 'Exports', href: routes.value.adminExports, icon: Download },
     { label: 'Settings', href: routes.value.adminSettings, icon: Settings },
 ]);
 

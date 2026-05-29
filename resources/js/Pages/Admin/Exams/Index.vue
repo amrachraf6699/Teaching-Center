@@ -5,6 +5,7 @@ import { computed, onBeforeUnmount, ref, watch } from 'vue';
 import Button from '../../../Components/Button.vue';
 import DataTable from '../../../Components/DataTable.vue';
 import EmptyState from '../../../Components/EmptyState.vue';
+import ImportActions from '../../../Components/ImportActions.vue';
 import Pagination from '../../../Components/Pagination.vue';
 import ResourceActions from '../../../Components/ResourceActions.vue';
 import SearchableSelect from '../../../Components/SearchableSelect.vue';
@@ -22,6 +23,10 @@ const props = defineProps({
     exportUrls: {
         type: Object,
         default: () => ({}),
+    },
+    importOptions: {
+        type: Array,
+        default: () => [],
     },
     filters: {
         type: Object,
@@ -155,6 +160,10 @@ onBeforeUnmount(() => {
                     </div>
                 </div>
             </form>
+
+            <div class="border-t border-white/70 bg-white/75 p-4 sm:p-5 lg:p-6">
+                <ImportActions :imports="importOptions" />
+            </div>
         </section>
 
         <DataTable v-if="exams.data.length" :columns="columns" :rows="exams.data">

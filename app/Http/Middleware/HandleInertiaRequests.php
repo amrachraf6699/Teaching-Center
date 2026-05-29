@@ -63,8 +63,6 @@ class HandleInertiaRequests extends Middleware
                 'adminSessions' => route('admin.sessions.index'),
                 'adminExams' => route('admin.exams.index'),
                 'adminNotifications' => route('admin.notifications.index'),
-                'adminImports' => route('admin.imports.index'),
-                'adminExports' => route('admin.exports.index'),
                 'adminSettings' => route('admin.settings.edit'),
             ],
             'parentUnreadCount' => fn () => $user?->role === 'parent'

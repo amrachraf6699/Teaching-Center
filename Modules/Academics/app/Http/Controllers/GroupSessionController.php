@@ -53,6 +53,10 @@ class GroupSessionController extends Controller
                 'csv' => route('admin.sessions.export', 'csv'),
                 'pdf' => route('admin.sessions.export', 'pdf'),
             ],
+            'importOptions' => [
+                $this->importOption('sessions', 'Sessions'),
+                $this->importOption('attendance', 'Attendance'),
+            ],
         ]);
     }
 
@@ -227,5 +231,16 @@ class GroupSessionController extends Controller
             ->when($filters['group'] !== '', function ($query) use ($filters): void {
                 $query->where('teaching_group_id', $filters['group']);
             });
+    }
+
+    private function importOption(string $type, string $label): array
+    {
+        return [
+            'value' => $type,
+            'label' => $label,
+            'store_url' => route('admin.imports.store', $type),
+            'template_csv_url' => route('admin.imports.template', ['type' => $type, 'format' => 'csv']),
+            'template_xlsx_url' => route('admin.imports.template', ['type' => $type, 'format' => 'xlsx']),
+        ];
     }
 }

@@ -42,6 +42,9 @@ class ParentAccountController extends Controller
                 'csv' => route('admin.parents.export', 'csv'),
                 'pdf' => route('admin.parents.export', 'pdf'),
             ],
+            'importOptions' => [
+                $this->importOption('parents', 'Parents'),
+            ],
         ]);
     }
 
@@ -218,5 +221,16 @@ class ParentAccountController extends Controller
             ->when($filters['children'] === 'without', function ($query): void {
                 $query->doesntHave('children');
             });
+    }
+
+    private function importOption(string $type, string $label): array
+    {
+        return [
+            'value' => $type,
+            'label' => $label,
+            'store_url' => route('admin.imports.store', $type),
+            'template_csv_url' => route('admin.imports.template', ['type' => $type, 'format' => 'csv']),
+            'template_xlsx_url' => route('admin.imports.template', ['type' => $type, 'format' => 'xlsx']),
+        ];
     }
 }

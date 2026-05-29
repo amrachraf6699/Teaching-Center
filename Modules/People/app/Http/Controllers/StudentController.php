@@ -68,6 +68,10 @@ class StudentController extends Controller
                 'csv' => route('admin.students.export', 'csv'),
                 'pdf' => route('admin.students.export', 'pdf'),
             ],
+            'importOptions' => [
+                $this->importOption('students', 'Students'),
+                $this->importOption('enrollments', 'Enrollments'),
+            ],
         ]);
     }
 
@@ -309,5 +313,16 @@ class StudentController extends Controller
         $student->user->forceFill([
             'password' => Hash::make($password),
         ])->save();
+    }
+
+    private function importOption(string $type, string $label): array
+    {
+        return [
+            'value' => $type,
+            'label' => $label,
+            'store_url' => route('admin.imports.store', $type),
+            'template_csv_url' => route('admin.imports.template', ['type' => $type, 'format' => 'csv']),
+            'template_xlsx_url' => route('admin.imports.template', ['type' => $type, 'format' => 'xlsx']),
+        ];
     }
 }
