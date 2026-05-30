@@ -1,5 +1,6 @@
 <script setup>
 import { Head } from '@inertiajs/vue3';
+import { BrowserQRCodeReader } from '@zxing/browser';
 import { onBeforeUnmount, onMounted, ref } from 'vue';
 import AppShell from '../../Layouts/AppShell.vue';
 
@@ -8,78 +9,61 @@ const scannerReady = ref(false);
 const scannerSupported = ref(false);
 const scanning = ref(false);
 const errorMessage = ref('');
-let mediaStream = null;
-let animationFrameId = null;
-let detector = null;
+const codeReader = new BrowserQRCodeReader();
+let scannerControls = null;
 
 async function startScanner() {
+    if (scanning.value) {
+        return;
+    }
+
     if (!('mediaDevices' in navigator) || !('getUserMedia' in navigator.mediaDevices)) {
         errorMessage.value = 'Camera access is not available in this browser.';
         return;
     }
 
-    if (!('BarcodeDetector' in window)) {
-        errorMessage.value = 'This browser does not support in-app QR scanning. Use your phone camera to open the session QR link instead.';
-        return;
-    }
-
     try {
-        detector = new window.BarcodeDetector({ formats: ['qr_code'] });
+        errorMessage.value = '';
         scannerSupported.value = true;
-        mediaStream = await navigator.mediaDevices.getUserMedia({
-            video: {
-                facingMode: 'environment',
-            },
-        });
+        scanning.value = true;
 
         if (!video.value) {
             return;
         }
 
-        video.value.srcObject = mediaStream;
-        await video.value.play();
+        scannerControls = await codeReader.decodeFromConstraints(
+            {
+                audio: false,
+                video: { facingMode: { ideal: 'environment' } },
+            },
+            video.value,
+            (result, error, controls) => {
+                if (!result) {
+                    return;
+                }
+
+                controls.stop();
+                scannerControls = null;
+                scannerReady.value = false;
+                scanning.value = false;
+                window.location.href = result.getText();
+            },
+        );
         scannerReady.value = true;
-        scanning.value = true;
-        scanFrame();
     } catch (error) {
+        scannerSupported.value = false;
+        scanning.value = false;
         errorMessage.value = 'Unable to open the camera. Allow camera access and try again.';
     }
 }
 
-async function scanFrame() {
-    if (!video.value || !detector || !scanning.value) {
-        return;
-    }
-
-    try {
-        const barcodes = await detector.detect(video.value);
-        const qrCode = barcodes.find((barcode) => barcode.rawValue);
-
-        if (qrCode?.rawValue) {
-            stopScanner();
-            window.location.href = qrCode.rawValue;
-            return;
-        }
-    } catch (error) {
-        errorMessage.value = 'Scanning failed on this device. Try again or use your phone camera directly.';
-        stopScanner();
-        return;
-    }
-
-    animationFrameId = window.requestAnimationFrame(scanFrame);
-}
-
 function stopScanner() {
     scanning.value = false;
+    scannerReady.value = false;
 
-    if (animationFrameId) {
-        window.cancelAnimationFrame(animationFrameId);
-        animationFrameId = null;
-    }
-
-    if (mediaStream) {
-        mediaStream.getTracks().forEach((track) => track.stop());
-        mediaStream = null;
+    if (scannerControls) {
+        scannerControls.stop();
+        scannerControls = null;
     }
 }
 

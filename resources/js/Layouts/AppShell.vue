@@ -1,5 +1,6 @@
 <script setup>
 import { Link, router, useForm, usePage } from '@inertiajs/vue3';
+import { BrowserQRCodeReader } from '@zxing/browser';
 import {
     Bell,
     BookOpen,
@@ -46,13 +47,12 @@ const scannerSupported = ref(false);
 const scanning = ref(false);
 const scannerError = ref('');
 const video = ref(null);
-const detector = ref(null);
 const codeForm = useForm({
     code: '',
 });
 
-let mediaStream = null;
-let animationFrameId = null;
+const codeReader = new BrowserQRCodeReader();
+let scannerControls = null;
 
 function toggleBell() {
     bellOpen.value = !bellOpen.value;
@@ -87,72 +87,57 @@ async function startScanner() {
         return;
     }
 
+    if (scanning.value) {
+        return;
+    }
+
     if (!('mediaDevices' in navigator) || !('getUserMedia' in navigator.mediaDevices)) {
         scannerError.value = 'Camera access is not available in this browser.';
         return;
     }
 
-    if (!('BarcodeDetector' in window)) {
-        scannerError.value = 'This browser does not support in-app QR scanning. Use the session code instead.';
-        return;
-    }
-
     try {
-        detector.value = new window.BarcodeDetector({ formats: ['qr_code'] });
+        scannerError.value = '';
         scannerSupported.value = true;
-        mediaStream = await navigator.mediaDevices.getUserMedia({
-            video: { facingMode: 'environment' },
-        });
+        scanning.value = true;
 
         if (!video.value) {
             return;
         }
 
-        video.value.srcObject = mediaStream;
-        await video.value.play();
+        scannerControls = await codeReader.decodeFromConstraints(
+            {
+                audio: false,
+                video: { facingMode: { ideal: 'environment' } },
+            },
+            video.value,
+            (result, error, controls) => {
+                if (!result) {
+                    return;
+                }
+
+                controls.stop();
+                scannerControls = null;
+                scannerReady.value = false;
+                scanning.value = false;
+                window.location.href = result.getText();
+            },
+        );
         scannerReady.value = true;
-        scanning.value = true;
-        scanFrame();
-    } catch {
+    } catch (error) {
+        scannerSupported.value = false;
+        scanning.value = false;
         scannerError.value = 'Unable to open the camera. Allow access or use the session code instead.';
     }
-}
-
-async function scanFrame() {
-    if (!video.value || !detector.value || !scanning.value) {
-        return;
-    }
-
-    try {
-        const barcodes = await detector.value.detect(video.value);
-        const qrCode = barcodes.find((barcode) => barcode.rawValue);
-
-        if (qrCode?.rawValue) {
-            stopScanner();
-            window.location.href = qrCode.rawValue;
-            return;
-        }
-    } catch {
-        scannerError.value = 'Scanning failed on this device. Use the session code instead.';
-        stopScanner();
-        return;
-    }
-
-    animationFrameId = window.requestAnimationFrame(scanFrame);
 }
 
 function stopScanner() {
     scanning.value = false;
     scannerReady.value = false;
 
-    if (animationFrameId) {
-        window.cancelAnimationFrame(animationFrameId);
-        animationFrameId = null;
-    }
-
-    if (mediaStream) {
-        mediaStream.getTracks().forEach((track) => track.stop());
-        mediaStream = null;
+    if (scannerControls) {
+        scannerControls.stop();
+        scannerControls = null;
     }
 }
 
@@ -379,8 +364,8 @@ function logout() {
             </div>
         </nav>
 
-        <div v-if="attendanceModalOpen && user?.role === 'student'" class="fixed inset-0 z-50 flex items-center justify-center bg-slate-950/50 px-4 py-6">
-            <div class="w-full max-w-4xl rounded-[1.8rem] border border-teachify-line bg-white shadow-[0_24px_80px_rgba(15,23,42,0.22)]">
+        <div v-if="attendanceModalOpen && user?.role === 'student'" class="fixed inset-0 z-50 flex items-start justify-center overflow-y-auto bg-slate-950/50 px-4 py-6 sm:items-center">
+            <div class="max-h-[calc(100vh-3rem)] w-full max-w-4xl overflow-y-auto rounded-[1.8rem] border border-teachify-line bg-white shadow-[0_24px_80px_rgba(15,23,42,0.22)]">
                 <div class="flex items-start justify-between gap-4 border-b border-teachify-line px-5 py-4 sm:px-6">
                     <div>
                         <h2 class="text-xl font-black text-teachify-ink">Student self check-in</h2>
