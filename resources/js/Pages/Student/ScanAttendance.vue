@@ -1,7 +1,7 @@
 <script setup>
 import { Head } from '@inertiajs/vue3';
 import { BrowserQRCodeReader } from '@zxing/browser';
-import { onBeforeUnmount, onMounted, ref } from 'vue';
+import { nextTick, onBeforeUnmount, onMounted, ref } from 'vue';
 import AppShell from '../../Layouts/AppShell.vue';
 
 const video = ref(null);
@@ -11,9 +11,15 @@ const scanning = ref(false);
 const errorMessage = ref('');
 const codeReader = new BrowserQRCodeReader();
 let scannerControls = null;
+let mediaStream = null;
 
 async function startScanner() {
     if (scanning.value) {
+        return;
+    }
+
+    if (!window.isSecureContext) {
+        errorMessage.value = 'Camera access requires HTTPS. Use your phone camera to open the session QR link instead.';
         return;
     }
 
@@ -33,11 +39,13 @@ async function startScanner() {
             return;
         }
 
-        scannerControls = await codeReader.decodeFromConstraints(
-            {
-                audio: false,
-                video: { facingMode: { ideal: 'environment' } },
-            },
+        mediaStream = await navigator.mediaDevices.getUserMedia({
+            audio: false,
+            video: { facingMode: { ideal: 'environment' } },
+        });
+
+        scannerControls = await codeReader.decodeFromStream(
+            mediaStream,
             video.value,
             (result, error, controls) => {
                 if (!result) {
@@ -67,9 +75,15 @@ function stopScanner() {
         scannerControls.stop();
         scannerControls = null;
     }
+
+    if (mediaStream) {
+        mediaStream.getTracks().forEach((track) => track.stop());
+        mediaStream = null;
+    }
 }
 
-onMounted(() => {
+onMounted(async () => {
+    await nextTick();
     startScanner();
 });
 
@@ -98,6 +112,7 @@ onBeforeUnmount(() => {
                     <div class="rounded-2xl bg-slate-50 px-4 py-3 text-sm font-medium text-teachify-muted">
                         <span class="font-black text-teachify-ink">Status:</span>
                         <span v-if="scannerReady && scanning" class="text-teachify-blue"> Camera is live and scanning.</span>
+                        <span v-else-if="scanning && !errorMessage" class="text-teachify-blue"> Waiting for camera permission...</span>
                         <span v-else-if="scannerSupported && !scanning" class="text-teachify-muted"> Scanner stopped.</span>
                         <span v-else-if="errorMessage" class="text-amber-700"> Camera unavailable.</span>
                         <span v-else> Preparing camera...</span>

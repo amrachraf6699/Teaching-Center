@@ -17,7 +17,7 @@ import {
     UserRound,
     X,
 } from 'lucide-vue-next';
-import { computed, onBeforeUnmount, onMounted, onUnmounted, ref } from 'vue';
+import { computed, nextTick, onBeforeUnmount, onMounted, onUnmounted, ref } from 'vue';
 import FlashMessage from '../Components/FlashMessage.vue';
 
 const props = defineProps({
@@ -53,6 +53,7 @@ const codeForm = useForm({
 
 const codeReader = new BrowserQRCodeReader();
 let scannerControls = null;
+let mediaStream = null;
 
 function toggleBell() {
     bellOpen.value = !bellOpen.value;
@@ -67,12 +68,13 @@ function closeBell(e) {
     }
 }
 
-function openAttendanceModal() {
+async function openAttendanceModal() {
     attendanceModalOpen.value = true;
     codeForm.reset();
     codeForm.clearErrors();
     scannerError.value = '';
     if (user.value?.role === 'student') {
+        await nextTick();
         startScanner();
     }
 }
@@ -88,6 +90,11 @@ async function startScanner() {
     }
 
     if (scanning.value) {
+        return;
+    }
+
+    if (!window.isSecureContext) {
+        scannerError.value = 'Camera access requires HTTPS. Use the session code instead.';
         return;
     }
 
@@ -107,11 +114,13 @@ async function startScanner() {
             return;
         }
 
-        scannerControls = await codeReader.decodeFromConstraints(
-            {
-                audio: false,
-                video: { facingMode: { ideal: 'environment' } },
-            },
+        mediaStream = await navigator.mediaDevices.getUserMedia({
+            audio: false,
+            video: { facingMode: { ideal: 'environment' } },
+        });
+
+        scannerControls = await codeReader.decodeFromStream(
+            mediaStream,
             video.value,
             (result, error, controls) => {
                 if (!result) {
@@ -140,6 +149,11 @@ function stopScanner() {
     if (scannerControls) {
         scannerControls.stop();
         scannerControls = null;
+    }
+
+    if (mediaStream) {
+        mediaStream.getTracks().forEach((track) => track.stop());
+        mediaStream = null;
     }
 }
 
@@ -387,6 +401,7 @@ function logout() {
                         <div class="rounded-2xl bg-white px-4 py-3 text-sm font-medium text-teachify-muted">
                             <span class="font-black text-teachify-ink">Status:</span>
                             <span v-if="scannerReady && scanning" class="text-teachify-blue"> Camera is live and scanning.</span>
+                            <span v-else-if="scanning && !scannerError" class="text-teachify-blue"> Waiting for camera permission...</span>
                             <span v-else-if="scannerSupported && !scanning" class="text-teachify-muted"> Scanner stopped.</span>
                             <span v-else-if="scannerError" class="text-amber-700"> Camera unavailable.</span>
                             <span v-else> Preparing camera...</span>
