@@ -33,7 +33,9 @@ async function startScanner() {
         scannerSupported.value = true;
         scanning.value = true;
 
-        if (!video.value) {
+        const preview = await waitForVideoPreview();
+
+        if (!preview) {
             scanning.value = false;
             errorMessage.value = 'Camera preview is not ready. Try again or use your phone camera directly.';
             return;
@@ -46,7 +48,7 @@ async function startScanner() {
 
         scannerControls = await codeReader.decodeFromStream(
             mediaStream,
-            video.value,
+            preview,
             (result, error, controls) => {
                 if (!result) {
                     return;
@@ -65,6 +67,20 @@ async function startScanner() {
         scanning.value = false;
         errorMessage.value = 'Unable to open the camera. Allow camera access and try again.';
     }
+}
+
+async function waitForVideoPreview() {
+    for (let attempt = 0; attempt < 20; attempt += 1) {
+        await nextTick();
+
+        if (video.value) {
+            return video.value;
+        }
+
+        await new Promise((resolve) => window.setTimeout(resolve, 50));
+    }
+
+    return null;
 }
 
 function stopScanner() {
