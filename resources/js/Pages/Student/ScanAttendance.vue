@@ -28,6 +28,8 @@ async function startScanner() {
         scanning.value = true;
 
         if (!video.value) {
+            scanning.value = false;
+            errorMessage.value = 'Camera preview is not ready. Try again or use your phone camera directly.';
             return;
         }
 
@@ -97,6 +99,7 @@ onBeforeUnmount(() => {
                         <span class="font-black text-teachify-ink">Status:</span>
                         <span v-if="scannerReady && scanning" class="text-teachify-blue"> Camera is live and scanning.</span>
                         <span v-else-if="scannerSupported && !scanning" class="text-teachify-muted"> Scanner stopped.</span>
+                        <span v-else-if="errorMessage" class="text-amber-700"> Camera unavailable.</span>
                         <span v-else> Preparing camera...</span>
                     </div>
 

@@ -102,6 +102,8 @@ async function startScanner() {
         scanning.value = true;
 
         if (!video.value) {
+            scanning.value = false;
+            scannerError.value = 'Camera preview is not ready. Use the session code instead.';
             return;
         }
 
@@ -386,6 +388,7 @@ function logout() {
                             <span class="font-black text-teachify-ink">Status:</span>
                             <span v-if="scannerReady && scanning" class="text-teachify-blue"> Camera is live and scanning.</span>
                             <span v-else-if="scannerSupported && !scanning" class="text-teachify-muted"> Scanner stopped.</span>
+                            <span v-else-if="scannerError" class="text-amber-700"> Camera unavailable.</span>
                             <span v-else> Preparing camera...</span>
                         </div>
 

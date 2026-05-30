@@ -1,0 +1,1 @@
+import{t as e}from"./createLucideIcon-Bm8O6g2p.js";var t=e(`chevron-down`,[[`path`,{d:`m6 9 6 6 6-6`,key:`qrunsl`}]]);export{t};
