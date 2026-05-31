@@ -10,7 +10,7 @@ const brand = computed(() => page.props.brand ?? { name: 'Teachify' });
     <main class="grid min-h-screen place-items-center px-4 py-10">
         <section class="w-full max-w-md">
             <div class="mb-8 text-center">
-                <div class="mx-auto mb-4 grid h-16 w-16 place-items-center rounded-[1.4rem] bg-teachify-blue text-2xl font-black text-white shadow-[0_18px_35px_rgba(37,99,235,0.25)]">
+                <div class="place-items-center font-black mb-2">
                     <img v-if="brand.logoUrl" :src="brand.logoUrl" :alt="brand.name" class="max-h-12 w-auto rounded-xl" />
                     <span v-else>T</span>
                 </div>
