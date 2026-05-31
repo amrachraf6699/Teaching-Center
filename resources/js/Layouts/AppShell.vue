@@ -18,7 +18,9 @@ import {
     X,
 } from 'lucide-vue-next';
 import { computed, nextTick, onBeforeUnmount, onMounted, onUnmounted, ref } from 'vue';
+import { useI18n } from 'vue-i18n';
 import FlashMessage from '../Components/FlashMessage.vue';
+import LanguageToggle from '../Components/LanguageToggle.vue';
 
 const props = defineProps({
     title: {
@@ -28,6 +30,7 @@ const props = defineProps({
 });
 
 const page = usePage();
+const { t } = useI18n();
 const user = computed(() => page.props.auth?.user);
 const brand = computed(() => page.props.brand ?? { name: 'Teachify' });
 const routes = computed(() => page.props.routes ?? {});
@@ -94,12 +97,12 @@ async function startScanner() {
     }
 
     if (!window.isSecureContext) {
-        scannerError.value = 'Camera access requires HTTPS. Use the session code instead.';
+        scannerError.value = t('scanner.requiresHttps');
         return;
     }
 
     if (!('mediaDevices' in navigator) || !('getUserMedia' in navigator.mediaDevices)) {
-        scannerError.value = 'Camera access is not available in this browser.';
+        scannerError.value = t('scanner.notAvailable');
         return;
     }
 
@@ -112,7 +115,7 @@ async function startScanner() {
 
         if (!preview) {
             scanning.value = false;
-            scannerError.value = 'Camera preview is not ready. Use the session code instead.';
+            scannerError.value = t('scanner.previewNotReady');
             return;
         }
 
@@ -140,7 +143,7 @@ async function startScanner() {
     } catch (error) {
         scannerSupported.value = false;
         scanning.value = false;
-        scannerError.value = 'Unable to open the camera. Allow access or use the session code instead.';
+        scannerError.value = t('scanner.unableToOpen');
     }
 }
 
@@ -189,28 +192,28 @@ onUnmounted(() => document.removeEventListener('click', closeBell));
 onBeforeUnmount(() => stopScanner());
 
 const adminNav = computed(() => [
-    { label: 'Dashboard', href: routes.value.adminDashboard, icon: LayoutDashboard },
-    { label: 'Students', href: routes.value.adminStudents, icon: GraduationCap },
-    { label: 'Parents', href: routes.value.adminParents, icon: Users },
-    { label: 'Groups', href: routes.value.adminGroups, icon: BookOpen },
-    { label: 'Timetables', href: routes.value.adminTimetables, icon: CalendarDays },
-    { label: 'Sessions', href: routes.value.adminSessions, icon: CalendarDays },
-    { label: 'Exams', href: routes.value.adminExams, icon: FileText },
-    { label: 'Notifications', href: routes.value.adminNotifications, icon: Bell },
-    { label: 'Settings', href: routes.value.adminSettings, icon: Settings },
+    { label: t('nav.dashboard'), href: routes.value.adminDashboard, icon: LayoutDashboard },
+    { label: t('nav.students'), href: routes.value.adminStudents, icon: GraduationCap },
+    { label: t('nav.parents'), href: routes.value.adminParents, icon: Users },
+    { label: t('nav.groups'), href: routes.value.adminGroups, icon: BookOpen },
+    { label: t('nav.timetables'), href: routes.value.adminTimetables, icon: CalendarDays },
+    { label: t('nav.sessions'), href: routes.value.adminSessions, icon: CalendarDays },
+    { label: t('nav.exams'), href: routes.value.adminExams, icon: FileText },
+    { label: t('nav.notifications'), href: routes.value.adminNotifications, icon: Bell },
+    { label: t('nav.settings'), href: routes.value.adminSettings, icon: Settings },
 ]);
 
 const parentNav = computed(() => [
-    { label: 'Portal', href: routes.value.parentDashboard, icon: UserRound },
-    { label: 'Attendance', href: routes.value.parentAttendance, icon: CalendarDays },
-    { label: 'Exams', href: routes.value.parentExams, icon: FileText },
+    { label: t('nav.portal'), href: routes.value.parentDashboard, icon: UserRound },
+    { label: t('nav.attendance'), href: routes.value.parentAttendance, icon: CalendarDays },
+    { label: t('nav.exams'), href: routes.value.parentExams, icon: FileText },
 ]);
 
 const studentNav = computed(() => [
-    { label: 'Home', href: routes.value.studentHome, icon: House },
-    { label: 'Sessions', href: routes.value.studentSessions, icon: CalendarDays },
-    { label: 'Exams', href: routes.value.studentExams, icon: FileText },
-    { label: 'Password', href: routes.value.studentPassword, icon: KeyRound },
+    { label: t('nav.home'), href: routes.value.studentHome, icon: House },
+    { label: t('nav.sessions'), href: routes.value.studentSessions, icon: CalendarDays },
+    { label: t('nav.exams'), href: routes.value.studentExams, icon: FileText },
+    { label: t('nav.password'), href: routes.value.studentPassword, icon: KeyRound },
 ]);
 
 const navItems = computed(() => {
@@ -249,7 +252,7 @@ function logout() {
                 <span v-else class="grid h-11 w-11 place-items-center rounded-2xl bg-teachify-blue text-lg font-bold text-white">T</span>
                 <span>
                     <span class="block text-lg font-bold">{{ brand.name }}</span>
-                    <span class="block text-xs font-medium text-teachify-muted">{{ user?.role === 'student' ? 'Student workspace' : brand.tagline || 'Teacher workspace' }}</span>
+                    <span class="block text-xs font-medium text-teachify-muted">{{ user?.role === 'student' ? $t('brand.studentWorkspace') : brand.tagline || $t('brand.teacherWorkspace') }}</span>
                 </span>
             </Link>
 
@@ -260,7 +263,7 @@ function logout() {
                 @click="openAttendanceModal"
             >
                 <ScanLine class="h-4 w-4" />
-                Scan or Enter Session Code
+                {{ $t('nav.scanOrEnterCode') }}
             </button>
 
             <nav class="mt-8 space-y-1">
@@ -298,7 +301,7 @@ function logout() {
                             @click="openAttendanceModal"
                         >
                             <ScanLine class="h-4 w-4" />
-                            Scan / Code
+                            {{ $t('nav.scanOrCode') }}
                         </button>
 
                         <div class="hidden text-right sm:block">
@@ -310,7 +313,7 @@ function logout() {
                             <button
                                 type="button"
                                 class="relative grid h-11 w-11 place-items-center rounded-2xl border border-teachify-line bg-white text-teachify-muted shadow-sm transition hover:border-teachify-blue hover:text-teachify-blue"
-                                aria-label="Notifications"
+                                :aria-label="$t('notifications.title')"
                                 @click.stop="toggleBell"
                             >
                                 <Bell class="h-5 w-5" />
@@ -328,8 +331,8 @@ function logout() {
                                 data-bell
                             >
                                 <div class="flex items-center justify-between border-b border-teachify-line px-4 py-3">
-                                    <span class="font-black">Notifications</span>
-                                    <Link :href="routes.parentNotifications" class="text-xs font-bold text-teachify-blue hover:underline" @click="bellOpen = false">View all</Link>
+                                    <span class="font-black">{{ $t('notifications.title') }}</span>
+                                    <Link :href="routes.parentNotifications" class="text-xs font-bold text-teachify-blue hover:underline" @click="bellOpen = false">{{ $t('actions.viewAll') }}</Link>
                                 </div>
 
                                 <div v-if="recentNotifications.length" class="max-h-80 space-y-2 overflow-y-auto p-3">
@@ -345,14 +348,16 @@ function logout() {
                                         <div class="mt-1 text-[10px] font-bold text-teachify-muted">{{ n.created_at }}</div>
                                     </div>
                                 </div>
-                                <p v-else class="px-4 py-5 text-sm font-medium text-teachify-muted">No notifications yet.</p>
+                                <p v-else class="px-4 py-5 text-sm font-medium text-teachify-muted">{{ $t('notifications.noNotificationsYet') }}</p>
                             </div>
                         </div>
+
+                        <LanguageToggle />
 
                         <button
                             type="button"
                             class="grid h-11 w-11 place-items-center rounded-2xl border border-teachify-line bg-white text-teachify-muted shadow-sm transition hover:border-teachify-coral hover:text-teachify-coral"
-                            aria-label="Logout"
+                            :aria-label="$t('actions.logout')"
                             @click="logout"
                         >
                             <LogOut class="h-5 w-5" />
@@ -380,7 +385,7 @@ function logout() {
                     @click="openAttendanceModal"
                 >
                     <ScanLine class="h-5 w-5" />
-                    <span>Scan</span>
+                    <span>{{ $t('nav.scan') }}</span>
                 </button>
 
                 <Link
@@ -400,8 +405,8 @@ function logout() {
             <div class="max-h-[calc(100vh-3rem)] w-full max-w-4xl overflow-y-auto rounded-[1.8rem] border border-teachify-line bg-white shadow-[0_24px_80px_rgba(15,23,42,0.22)]">
                 <div class="flex items-start justify-between gap-4 border-b border-teachify-line px-5 py-4 sm:px-6">
                     <div>
-                        <h2 class="text-xl font-black text-teachify-ink">Student self check-in</h2>
-                        <p class="mt-1 text-sm font-medium text-teachify-muted">Scan the teacher QR code or enter the session code from the session page.</p>
+                        <h2 class="text-xl font-black text-teachify-ink">{{ $t('scanner.title') }}</h2>
+                        <p class="mt-1 text-sm font-medium text-teachify-muted">{{ $t('scanner.description') }}</p>
                     </div>
                     <button type="button" class="grid h-10 w-10 place-items-center rounded-2xl border border-teachify-line text-teachify-muted transition hover:border-teachify-blue hover:text-teachify-blue" @click="closeAttendanceModal">
                         <X class="h-4 w-4" />
@@ -415,12 +420,12 @@ function logout() {
 
                     <aside class="space-y-4 rounded-[1.6rem] border border-teachify-line bg-slate-50 p-4">
                         <div class="rounded-2xl bg-white px-4 py-3 text-sm font-medium text-teachify-muted">
-                            <span class="font-black text-teachify-ink">Status:</span>
-                            <span v-if="scannerReady && scanning" class="text-teachify-blue"> Camera is live and scanning.</span>
-                            <span v-else-if="scanning && !scannerError" class="text-teachify-blue"> Waiting for camera permission...</span>
-                            <span v-else-if="scannerSupported && !scanning" class="text-teachify-muted"> Scanner stopped.</span>
-                            <span v-else-if="scannerError" class="text-amber-700"> Camera unavailable.</span>
-                            <span v-else> Preparing camera...</span>
+                            <span class="font-black text-teachify-ink">{{ $t('scanner.status') }}</span>
+                            <span v-if="scannerReady && scanning" class="text-teachify-blue">{{ $t('scanner.live') }}</span>
+                            <span v-else-if="scanning && !scannerError" class="text-teachify-blue">{{ $t('scanner.waitingPermission') }}</span>
+                            <span v-else-if="scannerSupported && !scanning" class="text-teachify-muted">{{ $t('scanner.stopped') }}</span>
+                            <span v-else-if="scannerError" class="text-amber-700">{{ $t('scanner.unavailable') }}</span>
+                            <span v-else>{{ $t('scanner.preparing') }}</span>
                         </div>
 
                         <div v-if="scannerError" class="rounded-2xl border border-amber-200 bg-amber-50 px-4 py-3 text-sm font-medium text-amber-800">
@@ -429,7 +434,7 @@ function logout() {
 
                         <form class="space-y-3 rounded-[1.4rem] border border-teachify-line bg-white p-4" @submit.prevent="submitAttendanceCode">
                             <label class="block">
-                                <span class="text-sm font-bold text-teachify-ink">Session code</span>
+                                <span class="text-sm font-bold text-teachify-ink">{{ $t('scanner.sessionCode') }}</span>
                                 <input
                                     v-model="codeForm.code"
                                     type="text"
@@ -443,13 +448,13 @@ function logout() {
                                 class="inline-flex min-h-11 w-full items-center justify-center rounded-2xl bg-teachify-blue px-4 py-2.5 text-sm font-bold text-white shadow-[0_12px_24px_rgba(37,99,235,0.22)] transition hover:bg-blue-700 disabled:cursor-not-allowed disabled:opacity-60"
                                 :disabled="codeForm.processing"
                             >
-                                Open Session
+                                {{ $t('actions.openSession') }}
                             </button>
                         </form>
 
                         <div class="space-y-3 text-sm font-medium text-teachify-muted">
-                            <div class="rounded-2xl bg-white px-4 py-3">The teacher can disable self check-in per session. If that happens, use teacher attendance review instead.</div>
-                            <div class="rounded-2xl bg-white px-4 py-3">If scanning fails here, enter the short session code shown on the teacher session page.</div>
+                            <div class="rounded-2xl bg-white px-4 py-3">{{ $t('scanner.teacherCanDisable') }}</div>
+                            <div class="rounded-2xl bg-white px-4 py-3">{{ $t('scanner.enterCodeFallback') }}</div>
                         </div>
                     </aside>
                 </div>

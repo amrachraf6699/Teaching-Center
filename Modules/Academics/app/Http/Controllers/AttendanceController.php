@@ -42,6 +42,6 @@ class AttendanceController extends Controller
             "Attendance for {$session->title}: {$attendance->status}."
         );
 
-        return back()->with('status', 'Attendance saved.');
+        return back()->with('status', __('flash.attendance.saved'));
     }
 }

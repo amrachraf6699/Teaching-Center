@@ -38,7 +38,7 @@ function toggle() {
             class="absolute left-1 grid h-6 w-6 place-items-center rounded-full bg-white text-[9px] font-black uppercase text-slate-500 shadow-sm transition"
             :class="modelValue ? 'translate-x-6 text-emerald-600' : 'translate-x-0'"
         >
-            {{ modelValue ? 'On' : 'Off' }}
+            {{ modelValue ? $t('common.on') : $t('common.off') }}
         </span>
     </button>
 </template>

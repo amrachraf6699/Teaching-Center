@@ -30,6 +30,6 @@ class StudentPasswordController extends Controller
             'password' => Hash::make($data['password']),
         ])->save();
 
-        return redirect()->route('student.password.edit')->with('status', 'Password updated.');
+        return redirect()->route('student.password.edit')->with('status', __('flash.password.updated'));
     }
 }

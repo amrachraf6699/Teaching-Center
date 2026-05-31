@@ -103,7 +103,7 @@ class StudentController extends Controller
         $student = Student::create($data);
         $this->syncStudentPassword($student, $password);
 
-        return redirect()->route('admin.students.index')->with('status', 'Student created.');
+        return redirect()->route('admin.students.index')->with('status', __('flash.student.created'));
     }
 
     public function show(Student $student): Response
@@ -235,14 +235,14 @@ class StudentController extends Controller
         $student->update($data);
         $this->syncStudentPassword($student->refresh(), $password);
 
-        return redirect()->route('admin.students.show', $student)->with('status', 'Student updated.');
+        return redirect()->route('admin.students.show', $student)->with('status', __('flash.student.updated'));
     }
 
     public function destroy(Student $student): RedirectResponse
     {
         $student->delete();
 
-        return redirect()->route('admin.students.index')->with('status', 'Student deleted.');
+        return redirect()->route('admin.students.index')->with('status', __('flash.student.deleted'));
     }
 
     public function toggleStatus(Request $request, Student $student): RedirectResponse
@@ -255,7 +255,7 @@ class StudentController extends Controller
             'is_active' => (bool) $data['is_active'],
         ]);
 
-        return back()->with('status', 'Student status updated.');
+        return back()->with('status', __('flash.student.status_updated'));
     }
 
     private function filters(Request $request): array

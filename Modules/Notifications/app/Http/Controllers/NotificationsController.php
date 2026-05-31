@@ -98,6 +98,6 @@ class NotificationsController extends Controller
                 'student_id' => $student->id,
                 'recipient' => $data['recipient'],
             ])
-            ->with('status', 'Notification sent.');
+            ->with('status', __('flash.notification.sent'));
     }
 }

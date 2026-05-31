@@ -1,11 +1,11 @@
 @php
     $settings = rescue(fn () => app(\Modules\Core\Settings\GeneralSettings::class), null, false);
     $media = rescue(fn () => \Modules\Core\Models\SettingMedia::brand(), null, false);
-    $appName = $settings?->name ?: config('app.name', 'Teachify');
-    $faviconUrl = $media?->getFirstMediaUrl('favicon') ?: null;
+    $appName = rescue(fn () => $settings?->name, config('app.name', 'Teachify'), false) ?: config('app.name', 'Teachify');
+    $faviconUrl = rescue(fn () => $media?->getFirstMediaUrl('favicon') ?: null, null, false);
 @endphp
 <!DOCTYPE html>
-<html lang="{{ str_replace('_', '-', app()->getLocale()) }}" data-app-name="{{ $appName }}">
+<html lang="{{ str_replace('_', '-', app()->getLocale()) }}" dir="{{ app()->getLocale() === 'ar' ? 'rtl' : 'ltr' }}" data-app-name="{{ $appName }}">
 <head>
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">

@@ -70,7 +70,7 @@ class StudentSessionAttendanceController extends Controller
             ->first();
 
         if ($existingAttendance) {
-            return back()->with('status', 'Attendance already recorded for this session.');
+            return back()->with('status', __('flash.attendance.already_recorded'));
         }
 
         Attendance::query()->create([
@@ -80,7 +80,7 @@ class StudentSessionAttendanceController extends Controller
             'notes' => 'Recorded from student QR scan.',
         ]);
 
-        return back()->with('status', 'Attendance recorded successfully.');
+        return back()->with('status', __('flash.attendance.recorded'));
     }
 
     public function lookupByCode(Request $request): RedirectResponse

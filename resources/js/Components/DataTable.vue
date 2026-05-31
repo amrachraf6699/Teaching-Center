@@ -49,7 +49,7 @@ const props = defineProps({
                         </template>
 
                         <div v-if="props.columns.some((column) => column.key === 'actions')" class="border-t border-dashed border-teachify-line pt-3">
-                            <div class="mb-2 text-[11px] font-black uppercase tracking-[0.14em] text-teachify-muted">Actions</div>
+                            <div class="mb-2 text-[11px] font-black uppercase tracking-[0.14em] text-teachify-muted">{{ $t('common.actions') }}</div>
                             <div class="flex justify-start">
                                 <slot name="actions" :row="row">{{ row.actions ?? '-' }}</slot>
                             </div>

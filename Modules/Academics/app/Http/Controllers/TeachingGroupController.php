@@ -73,7 +73,7 @@ class TeachingGroupController extends Controller
         $group = TeachingGroup::create($data);
         $group->students()->sync($studentIds);
 
-        return redirect()->route('admin.groups.index')->with('status', 'Group created.');
+        return redirect()->route('admin.groups.index')->with('status', __('flash.group.created'));
     }
 
     public function show(TeachingGroup $group): Response
@@ -184,14 +184,14 @@ class TeachingGroupController extends Controller
         $group->update($data);
         $group->students()->sync($studentIds);
 
-        return redirect()->route('admin.groups.show', $group)->with('status', 'Group updated.');
+        return redirect()->route('admin.groups.show', $group)->with('status', __('flash.group.updated'));
     }
 
     public function destroy(TeachingGroup $group): RedirectResponse
     {
         $group->delete();
 
-        return redirect()->route('admin.groups.index')->with('status', 'Group deleted.');
+        return redirect()->route('admin.groups.index')->with('status', __('flash.group.deleted'));
     }
 
     private function filters(Request $request): array

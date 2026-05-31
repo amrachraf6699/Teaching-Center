@@ -3,6 +3,7 @@ import { Head, useForm } from '@inertiajs/vue3';
 import Button from '../../Components/Button.vue';
 import TextInput from '../../Components/TextInput.vue';
 import AuthLayout from '../../Layouts/AuthLayout.vue';
+import { useI18n } from 'vue-i18n';
 
 const props = defineProps({
     title: String,
@@ -13,6 +14,7 @@ const props = defineProps({
     },
 });
 
+const { t } = useI18n();
 const form = useForm({
     code: '',
     password: '',
@@ -25,18 +27,18 @@ function submit() {
 </script>
 
 <template>
-    <Head :title="title" />
+    <Head :title="t('auth.studentLoginTitle')" />
     <AuthLayout>
         <form class="teachify-card space-y-4 rounded-[1.6rem] p-5" @submit.prevent="submit">
             <div>
-                <h2 class="text-xl font-black">Student attendance login</h2>
-                <p class="mt-1 text-sm font-medium text-teachify-muted">Sign in with your student code and password to confirm attendance.</p>
+                <h2 class="text-xl font-black">{{ $t('auth.studentLoginHeading') }}</h2>
+                <p class="mt-1 text-sm font-medium text-teachify-muted">{{ $t('auth.studentLoginSubtitle') }}</p>
             </div>
 
-            <TextInput v-model="form.code" label="Student Code" required :error="form.errors.code" />
-            <TextInput v-model="form.password" label="Password" type="password" required :error="form.errors.password" />
+            <TextInput v-model="form.code" :label="$t('auth.studentCode')" required :error="form.errors.code" />
+            <TextInput v-model="form.password" :label="$t('auth.password')" type="password" required :error="form.errors.password" />
 
-            <Button type="submit" class="w-full" :disabled="form.processing">Sign in</Button>
+            <Button type="submit" class="w-full" :disabled="form.processing">{{ $t('auth.signIn') }}</Button>
         </form>
     </AuthLayout>
 </template>

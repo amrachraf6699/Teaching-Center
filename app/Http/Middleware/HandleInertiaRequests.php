@@ -21,9 +21,21 @@ class HandleInertiaRequests extends Middleware
         $settings = rescue(fn () => app(GeneralSettings::class), null, false);
         $media = rescue(fn () => SettingMedia::brand(), null, false);
         $user = $request->user();
+        $locale = app()->getLocale();
+        $locale = in_array($locale, ['en', 'ar'], true) ? $locale : 'en';
+        $brandName = rescue(fn () => $settings?->name, config('app.name', 'Teachify'), false) ?: config('app.name', 'Teachify');
+        $brandTagline = rescue(fn () => $settings?->tagline, null, false);
+        $brandLogoUrl = rescue(fn () => $media?->getFirstMediaUrl('logo') ?: null, null, false);
+        $brandFaviconUrl = rescue(fn () => $media?->getFirstMediaUrl('favicon') ?: null, null, false);
 
         return [
             ...parent::share($request),
+            'locale' => $locale,
+            'direction' => $locale === 'ar' ? 'rtl' : 'ltr',
+            'availableLocales' => [
+                ['code' => 'en', 'name' => 'English', 'direction' => 'ltr'],
+                ['code' => 'ar', 'name' => 'العربية', 'direction' => 'rtl'],
+            ],
             'auth' => [
                 'user' => $user ? [
                     'id' => $user->id,
@@ -33,10 +45,10 @@ class HandleInertiaRequests extends Middleware
                 ] : null,
             ],
             'brand' => [
-                'name' => $settings?->name ?? config('app.name', 'Teachify'),
-                'tagline' => $settings?->tagline,
-                'logoUrl' => $media?->getFirstMediaUrl('logo') ?: null,
-                'faviconUrl' => $media?->getFirstMediaUrl('favicon') ?: null,
+                'name' => $brandName,
+                'tagline' => $brandTagline,
+                'logoUrl' => $brandLogoUrl,
+                'faviconUrl' => $brandFaviconUrl,
             ],
             'flash' => [
                 'status' => fn () => $request->session()->get('status'),
@@ -44,6 +56,7 @@ class HandleInertiaRequests extends Middleware
             'routes' => [
                 'login' => route('login'),
                 'logout' => route('logout'),
+                'localeSwitch' => route('locale.switch'),
                 'adminDashboard' => route('admin.dashboard'),
                 'parentDashboard' => route('parent.dashboard'),
                 'parentAttendance' => route('parent.attendance'),

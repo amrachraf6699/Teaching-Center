@@ -86,7 +86,7 @@ class GroupSessionController extends Controller
         $session = GroupSession::create($data);
         $session->ensureManualAttendanceCode();
 
-        return redirect()->route('admin.sessions.index')->with('status', 'Session created.');
+        return redirect()->route('admin.sessions.index')->with('status', __('flash.session.created'));
     }
 
     public function show(GroupSession $session): Response
@@ -172,7 +172,7 @@ class GroupSessionController extends Controller
         $session->update($data);
         $session->ensureManualAttendanceCode();
 
-        return redirect()->route('admin.sessions.show', $session)->with('status', 'Session updated.');
+        return redirect()->route('admin.sessions.show', $session)->with('status', __('flash.session.updated'));
     }
 
     public function regenerateAttendanceCode(GroupSession $session): RedirectResponse
@@ -181,7 +181,7 @@ class GroupSessionController extends Controller
             'manual_attendance_code' => $session->generateManualAttendanceCode(),
         ]);
 
-        return back()->with('status', 'Attendance code regenerated.');
+        return back()->with('status', __('flash.session.attendance_code_regenerated'));
     }
 
     public function updateAttendanceEntry(Request $request, GroupSession $session): RedirectResponse
@@ -194,14 +194,14 @@ class GroupSessionController extends Controller
             'attendance_entry_enabled' => $data['attendance_entry_enabled'],
         ]);
 
-        return back()->with('status', 'Session self check-in updated.');
+        return back()->with('status', __('flash.session.self_check_in_updated'));
     }
 
     public function destroy(GroupSession $session): RedirectResponse
     {
         $session->delete();
 
-        return redirect()->route('admin.sessions.index')->with('status', 'Session deleted.');
+        return redirect()->route('admin.sessions.index')->with('status', __('flash.session.deleted'));
     }
 
     private function filters(Request $request): array

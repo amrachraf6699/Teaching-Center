@@ -40,6 +40,6 @@ class ExamResultController extends Controller
             "{$exam->title}: {$result->score} / {$exam->max_score}."
         );
 
-        return back()->with('status', 'Exam result saved.');
+        return back()->with('status', __('flash.exam.result_saved'));
     }
 }

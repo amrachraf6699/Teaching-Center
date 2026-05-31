@@ -76,7 +76,7 @@ class StudentExamAttemptController extends Controller
             ],
         );
 
-        return back()->with('status', 'Answer saved.');
+        return back()->with('status', __('flash.exam.answer_saved'));
     }
 
     public function submit(Request $request, Exam $exam, ExamAttempt $attempt): RedirectResponse
@@ -90,7 +90,7 @@ class StudentExamAttemptController extends Controller
             $this->submitExamAttempt->handle($attempt, 'submitted');
         }
 
-        return redirect()->route('student.exams.attempt.show', [$exam, $attempt])->with('status', 'Exam submitted.');
+        return redirect()->route('student.exams.attempt.show', [$exam, $attempt])->with('status', __('flash.exam.submitted'));
     }
 
     private function authorizeAttempt(Exam $exam, ExamAttempt $attempt, int $studentId): void

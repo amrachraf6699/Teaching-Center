@@ -100,7 +100,7 @@ class TimetableController extends Controller
         $timetable->entries()->createMany($activeEntries);
         $this->generateSessions->handle($timetable->load(['group', 'entries']), now(), 7);
 
-        return redirect()->route('admin.timetables.index')->with('status', 'Timetable created.');
+        return redirect()->route('admin.timetables.index')->with('status', __('flash.timetable.created'));
     }
 
     public function show(Timetable $timetable): Response
@@ -162,7 +162,7 @@ class TimetableController extends Controller
         $this->syncEntries($timetable, $activeEntries);
         $this->generateSessions->handle($timetable->fresh(['group', 'entries']), now(), 7);
 
-        return redirect()->route('admin.timetables.show', $timetable)->with('status', 'Timetable updated.');
+        return redirect()->route('admin.timetables.show', $timetable)->with('status', __('flash.timetable.updated'));
     }
 
     public function destroy(Timetable $timetable): RedirectResponse
@@ -170,7 +170,7 @@ class TimetableController extends Controller
         $this->deleteFuturePendingGeneratedSessionsForEntryIds($timetable->entries()->pluck('id')->all());
         $timetable->delete();
 
-        return redirect()->route('admin.timetables.index')->with('status', 'Timetable deleted.');
+        return redirect()->route('admin.timetables.index')->with('status', __('flash.timetable.deleted'));
     }
 
     private function filters(Request $request): array

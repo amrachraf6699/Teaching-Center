@@ -31,8 +31,8 @@ function submit() {
             </div>
             <label class="flex items-center justify-between rounded-2xl border border-teachify-line bg-slate-50 px-4 py-3">
                 <span>
-                    <span class="block text-sm font-bold text-teachify-ink">Student self check-in</span>
-                    <span class="block text-xs font-medium text-teachify-muted">Allow students to use QR or session code for this session.</span>
+                    <span class="block text-sm font-bold text-teachify-ink">{{ $t('sessions.studentCheckIn') }}</span>
+                    <span class="block text-xs font-medium text-teachify-muted">{{ $t('sessions.allowStudentCheckIn') }}</span>
                 </span>
                 <ToggleSwitch v-model="form.attendance_entry_enabled" />
             </label>

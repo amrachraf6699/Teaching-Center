@@ -70,7 +70,7 @@ class ParentAccountController extends Controller
             'role' => 'parent',
         ]);
 
-        return redirect()->route('admin.parents.index')->with('status', 'Parent account created.');
+        return redirect()->route('admin.parents.index')->with('status', __('flash.parent.created'));
     }
 
     public function show(User $parent): Response
@@ -179,7 +179,7 @@ class ParentAccountController extends Controller
             ...(filled($data['password'] ?? null) ? ['password' => Hash::make($data['password'])] : []),
         ]);
 
-        return redirect()->route('admin.parents.show', $parent)->with('status', 'Parent account updated.');
+        return redirect()->route('admin.parents.show', $parent)->with('status', __('flash.parent.updated'));
     }
 
     public function destroy(User $parent): RedirectResponse
@@ -187,7 +187,7 @@ class ParentAccountController extends Controller
         $this->ensureParent($parent);
         $parent->delete();
 
-        return redirect()->route('admin.parents.index')->with('status', 'Parent account deleted.');
+        return redirect()->route('admin.parents.index')->with('status', __('flash.parent.deleted'));
     }
 
     private function ensureParent(User $parent): void

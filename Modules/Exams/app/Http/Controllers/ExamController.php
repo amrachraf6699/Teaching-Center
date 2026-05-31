@@ -82,7 +82,7 @@ class ExamController extends Controller
 
         $this->upsertExam->handle($attributes, $questions);
 
-        return redirect()->route('admin.exams.index')->with('status', 'Exam created.');
+        return redirect()->route('admin.exams.index')->with('status', __('flash.exam.created'));
     }
 
     public function show(Exam $exam): Response
@@ -215,14 +215,14 @@ class ExamController extends Controller
 
         $this->upsertExam->handle($attributes, $questions, $exam);
 
-        return redirect()->route('admin.exams.show', $exam)->with('status', 'Exam updated.');
+        return redirect()->route('admin.exams.show', $exam)->with('status', __('flash.exam.updated'));
     }
 
     public function destroy(Exam $exam): RedirectResponse
     {
         $exam->delete();
 
-        return redirect()->route('admin.exams.index')->with('status', 'Exam deleted.');
+        return redirect()->route('admin.exams.index')->with('status', __('flash.exam.deleted'));
     }
 
     private function filters(Request $request): array

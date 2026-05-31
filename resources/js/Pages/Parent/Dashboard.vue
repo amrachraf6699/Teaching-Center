@@ -2,6 +2,7 @@
 import { Head, Link, usePage } from '@inertiajs/vue3';
 import { Bell, CalendarDays, Download, FileText, GraduationCap, UserRound } from 'lucide-vue-next';
 import { computed } from 'vue';
+import { useI18n } from 'vue-i18n';
 import EmptyState from '../../Components/EmptyState.vue';
 import AppShell from '../../Layouts/AppShell.vue';
 
@@ -11,28 +12,29 @@ const props = defineProps({
 
 const page = usePage();
 const routes = computed(() => page.props.routes ?? {});
+const { t } = useI18n();
 
 const dashboardStats = computed(() => {
     const children = props.children ?? [];
 
     return [
         {
-            label: 'Children',
+            label: t('dashboard.children'),
             value: children.length,
             icon: UserRound,
         },
         {
-            label: 'Groups',
+            label: t('nav.groups'),
             value: children.reduce((total, child) => total + (child.group_count || 0), 0),
             icon: GraduationCap,
         },
         {
-            label: 'Upcoming sessions',
+            label: t('dashboard.upcomingSessions'),
             value: children.reduce((total, child) => total + (child.upcoming_sessions?.length || 0), 0),
             icon: CalendarDays,
         },
         {
-            label: 'Upcoming exams',
+            label: t('dashboard.upcomingExams'),
             value: children.reduce((total, child) => total + (child.upcoming_exams?.length || 0), 0),
             icon: FileText,
         },
@@ -67,13 +69,17 @@ function examClass(percentage) {
 }
 
 function availabilityLabel(value) {
-    return String(value || 'scheduled').replaceAll('_', ' ');
+    return t(`exams.availability.${value || 'scheduled'}`);
+}
+
+function attendanceLabel(value) {
+    return t(`attendance.status.${value || 'pending'}`);
 }
 </script>
 
 <template>
-    <Head title="Parent Portal" />
-    <AppShell title="Parent Portal">
+    <Head :title="$t('dashboard.parentPortal')" />
+    <AppShell :title="$t('dashboard.parentPortal')">
         <section class="grid gap-3 sm:grid-cols-2 xl:grid-cols-4">
             <article
                 v-for="stat in dashboardStats"
@@ -110,7 +116,7 @@ function availabilityLabel(value) {
                                     <span v-if="child.code" class="rounded-full bg-white px-3 py-1 text-xs font-black text-teachify-blue shadow-sm">{{ child.code }}</span>
                                 </div>
                                 <p class="mt-1 text-sm font-semibold text-teachify-muted">
-                                    {{ child.group_count }} {{ child.group_count === 1 ? 'group' : 'groups' }}
+                                    {{ child.group_count }} {{ child.group_count === 1 ? $t('common.group') : $t('common.groups') }}
                                     <span v-if="child.phone"> - {{ child.phone }}</span>
                                 </p>
                             </div>
@@ -124,48 +130,48 @@ function availabilityLabel(value) {
                                 class="inline-flex min-h-10 items-center justify-center gap-2 rounded-2xl border border-teachify-line bg-white px-4 py-2 text-sm font-bold text-teachify-ink shadow-sm transition hover:border-teachify-blue hover:text-teachify-blue"
                             >
                                 <Download class="h-4 w-4" />
-                                PDF
+                                {{ $t('actions.pdf') }}
                             </a>
                             <Link
                                 :href="routes.parentAttendance"
                                 class="inline-flex min-h-10 items-center justify-center gap-2 rounded-2xl border border-teachify-line bg-white px-4 py-2 text-sm font-bold text-teachify-ink shadow-sm transition hover:border-teachify-blue hover:text-teachify-blue"
                             >
                                 <CalendarDays class="h-4 w-4" />
-                                Attendance
+                                {{ $t('nav.attendance') }}
                             </Link>
                             <Link
                                 :href="routes.parentExams"
                                 class="inline-flex min-h-10 items-center justify-center gap-2 rounded-2xl bg-teachify-blue px-4 py-2 text-sm font-bold text-white shadow-[0_10px_22px_rgba(37,99,235,0.18)] transition hover:bg-blue-700"
                             >
                                 <FileText class="h-4 w-4" />
-                                Exams
+                                {{ $t('nav.exams') }}
                             </Link>
                         </div>
                     </div>
 
                     <div class="mt-5 grid gap-3 sm:grid-cols-4">
                         <div class="rounded-2xl border border-white/80 bg-white/85 px-4 py-3">
-                            <div class="text-xs font-black uppercase tracking-[0.14em] text-teachify-muted">Groups</div>
+                            <div class="text-xs font-black uppercase tracking-[0.14em] text-teachify-muted">{{ $t('nav.groups') }}</div>
                             <div class="mt-1 text-lg font-black text-teachify-ink">{{ child.group_count }}</div>
                         </div>
                         <div class="rounded-2xl border border-white/80 bg-white/85 px-4 py-3">
-                            <div class="text-xs font-black uppercase tracking-[0.14em] text-teachify-muted">Last attendance</div>
+                            <div class="text-xs font-black uppercase tracking-[0.14em] text-teachify-muted">{{ $t('dashboard.lastAttendance') }}</div>
                             <div class="mt-2">
                                 <span class="rounded-full px-2.5 py-1 text-xs font-black capitalize" :class="attendanceClass(child.last_attendance)">
-                                    {{ child.last_attendance || 'pending' }}
+                                    {{ attendanceLabel(child.last_attendance) }}
                                 </span>
                             </div>
                         </div>
                         <div class="rounded-2xl border border-white/80 bg-white/85 px-4 py-3">
-                            <div class="text-xs font-black uppercase tracking-[0.14em] text-teachify-muted">Latest exam</div>
+                            <div class="text-xs font-black uppercase tracking-[0.14em] text-teachify-muted">{{ $t('dashboard.latestExam') }}</div>
                             <div class="mt-2">
                                 <span class="rounded-full px-2.5 py-1 text-xs font-black" :class="examClass(child.latest_exam_percentage)">
-                                    {{ child.latest_exam_percentage != null ? `${child.latest_exam_percentage}%` : 'N/A' }}
+                                    {{ child.latest_exam_percentage != null ? `${child.latest_exam_percentage}%` : $t('common.notAvailable') }}
                                 </span>
                             </div>
                         </div>
                         <div class="rounded-2xl border border-white/80 bg-white/85 px-4 py-3">
-                            <div class="text-xs font-black uppercase tracking-[0.14em] text-teachify-muted">Notifications</div>
+                            <div class="text-xs font-black uppercase tracking-[0.14em] text-teachify-muted">{{ $t('notifications.title') }}</div>
                             <div class="mt-1 text-lg font-black text-teachify-ink">{{ child.recent_notifications.length }}</div>
                         </div>
                     </div>
@@ -175,7 +181,7 @@ function availabilityLabel(value) {
                     <section>
                         <div class="flex items-center justify-between gap-3">
                             <div>
-                                <h3 class="text-lg font-black text-teachify-ink">This week</h3>
+                                <h3 class="text-lg font-black text-teachify-ink">{{ $t('dashboard.thisWeek') }}</h3>
                                 <p class="text-sm font-medium text-teachify-muted">{{ child.week.starts_at }} - {{ child.week.ends_at }}</p>
                             </div>
                         </div>
@@ -202,13 +208,13 @@ function availabilityLabel(value) {
                                                 <div class="mt-0.5 text-xs font-semibold text-teachify-muted">{{ session.group || '-' }} - {{ session.subject || '-' }}</div>
                                             </div>
                                             <span class="shrink-0 rounded-full px-2 py-0.5 text-[11px] font-black capitalize" :class="attendanceClass(session.attendance_status)">
-                                                {{ session.attendance_status || 'pending' }}
+                                                {{ attendanceLabel(session.attendance_status) }}
                                             </span>
                                         </div>
                                         <div class="mt-2 text-xs font-bold text-teachify-muted">{{ session.starts_at || '-' }} - {{ session.ends_at || '-' }}</div>
                                     </div>
                                 </div>
-                                <p v-else class="mt-3 text-sm font-medium text-teachify-muted">No sessions.</p>
+                                <p v-else class="mt-3 text-sm font-medium text-teachify-muted">{{ $t('dashboard.noSessions') }}</p>
                             </article>
                         </div>
                     </section>
@@ -216,24 +222,24 @@ function availabilityLabel(value) {
                     <aside class="space-y-5">
                         <section class="rounded-[1.3rem] border border-teachify-line bg-slate-50 p-4">
                             <div class="flex items-center justify-between gap-3">
-                                <h3 class="font-black text-teachify-ink">Upcoming</h3>
+                                <h3 class="font-black text-teachify-ink">{{ $t('dashboard.upcoming') }}</h3>
                                 <CalendarDays class="h-4 w-4 text-teachify-blue" />
                             </div>
 
                             <div class="mt-3 space-y-3">
                                 <div>
-                                    <div class="text-xs font-black uppercase tracking-[0.14em] text-teachify-muted">Sessions</div>
+                                    <div class="text-xs font-black uppercase tracking-[0.14em] text-teachify-muted">{{ $t('nav.sessions') }}</div>
                                     <div v-if="child.upcoming_sessions.length" class="mt-2 space-y-2">
                                         <div v-for="session in child.upcoming_sessions" :key="session.id" class="rounded-xl bg-white px-3 py-2">
                                             <div class="text-sm font-black text-teachify-ink">{{ session.title }}</div>
                                             <div class="mt-0.5 text-xs font-semibold text-teachify-muted">{{ session.group || '-' }} - {{ session.starts_at || '-' }}</div>
                                         </div>
                                     </div>
-                                    <p v-else class="mt-2 text-sm font-medium text-teachify-muted">No upcoming sessions.</p>
+                                    <p v-else class="mt-2 text-sm font-medium text-teachify-muted">{{ $t('dashboard.noUpcomingSessions') }}</p>
                                 </div>
 
                                 <div>
-                                    <div class="text-xs font-black uppercase tracking-[0.14em] text-teachify-muted">Exams</div>
+                                    <div class="text-xs font-black uppercase tracking-[0.14em] text-teachify-muted">{{ $t('nav.exams') }}</div>
                                     <div v-if="child.upcoming_exams.length" class="mt-2 space-y-2">
                                         <div v-for="exam in child.upcoming_exams" :key="exam.id" class="rounded-xl bg-white px-3 py-2">
                                             <div class="flex items-start justify-between gap-2">
@@ -247,20 +253,20 @@ function availabilityLabel(value) {
                                             </div>
                                         </div>
                                     </div>
-                                    <p v-else class="mt-2 text-sm font-medium text-teachify-muted">No upcoming exams.</p>
+                                    <p v-else class="mt-2 text-sm font-medium text-teachify-muted">{{ $t('dashboard.noUpcomingExams') }}</p>
                                 </div>
                             </div>
                         </section>
 
                         <section class="rounded-[1.3rem] border border-teachify-line bg-slate-50 p-4">
                             <div class="flex items-center justify-between gap-3">
-                                <h3 class="font-black text-teachify-ink">Recent</h3>
+                                <h3 class="font-black text-teachify-ink">{{ $t('dashboard.recent') }}</h3>
                                 <Bell class="h-4 w-4 text-teachify-blue" />
                             </div>
 
                             <div class="mt-3 space-y-4">
                                 <div>
-                                    <div class="text-xs font-black uppercase tracking-[0.14em] text-teachify-muted">Attendance</div>
+                                    <div class="text-xs font-black uppercase tracking-[0.14em] text-teachify-muted">{{ $t('nav.attendance') }}</div>
                                     <div v-if="child.recent_attendance.length" class="mt-2 space-y-2">
                                         <div v-for="item in child.recent_attendance" :key="item.id" class="rounded-xl bg-white px-3 py-2">
                                             <div class="flex items-start justify-between gap-2">
@@ -269,17 +275,17 @@ function availabilityLabel(value) {
                                                     <div class="mt-0.5 text-xs font-semibold text-teachify-muted">{{ item.group || '-' }} - {{ item.starts_at || '-' }}</div>
                                                 </div>
                                                 <span class="shrink-0 rounded-full px-2 py-0.5 text-[11px] font-black capitalize" :class="attendanceClass(item.status)">
-                                                    {{ item.status || 'pending' }}
+                                                    {{ attendanceLabel(item.status) }}
                                                 </span>
                                             </div>
                                             <p v-if="item.notes" class="mt-1 text-xs font-medium text-teachify-muted">{{ item.notes }}</p>
                                         </div>
                                     </div>
-                                    <p v-else class="mt-2 text-sm font-medium text-teachify-muted">No attendance yet.</p>
+                                    <p v-else class="mt-2 text-sm font-medium text-teachify-muted">{{ $t('dashboard.noAttendance') }}</p>
                                 </div>
 
                                 <div>
-                                    <div class="text-xs font-black uppercase tracking-[0.14em] text-teachify-muted">Exam results</div>
+                                    <div class="text-xs font-black uppercase tracking-[0.14em] text-teachify-muted">{{ $t('dashboard.examResults') }}</div>
                                     <div v-if="child.conducted_exams.length" class="mt-2 space-y-2">
                                         <div v-for="exam in child.conducted_exams" :key="exam.id" class="rounded-xl bg-white px-3 py-2">
                                             <div class="flex items-start justify-between gap-2">
@@ -293,11 +299,11 @@ function availabilityLabel(value) {
                                             </div>
                                         </div>
                                     </div>
-                                    <p v-else class="mt-2 text-sm font-medium text-teachify-muted">No exam results yet.</p>
+                                    <p v-else class="mt-2 text-sm font-medium text-teachify-muted">{{ $t('dashboard.noExamResults') }}</p>
                                 </div>
 
                                 <div>
-                                    <div class="text-xs font-black uppercase tracking-[0.14em] text-teachify-muted">Notifications</div>
+                                    <div class="text-xs font-black uppercase tracking-[0.14em] text-teachify-muted">{{ $t('notifications.title') }}</div>
                                     <div v-if="child.recent_notifications.length" class="mt-2 space-y-2">
                                         <div v-for="notification in child.recent_notifications" :key="notification.id" class="rounded-xl bg-white px-3 py-2">
                                             <div class="text-[11px] font-black uppercase tracking-[0.12em] text-teachify-blue">{{ notification.type }}</div>
@@ -305,7 +311,7 @@ function availabilityLabel(value) {
                                             <p class="mt-0.5 text-xs font-medium text-teachify-muted">{{ notification.body }}</p>
                                         </div>
                                     </div>
-                                    <p v-else class="mt-2 text-sm font-medium text-teachify-muted">No recent notifications.</p>
+                                    <p v-else class="mt-2 text-sm font-medium text-teachify-muted">{{ $t('dashboard.noNotifications') }}</p>
                                 </div>
                             </div>
                         </section>
@@ -316,8 +322,8 @@ function availabilityLabel(value) {
 
         <EmptyState
             v-else
-            title="No children linked"
-            message="Ask the teacher to link students to this parent account."
+            :title="$t('dashboard.noChildrenTitle')"
+            :message="$t('dashboard.noChildrenMessage')"
         />
     </AppShell>
 </template>

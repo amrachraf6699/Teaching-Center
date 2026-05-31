@@ -61,13 +61,13 @@ onBeforeUnmount(() => {
                     <CheckCircle2 class="h-5 w-5" />
                 </div>
                 <div class="min-w-0 flex-1">
-                    <p class="text-xs font-black uppercase tracking-[0.2em] text-emerald-600">Success</p>
+                    <p class="text-xs font-black uppercase tracking-[0.2em] text-emerald-600">{{ $t('common.success') }}</p>
                     <p class="mt-1 text-sm font-semibold leading-6 text-teachify-ink">{{ status }}</p>
                 </div>
                 <button
                     type="button"
                     class="grid h-8 w-8 shrink-0 place-items-center rounded-full text-teachify-muted transition hover:bg-slate-100 hover:text-teachify-ink"
-                    aria-label="Dismiss notification"
+                    :aria-label="$t('common.dismissNotification')"
                     @click="dismiss"
                 >
                     <X class="h-4 w-4" />

@@ -68,7 +68,7 @@ class SettingsController extends Controller
             $media->addMediaFromRequest('favicon')->toMediaCollection('favicon');
         }
 
-        return redirect()->route('admin.settings.edit')->with('status', 'Settings updated.');
+        return redirect()->route('admin.settings.edit')->with('status', __('flash.settings.updated'));
     }
 
     /**

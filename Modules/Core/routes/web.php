@@ -2,6 +2,7 @@
 
 use Illuminate\Support\Facades\Route;
 use Modules\Core\Http\Controllers\AuthController;
+use Modules\Core\Http\Controllers\LocaleController;
 use Modules\Core\Http\Controllers\ParentAttendanceController;
 use Modules\Core\Http\Controllers\ParentChildPdfController;
 use Modules\Core\Http\Controllers\ParentExamsController;
@@ -13,6 +14,8 @@ use Modules\Core\Http\Controllers\StudentHomeController;
 use Modules\Core\Http\Controllers\StudentPasswordController;
 use Modules\Core\Http\Controllers\StudentSessionsController;
 use Modules\Core\Http\Controllers\TeacherDashboardController;
+
+Route::post('/locale', LocaleController::class)->name('locale.switch');
 
 Route::middleware('guest')->group(function (): void {
     Route::get('/login', [AuthController::class, 'login'])->name('login');
