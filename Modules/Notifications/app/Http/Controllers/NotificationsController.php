@@ -30,10 +30,8 @@ class NotificationsController extends Controller
                 ->map(fn (Student $student): array => [
                     'value' => (string) $student->id,
                     'label' => sprintf('%s (%s)', $student->name, $student->code),
-                    'description' => collect([
-                        $student->parent ? 'Parent: '.$student->parent->name : null,
-                        $student->user ? 'Student login ready' : 'Student login missing',
-                    ])->filter()->join(' · '),
+                    'parent_name' => $student->parent?->name,
+                    'student_login_ready' => (bool) $student->user_id,
                     'recipient_state' => [
                         'parent' => (bool) $student->parent_id,
                         'student' => (bool) $student->user_id,
@@ -55,15 +53,15 @@ class NotificationsController extends Controller
                     $data = PortalNotificationData::from($notification);
 
                     return [
-                    'id' => $notification->id,
-                    'title' => $data['title'],
-                    'body' => $data['body'],
-                    'type' => $data['type'],
-                    'recipient_role' => $data['audience'],
-                    'recipient_name' => $notification->notifiable?->name,
-                    'student_name' => $data['student_name'],
-                    'student_code' => $data['student_code'],
-                    'created_at' => $notification->created_at?->toDayDateTimeString(),
+                        'id' => $notification->id,
+                        'title' => $data['title'],
+                        'body' => $data['body'],
+                        'type' => $data['type'],
+                        'recipient_role' => $data['audience'],
+                        'recipient_name' => $notification->notifiable?->name,
+                        'student_name' => $data['student_name'],
+                        'student_code' => $data['student_code'],
+                        'created_at' => $notification->created_at?->toDayDateTimeString(),
                     ];
                 }),
             'indexUrl' => route('admin.notifications.index'),

@@ -9,15 +9,14 @@ defineProps({
 </script>
 
 <template>
-    <Head title="Sessions" />
-    <AppShell title="Sessions">
+    <Head :title="$t('nav.sessions')" />
+    <AppShell :title="$t('nav.sessions')">
         <section class="overflow-hidden rounded-[1.8rem] border border-teachify-line bg-[linear-gradient(135deg,rgba(37,99,235,0.08),rgba(255,255,255,0.95)_42%,rgba(251,191,36,0.08))] shadow-[0_24px_60px_rgba(15,23,42,0.08)]">
             <div class="flex flex-col gap-4 p-5 sm:p-6 lg:flex-row lg:items-center lg:justify-between">
                 <div class="max-w-2xl">
                     <h2 class="text-2xl font-black tracking-tight text-teachify-ink">{{ student.name }}</h2>
                     <p class="mt-2 text-sm font-medium text-teachify-muted">
-                        Your sessions for this week from <span class="font-black text-teachify-ink">{{ student.week.starts_at }}</span> to
-                        <span class="font-black text-teachify-ink">{{ student.week.ends_at }}</span>. Week starts on Saturday and ends on Friday.
+                        {{ $t('student.sessionsWeekRange', { start: student.week.starts_at, end: student.week.ends_at }) }}
                     </p>
                 </div>
             </div>
@@ -25,15 +24,15 @@ defineProps({
             <div class="border-t border-white/70 bg-white/75 px-5 py-4 sm:px-6">
                 <div class="grid gap-3 sm:grid-cols-3">
                     <div class="rounded-2xl border border-teachify-line bg-white px-4 py-3">
-                        <div class="text-xs font-black uppercase tracking-[0.16em] text-teachify-muted">Student code</div>
+                        <div class="text-xs font-black uppercase tracking-[0.16em] text-teachify-muted">{{ $t('student.studentCode') }}</div>
                         <div class="mt-1 text-sm font-bold text-teachify-ink">{{ student.code }}</div>
                     </div>
                     <div class="rounded-2xl border border-teachify-line bg-white px-4 py-3">
-                        <div class="text-xs font-black uppercase tracking-[0.16em] text-teachify-muted">Groups</div>
+                        <div class="text-xs font-black uppercase tracking-[0.16em] text-teachify-muted">{{ $t('nav.groups') }}</div>
                         <div class="mt-1 text-sm font-bold text-teachify-ink">{{ student.groups.length }}</div>
                     </div>
                     <div class="rounded-2xl border border-teachify-line bg-white px-4 py-3">
-                        <div class="text-xs font-black uppercase tracking-[0.16em] text-teachify-muted">Attendance records</div>
+                        <div class="text-xs font-black uppercase tracking-[0.16em] text-teachify-muted">{{ $t('student.attendanceRecords') }}</div>
                         <div class="mt-1 text-sm font-bold text-teachify-ink">{{ student.attendance.length }}</div>
                     </div>
                 </div>
@@ -42,8 +41,8 @@ defineProps({
 
         <section class="mt-6">
             <div class="mb-4">
-                <h2 class="text-xl font-black text-teachify-ink">This week's sessions</h2>
-                <p class="text-sm font-medium text-teachify-muted">Saturday to Friday, grouped by day.</p>
+                <h2 class="text-xl font-black text-teachify-ink">{{ $t('student.thisWeek') }}</h2>
+                <p class="text-sm font-medium text-teachify-muted">{{ $t('student.saturdayToFriday') }}</p>
             </div>
 
             <div class="grid gap-4 xl:grid-cols-2">
@@ -67,7 +66,7 @@ defineProps({
                                     class="rounded-full px-3 py-1 text-xs font-black uppercase tracking-[0.12em]"
                                     :class="session.attendance_status ? 'bg-teachify-blue-soft text-teachify-blue' : 'bg-amber-50 text-amber-700'"
                                 >
-                                    {{ session.attendance_status || 'Pending' }}
+                                    {{ $t(`attendance.status.${session.attendance_status || 'pending'}`) }}
                                 </span>
                             </div>
 
@@ -79,7 +78,7 @@ defineProps({
                         </article>
                     </div>
 
-                    <EmptyState v-else title="No sessions" message="No lessons scheduled for this day." />
+                    <EmptyState v-else :title="$t('student.noSessions')" :message="$t('student.noSessionsMessage')" />
                 </article>
             </div>
         </section>

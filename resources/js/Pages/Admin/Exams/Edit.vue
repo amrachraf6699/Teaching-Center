@@ -25,17 +25,17 @@ function submit() {
 </script>
 
 <template>
-    <Head title="Edit Exam" />
-    <AppShell title="Edit Exam">
+    <Head :title="$t('admin.exams.edit')" />
+    <AppShell :title="$t('admin.exams.edit')">
         <ExamForm
             :form="form"
             :groups="groups"
             :question-types="questionTypes"
             :review-modes="reviewModes"
-            submit-label="Save Exam"
+            :submit-label="$t('admin.exams.save')"
             :cancel-url="showUrl"
-            heading="Update exam"
-            description="Review the schedule and points, then adjust the questions as needed. Reordering or editing questions updates the exam score automatically."
+            :heading="$t('admin.exams.editHeading')"
+            :description="$t('admin.exams.editDescription')"
             @submit="submit"
         />
     </AppShell>

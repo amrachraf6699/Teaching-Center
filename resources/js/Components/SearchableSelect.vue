@@ -1,6 +1,7 @@
 <script setup>
 import { ChevronDown, Search, X } from 'lucide-vue-next';
 import { computed, ref, watch } from 'vue';
+import { useI18n } from 'vue-i18n';
 
 const props = defineProps({
     label: String,
@@ -11,21 +12,24 @@ const props = defineProps({
     },
     placeholder: {
         type: String,
-        default: 'Search and select',
+        default: '',
     },
     emptyMessage: {
         type: String,
-        default: 'No matches found.',
+        default: '',
     },
 });
 
 const emit = defineEmits(['update:modelValue']);
+const { t } = useI18n();
 
 const isOpen = ref(false);
 const query = ref('');
 
 const normalizedValue = computed(() => String(props.modelValue ?? ''));
 const selectedOption = computed(() => props.options.find((option) => String(option.value ?? option.id) === normalizedValue.value) ?? null);
+const placeholderLabel = computed(() => props.placeholder || t('forms.searchAndSelect'));
+const emptyLabel = computed(() => props.emptyMessage || t('forms.noMatches'));
 const filteredOptions = computed(() => {
     const term = query.value.trim().toLowerCase();
 
@@ -80,7 +84,7 @@ function clearSelection() {
                 <input
                     v-model="query"
                     type="text"
-                    :placeholder="selectedOption ? selectedOption.label : placeholder"
+                    :placeholder="selectedOption ? selectedOption.label : placeholderLabel"
                     class="w-full bg-transparent px-3 py-3 text-sm font-medium text-teachify-ink outline-none"
                     @focus="open"
                     @blur="setTimeout(close, 150)"
@@ -90,7 +94,7 @@ function clearSelection() {
                     v-if="selectedOption"
                     type="button"
                     class="grid h-8 w-8 place-items-center rounded-full text-teachify-muted transition hover:bg-slate-100 hover:text-teachify-ink"
-                    :aria-label="`Clear ${label}`"
+                    :aria-label="t('forms.clearNamed', { name: label })"
                     @mousedown.prevent
                     @click="clearSelection"
                 >
@@ -120,11 +124,11 @@ function clearSelection() {
                             v-if="String(option.value ?? option.id) === normalizedValue"
                             class="rounded-full bg-teachify-blue-soft px-2 py-1 text-[11px] font-black uppercase tracking-[0.18em] text-teachify-blue"
                         >
-                            Selected
+                            {{ t('common.selected') }}
                         </span>
                     </button>
                 </div>
-                <div v-else class="px-4 py-5 text-sm font-medium text-teachify-muted">{{ emptyMessage }}</div>
+                <div v-else class="px-4 py-5 text-sm font-medium text-teachify-muted">{{ emptyLabel }}</div>
             </div>
         </div>
     </label>

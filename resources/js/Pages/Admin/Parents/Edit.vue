@@ -13,15 +13,15 @@ function submit() {
 </script>
 
 <template>
-    <Head title="Edit Parent" />
-    <AppShell title="Edit Parent">
+    <Head :title="$t('admin.parents.edit')" />
+    <AppShell :title="$t('admin.parents.edit')">
         <form class="teachify-card max-w-2xl space-y-4 rounded-[1.6rem] p-5" @submit.prevent="submit">
-            <TextInput v-model="form.name" label="Name" required :error="form.errors.name" />
-            <TextInput v-model="form.email" label="Email" type="email" required :error="form.errors.email" />
-            <TextInput v-model="form.password" label="New Password" type="password" :error="form.errors.password" />
+            <TextInput v-model="form.name" :label="$t('fields.name')" required :error="form.errors.name" />
+            <TextInput v-model="form.email" :label="$t('fields.email')" type="email" required :error="form.errors.email" />
+            <TextInput v-model="form.password" :label="$t('fields.newPassword')" type="password" :error="form.errors.password" />
             <div class="flex gap-3">
-                <Button type="submit" :disabled="form.processing">Save Parent</Button>
-                <Button variant="secondary" :href="showUrl">Cancel</Button>
+                <Button type="submit" :disabled="form.processing">{{ $t('admin.parents.save') }}</Button>
+                <Button variant="secondary" :href="showUrl">{{ $t('actions.cancel') }}</Button>
             </div>
         </form>
     </AppShell>

@@ -2,6 +2,7 @@
 import { Head, router } from '@inertiajs/vue3';
 import { Download, Filter, RotateCcw, Search } from 'lucide-vue-next';
 import { computed, onBeforeUnmount, ref, watch } from 'vue';
+import { useI18n } from 'vue-i18n';
 import Button from '../../../Components/Button.vue';
 import DataTable from '../../../Components/DataTable.vue';
 import EmptyState from '../../../Components/EmptyState.vue';
@@ -30,25 +31,26 @@ const props = defineProps({
     },
 });
 
+const { t } = useI18n();
 const search = ref(props.filters.search ?? '');
 const status = ref(props.filters.status ?? '');
 let applyTimer = null;
 
-const statusOptions = [
-    { value: 'active', label: 'Active only' },
-    { value: 'inactive', label: 'Inactive only' },
-];
+const statusOptions = computed(() => [
+    { value: 'active', label: t('admin.filters.activeOnly') },
+    { value: 'inactive', label: t('admin.filters.inactiveOnly') },
+]);
 
 const hasFilters = computed(() => Boolean(search.value || status.value));
 
-const columns = [
-    { key: 'name', label: 'Group' },
-    { key: 'subject', label: 'Subject' },
-    { key: 'level', label: 'Level' },
-    { key: 'students_count', label: 'Students' },
-    { key: 'created_at', label: 'Created' },
-    { key: 'actions', label: 'Actions' },
-];
+const columns = computed(() => [
+    { key: 'name', label: t('fields.group') },
+    { key: 'subject', label: t('fields.subject') },
+    { key: 'level', label: t('fields.level') },
+    { key: 'students_count', label: t('fields.students') },
+    { key: 'created_at', label: t('fields.created') },
+    { key: 'actions', label: t('common.actions') },
+]);
 
 function submitSearch() {
     router.get(props.indexUrl, {
@@ -107,26 +109,26 @@ onBeforeUnmount(() => {
 </script>
 
 <template>
-    <Head title="Groups" />
-    <AppShell title="Groups">
+    <Head :title="$t('admin.groups.title')" />
+    <AppShell :title="$t('admin.groups.title')">
         <section class="mb-5 overflow-visible rounded-[1.8rem] border border-teachify-line bg-[linear-gradient(135deg,rgba(37,99,235,0.08),rgba(255,255,255,0.95)_42%,rgba(15,23,42,0.03))] shadow-[0_24px_60px_rgba(15,23,42,0.08)]">
             <div class="flex flex-col gap-4 p-4 sm:p-5 lg:flex-row lg:items-start lg:justify-between lg:p-6">
                 <div class="max-w-2xl">
                     <div class="inline-flex items-center gap-2 rounded-full bg-white/85 px-3 py-1 text-[11px] font-black uppercase tracking-[0.2em] text-teachify-blue">
                         <Filter class="h-3.5 w-3.5" />
-                        Group filters
+                        {{ $t('admin.groups.filters') }}
                     </div>
                 </div>
-                <Button :href="createUrl">Add Group</Button>
+                <Button :href="createUrl">{{ $t('admin.groups.add') }}</Button>
             </div>
 
             <form class="border-t border-white/70 bg-white/75 p-4 sm:p-5 lg:p-6" @submit.prevent="submitSearch">
                 <div class="grid gap-3 md:grid-cols-2 xl:grid-cols-[minmax(0,1.5fr)_minmax(0,1fr)]">
                     <div class="w-full">
-                        <TextInput v-model="search" label="Group search" placeholder="Group, subject, or level" />
+                        <TextInput v-model="search" :label="$t('admin.groups.searchLabel')" :placeholder="$t('admin.groups.searchPlaceholder')" />
                     </div>
                     <div class="w-full">
-                        <SelectInput v-model="status" label="Status" :options="statusOptions" placeholder="All statuses" />
+                        <SelectInput v-model="status" :label="$t('fields.status')" :options="statusOptions" :placeholder="$t('admin.filters.allStatuses')" />
                     </div>
                 </div>
 
@@ -134,24 +136,24 @@ onBeforeUnmount(() => {
                     <div class="flex flex-wrap items-center gap-2 text-xs font-bold text-teachify-muted">
                         <span class="inline-flex items-center gap-2 rounded-full bg-white px-3 py-2 shadow-sm">
                             <Search class="h-3.5 w-3.5" />
-                            {{ hasFilters ? 'Filters applied' : 'All groups' }}
+                            {{ hasFilters ? $t('admin.filters.applied') : $t('admin.filters.allGroups') }}
                         </span>
-                        <span v-if="search" class="rounded-full bg-teachify-blue-soft px-3 py-2 text-teachify-blue">Text</span>
-                        <span v-if="status" class="rounded-full bg-slate-100 px-3 py-2 text-slate-700">{{ status }}</span>
+                        <span v-if="search" class="rounded-full bg-teachify-blue-soft px-3 py-2 text-teachify-blue">{{ $t('common.text') }}</span>
+                        <span v-if="status" class="rounded-full bg-slate-100 px-3 py-2 text-slate-700">{{ status === 'active' ? $t('common.active') : $t('common.inactive') }}</span>
                     </div>
 
                     <div class="flex flex-wrap gap-2">
                         <Button type="button" variant="secondary" @click="downloadExport('csv')">
                             <Download class="h-4 w-4" />
-                            CSV
+                            {{ $t('actions.csv') }}
                         </Button>
                         <Button type="button" variant="secondary" @click="downloadExport('pdf')">
                             <Download class="h-4 w-4" />
-                            PDF
+                            {{ $t('actions.pdf') }}
                         </Button>
                         <Button v-if="hasFilters" type="button" variant="secondary" @click="resetSearch">
                             <RotateCcw class="h-4 w-4" />
-                            Reset
+                            {{ $t('actions.reset') }}
                         </Button>
                     </div>
                 </div>
@@ -169,8 +171,8 @@ onBeforeUnmount(() => {
         </DataTable>
         <EmptyState
             v-else
-            :title="hasFilters ? 'No groups found' : 'No groups yet'"
-            :message="hasFilters ? 'Try a different search term or filter.' : 'Create a group and enroll students into it.'"
+            :title="hasFilters ? $t('admin.groups.noneFound') : $t('admin.groups.noneYet')"
+            :message="hasFilters ? $t('admin.filters.tryDifferentSearchOrFilter') : $t('admin.groups.noneYetMessage')"
         />
         <Pagination :links="groups.links" />
     </AppShell>

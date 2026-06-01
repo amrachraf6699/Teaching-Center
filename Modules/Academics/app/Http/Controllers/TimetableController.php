@@ -33,9 +33,13 @@ class TimetableController extends Controller
                     'group_name' => $timetable->group?->name ?? '-',
                     'subject' => $timetable->group?->subject ?? '-',
                     'active_days_count' => $timetable->entries->count(),
-                    'weekly_summary' => $timetable->entries
-                        ->map(fn ($entry): string => $this->labelForDay($entry->day_of_week).' '.$this->formatTime($entry->starts_at).' - '.$this->formatTime($entry->ends_at))
-                        ->join(', '),
+                    'weekly_entries' => $timetable->entries
+                        ->map(fn ($entry): array => [
+                            'day' => $entry->day_of_week,
+                            'time_range' => $this->formatTime($entry->starts_at).' - '.$this->formatTime($entry->ends_at),
+                        ])
+                        ->values()
+                        ->all(),
                     'show_url' => route('admin.timetables.show', $timetable),
                     'edit_url' => route('admin.timetables.edit', $timetable),
                     'delete_url' => route('admin.timetables.destroy', $timetable),
@@ -117,6 +121,7 @@ class TimetableController extends Controller
                     'show_url' => route('admin.groups.show', $timetable->group),
                 ] : null,
                 'entries' => $timetable->entries->map(fn ($entry): array => [
+                    'day' => $entry->day_of_week,
                     'day_label' => $this->labelForDay($entry->day_of_week),
                     'time_range' => $this->formatTime($entry->starts_at).' - '.$this->formatTime($entry->ends_at),
                 ])->values()->all(),

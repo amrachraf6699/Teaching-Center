@@ -1,5 +1,8 @@
 <script setup>
-defineProps({
+import { computed } from 'vue';
+import { useI18n } from 'vue-i18n';
+
+const props = defineProps({
     label: String,
     modelValue: [String, Number],
     error: String,
@@ -9,7 +12,7 @@ defineProps({
     },
     placeholder: {
         type: String,
-        default: 'Select an option',
+        default: '',
     },
     required: {
         type: Boolean,
@@ -18,6 +21,9 @@ defineProps({
 });
 
 defineEmits(['update:modelValue']);
+
+const { t } = useI18n();
+const placeholderLabel = computed(() => props.placeholder || t('forms.selectOption'));
 </script>
 
 <template>
@@ -29,7 +35,7 @@ defineEmits(['update:modelValue']);
             class="mt-2 min-h-12 w-full rounded-2xl border border-teachify-line bg-white px-4 text-sm font-medium outline-none transition focus:border-teachify-blue focus:ring-4 focus:ring-teachify-blue-soft"
             @change="$emit('update:modelValue', $event.target.value)"
         >
-            <option value="">{{ placeholder }}</option>
+            <option value="">{{ placeholderLabel }}</option>
             <option v-for="option in options" :key="option.value ?? option.id" :value="option.value ?? option.id">
                 {{ option.label ?? option.name }}
             </option>

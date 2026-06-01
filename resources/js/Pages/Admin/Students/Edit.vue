@@ -23,25 +23,25 @@ function submit() {
 </script>
 
 <template>
-    <Head title="Edit Student" />
-    <AppShell title="Edit Student">
+    <Head :title="$t('admin.students.edit')" />
+    <AppShell :title="$t('admin.students.edit')">
         <form class="teachify-card max-w-3xl space-y-4 rounded-[1.6rem] p-5" @submit.prevent="submit">
-            <SelectInput v-model="form.parent_id" label="Parent" required :options="parents" :error="form.errors.parent_id" />
+            <SelectInput v-model="form.parent_id" :label="$t('fields.parent')" required :options="parents" :error="form.errors.parent_id" />
             <div class="grid gap-4 sm:grid-cols-2">
-                <TextInput v-model="form.name" label="Name" required :error="form.errors.name" />
-                <TextInput v-model="form.phone" label="Phone" :error="form.errors.phone" />
-                <TextInput v-model="form.date_of_birth" label="Date of Birth" type="date" :error="form.errors.date_of_birth" />
+                <TextInput v-model="form.name" :label="$t('fields.name')" required :error="form.errors.name" />
+                <TextInput v-model="form.phone" :label="$t('fields.phone')" :error="form.errors.phone" />
+                <TextInput v-model="form.date_of_birth" :label="$t('fields.dateOfBirth')" type="date" :error="form.errors.date_of_birth" />
             </div>
-            <TextInput v-model="form.password" label="Reset Student Password" type="password" :error="form.errors.password" />
-            <p class="text-sm font-medium text-teachify-muted">Leave this empty to keep the current password unchanged.</p>
+            <TextInput v-model="form.password" :label="$t('fields.resetStudentPassword')" type="password" :error="form.errors.password" />
+            <p class="text-sm font-medium text-teachify-muted">{{ $t('admin.students.keepPasswordHelp') }}</p>
             <label class="flex items-center gap-3 text-sm font-bold text-teachify-muted">
                 <input v-model="form.is_active" type="checkbox" class="h-4 w-4 rounded border-teachify-line text-teachify-blue" />
-                Active
+                {{ $t('common.active') }}
             </label>
-            <TextareaInput v-model="form.notes" label="Notes" :error="form.errors.notes" />
+            <TextareaInput v-model="form.notes" :label="$t('fields.notes')" :error="form.errors.notes" />
             <div class="flex gap-3">
-                <Button type="submit" :disabled="form.processing">Save Student</Button>
-                <Button variant="secondary" :href="showUrl">Cancel</Button>
+                <Button type="submit" :disabled="form.processing">{{ $t('admin.students.save') }}</Button>
+                <Button variant="secondary" :href="showUrl">{{ $t('actions.cancel') }}</Button>
             </div>
         </form>
     </AppShell>

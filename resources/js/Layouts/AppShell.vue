@@ -34,6 +34,7 @@ const { t } = useI18n();
 const user = computed(() => page.props.auth?.user);
 const brand = computed(() => page.props.brand ?? { name: 'Teachify' });
 const routes = computed(() => page.props.routes ?? {});
+const direction = computed(() => page.props.direction ?? 'ltr');
 const currentPath = computed(() => {
     const url = typeof page.url === 'string' ? page.url : window.location.pathname;
 
@@ -282,18 +283,18 @@ function logout() {
 
         <div :class="user?.role === 'teacher' || user?.role === 'student' ? 'lg:pl-72' : ''">
             <header class="sticky top-0 z-20 border-b border-teachify-line bg-white/88 backdrop-blur">
-                <div class="mx-auto flex max-w-7xl items-center justify-between px-4 py-3 sm:px-6 lg:px-8">
+                <div dir="ltr" class="mx-auto flex max-w-7xl items-center gap-4 px-4 py-3 sm:px-6 lg:px-8">
                     <Link :href="user?.role === 'parent' ? routes.parentDashboard : user?.role === 'student' ? routes.studentHome : routes.adminDashboard" class="flex items-center gap-3 lg:hidden">
                         <img v-if="brand.logoUrl" :src="brand.logoUrl" :alt="brand.name" class="h-9 w-auto rounded-xl" />
                         <span v-else class="grid h-10 w-10 place-items-center rounded-2xl bg-teachify-blue text-base font-bold text-white">T</span>
                         <span class="font-bold">{{ brand.name }}</span>
                     </Link>
 
-                    <div class="hidden lg:block">
-                        <h1 class="text-xl font-bold tracking-normal">{{ props.title }}</h1>
+                    <div class="hidden min-w-0 flex-1 lg:block" :dir="direction">
+                        <h1 class="truncate text-left text-xl font-bold tracking-normal">{{ props.title }}</h1>
                     </div>
 
-                    <div class="ml-auto flex items-center gap-3">
+                    <div class="flex shrink-0 items-center gap-3">
                         <button
                             v-if="user?.role === 'student'"
                             type="button"
@@ -367,8 +368,8 @@ function logout() {
             </header>
 
             <main class="mx-auto max-w-7xl px-4 py-5 sm:px-6 lg:px-8 lg:py-8">
-                <div class="mb-5 lg:hidden">
-                    <h1 class="text-2xl font-bold tracking-normal">{{ props.title }}</h1>
+                <div class="mb-5 lg:hidden" :dir="direction">
+                    <h1 class="text-left text-2xl font-bold tracking-normal">{{ props.title }}</h1>
                 </div>
 
                 <FlashMessage />

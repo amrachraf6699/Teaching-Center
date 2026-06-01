@@ -9,15 +9,15 @@ defineProps({
 </script>
 
 <template>
-    <Head title="Exam Results" />
-    <AppShell title="Exam Results">
+    <Head :title="$t('parentPortal.examResultsTitle')" />
+    <AppShell :title="$t('parentPortal.examResultsTitle')">
         <div class="space-y-5">
             <article v-for="child in children" :key="child.id" class="teachify-card rounded-[1.6rem] p-5">
                 <div class="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
                     <div>
                         <h2 class="text-2xl font-black">{{ child.name }}</h2>
                         <p class="mt-1 text-sm font-bold text-teachify-muted">
-                            {{ child.exam_results.length }} exam {{ child.exam_results.length === 1 ? 'result' : 'results' }}
+                            {{ child.exam_results.length }} {{ child.exam_results.length === 1 ? $t('parentPortal.examResult') : $t('parentPortal.examResults') }}
                         </p>
                     </div>
                     <span
@@ -48,18 +48,18 @@ defineProps({
                             </span>
                         </div>
                         <div class="mt-2 text-sm font-semibold text-teachify-muted">
-                            {{ result.score }} / {{ result.max_score }} &mdash; {{ result.group }}
+                            {{ result.score }} / {{ result.max_score }} - {{ result.group }}
                         </div>
                         <div class="mt-1 text-xs font-semibold text-teachify-muted">{{ result.schedule }}</div>
                     </div>
                 </div>
-                <p v-else class="mt-4 text-sm font-medium text-teachify-muted">No exam results posted yet.</p>
+                <p v-else class="mt-4 text-sm font-medium text-teachify-muted">{{ $t('parentPortal.noExamResultsPosted') }}</p>
             </article>
 
             <EmptyState
                 v-if="!children.length"
-                title="No children linked"
-                message="Ask the teacher to link students to this parent account."
+                :title="$t('dashboard.noChildrenTitle')"
+                :message="$t('dashboard.noChildrenMessage')"
             />
         </div>
     </AppShell>

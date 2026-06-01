@@ -64,28 +64,28 @@ class TeacherDashboardController extends Controller
                     ];
                 }),
             'quickActions' => [
-                ['label' => 'Add Parent', 'href' => route('admin.parents.create')],
-                ['label' => 'Add Student', 'href' => route('admin.students.create')],
-                ['label' => 'Add Group', 'href' => route('admin.groups.create')],
-                ['label' => 'Add Manual Session', 'href' => route('admin.sessions.create')],
-                ['label' => 'Add Exam', 'href' => route('admin.exams.create')],
-                ['label' => 'Send Notification', 'href' => route('admin.notifications.index')],
+                ['label_key' => 'teacherDashboard.action.addParent', 'href' => route('admin.parents.create')],
+                ['label_key' => 'teacherDashboard.action.addStudent', 'href' => route('admin.students.create')],
+                ['label_key' => 'teacherDashboard.action.addGroup', 'href' => route('admin.groups.create')],
+                ['label_key' => 'teacherDashboard.action.addManualSession', 'href' => route('admin.sessions.create')],
+                ['label_key' => 'teacherDashboard.action.addExam', 'href' => route('admin.exams.create')],
+                ['label_key' => 'teacherDashboard.action.sendNotification', 'href' => route('admin.notifications.index')],
             ],
         ]);
     }
 
     /**
-     * @return array<int, array{label: string, value: int, tone: string}>
+     * @return array<int, array{label_key: string, value: int, tone: string}>
      */
     private function metrics(CarbonInterface $weekStart, CarbonInterface $weekEnd): array
     {
         return [
-            ['label' => 'Total Students', 'value' => Student::query()->count(), 'tone' => 'blue'],
-            ['label' => 'Active Students', 'value' => Student::query()->where('is_active', true)->count(), 'tone' => 'mint'],
-            ['label' => 'Parents', 'value' => User::query()->where('role', 'parent')->count(), 'tone' => 'yellow'],
-            ['label' => 'Active Groups', 'value' => TeachingGroup::query()->where('is_active', true)->count(), 'tone' => 'coral'],
-            ['label' => 'Sessions This Week', 'value' => GroupSession::query()->whereBetween('starts_at', [$weekStart, $weekEnd])->count(), 'tone' => 'blue'],
-            ['label' => 'Upcoming Exams', 'value' => Exam::query()->where('start_at', '>=', now())->count(), 'tone' => 'mint'],
+            ['label_key' => 'teacherDashboard.metric.totalStudents', 'value' => Student::query()->count(), 'tone' => 'blue'],
+            ['label_key' => 'teacherDashboard.metric.activeStudents', 'value' => Student::query()->where('is_active', true)->count(), 'tone' => 'mint'],
+            ['label_key' => 'teacherDashboard.metric.parents', 'value' => User::query()->where('role', 'parent')->count(), 'tone' => 'yellow'],
+            ['label_key' => 'teacherDashboard.metric.activeGroups', 'value' => TeachingGroup::query()->where('is_active', true)->count(), 'tone' => 'coral'],
+            ['label_key' => 'teacherDashboard.metric.sessionsThisWeek', 'value' => GroupSession::query()->whereBetween('starts_at', [$weekStart, $weekEnd])->count(), 'tone' => 'blue'],
+            ['label_key' => 'teacherDashboard.metric.upcomingExams', 'value' => Exam::query()->where('start_at', '>=', now())->count(), 'tone' => 'mint'],
         ];
     }
 
@@ -116,7 +116,7 @@ class TeacherDashboardController extends Controller
             'labels' => $days->values()->all(),
             'datasets' => collect($statuses)
                 ->map(fn (string $status): array => [
-                    'label' => str($status)->headline()->toString(),
+                    'label_key' => "teacherDashboard.chart.{$status}",
                     'data' => array_values($counts[$status]),
                 ])
                 ->values()
@@ -143,7 +143,7 @@ class TeacherDashboardController extends Controller
         return [
             'labels' => $days->values()->all(),
             'datasets' => [[
-                'label' => 'Sessions',
+                'label_key' => 'teacherDashboard.chart.sessions',
                 'data' => array_values($counts),
             ]],
         ];
@@ -152,9 +152,14 @@ class TeacherDashboardController extends Controller
     private function examPipeline(): array
     {
         return [
-            'labels' => ['Upcoming exams', 'Conducted exams', 'In-progress attempts', 'Submitted attempts'],
+            'label_keys' => [
+                'teacherDashboard.chart.upcomingExams',
+                'teacherDashboard.chart.conductedExams',
+                'teacherDashboard.chart.inProgressAttempts',
+                'teacherDashboard.chart.submittedAttempts',
+            ],
             'datasets' => [[
-                'label' => 'Exam Pipeline',
+                'label_key' => 'teacherDashboard.chart.examPipeline',
                 'data' => [
                     Exam::query()->where('start_at', '>=', now())->count(),
                     Exam::query()->where('end_at', '<', now())->count(),
@@ -188,7 +193,7 @@ class TeacherDashboardController extends Controller
         return [
             'labels' => $months->values()->all(),
             'datasets' => [[
-                'label' => 'New students',
+                'label_key' => 'teacherDashboard.chart.newStudents',
                 'data' => array_values($counts),
             ]],
         ];
@@ -206,7 +211,7 @@ class TeacherDashboardController extends Controller
         return [
             'labels' => $groups->pluck('name')->all(),
             'datasets' => [[
-                'label' => 'Students',
+                'label_key' => 'teacherDashboard.chart.students',
                 'data' => $groups->pluck('students_count')->all(),
             ]],
         ];

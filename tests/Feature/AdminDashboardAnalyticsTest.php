@@ -104,26 +104,35 @@ it('renders teacher dashboard analytics metrics and chart payloads', function ()
         ->assertInertia(fn (Assert $page) => $page
             ->component('Admin/Dashboard')
             ->has('metrics', 6)
-            ->where('metrics.0.label', 'Total Students')
+            ->where('metrics.0.label_key', 'teacherDashboard.metric.totalStudents')
             ->where('metrics.0.value', 6)
-            ->where('metrics.1.label', 'Active Students')
+            ->where('metrics.1.label_key', 'teacherDashboard.metric.activeStudents')
             ->where('metrics.1.value', 5)
-            ->where('metrics.4.label', 'Sessions This Week')
+            ->where('metrics.4.label_key', 'teacherDashboard.metric.sessionsThisWeek')
             ->where('metrics.4.value', 3)
-            ->where('metrics.5.label', 'Upcoming Exams')
+            ->where('metrics.5.label_key', 'teacherDashboard.metric.upcomingExams')
             ->where('metrics.5.value', 1)
             ->has('charts.attendanceTrend.labels', 14)
-            ->where('charts.attendanceTrend.datasets.0.label', 'Present')
+            ->where('charts.attendanceTrend.datasets.0.label_key', 'teacherDashboard.chart.present')
             ->where('charts.attendanceTrend.datasets.0.data.12', 1)
             ->where('charts.attendanceTrend.datasets.1.data.12', 1)
             ->where('charts.attendanceTrend.datasets.2.data.12', 1)
             ->where('charts.weeklySessions.labels', ['Sat May 23', 'Sun May 24', 'Mon May 25', 'Tue May 26', 'Wed May 27', 'Thu May 28', 'Fri May 29'])
+            ->where('charts.weeklySessions.datasets.0.label_key', 'teacherDashboard.chart.sessions')
             ->where('charts.weeklySessions.datasets.0.data', [1, 0, 0, 0, 0, 1, 1])
-            ->where('charts.examPipeline.labels', ['Upcoming exams', 'Conducted exams', 'In-progress attempts', 'Submitted attempts'])
+            ->where('charts.examPipeline.label_keys', [
+                'teacherDashboard.chart.upcomingExams',
+                'teacherDashboard.chart.conductedExams',
+                'teacherDashboard.chart.inProgressAttempts',
+                'teacherDashboard.chart.submittedAttempts',
+            ])
+            ->where('charts.examPipeline.datasets.0.label_key', 'teacherDashboard.chart.examPipeline')
             ->where('charts.examPipeline.datasets.0.data', [1, 1, 1, 1])
             ->has('charts.studentGrowth.labels', 6)
+            ->where('charts.studentGrowth.datasets.0.label_key', 'teacherDashboard.chart.newStudents')
             ->where('charts.studentGrowth.datasets.0.data', [1, 1, 1, 1, 1, 1])
             ->where('charts.groupLoad.labels', ['Group 1', 'Group 2', 'Group 3', 'Group 4', 'Group 5'])
+            ->where('charts.groupLoad.datasets.0.label_key', 'teacherDashboard.chart.students')
             ->where('charts.groupLoad.datasets.0.data', [6, 5, 4, 3, 2]));
 
     Carbon::setTestNow();

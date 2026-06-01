@@ -30,16 +30,16 @@ function submit() {
 </script>
 
 <template>
-    <Head title="Add Exam" />
-    <AppShell title="Add Exam">
+    <Head :title="$t('admin.exams.add')" />
+    <AppShell :title="$t('admin.exams.add')">
         <ExamForm
             :form="form"
             :groups="groups"
             :question-types="questionTypes"
             :review-modes="reviewModes"
-            submit-label="Create Exam"
-            heading="Create a new exam"
-            description="Fill in the exam details first, then build the questions underneath. The total score is calculated from the points you assign."
+            :submit-label="$t('admin.exams.create')"
+            :heading="$t('admin.exams.createHeading')"
+            :description="$t('admin.exams.createDescription')"
             @submit="submit"
         />
     </AppShell>

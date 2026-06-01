@@ -14,6 +14,7 @@ import {
 } from 'chart.js';
 import { Bar, Doughnut, Line } from 'vue-chartjs';
 import { computed } from 'vue';
+import { useI18n } from 'vue-i18n';
 import Button from '../../Components/Button.vue';
 import EmptyState from '../../Components/EmptyState.vue';
 import StatTile from '../../Components/StatTile.vue';
@@ -31,6 +32,30 @@ const props = defineProps({
     recentNotifications: Array,
     quickActions: Array,
 });
+
+const { t } = useI18n();
+
+function localizeChart(chart) {
+    return {
+        labels: chart?.label_keys?.length
+            ? chart.label_keys.map((labelKey) => t(labelKey))
+            : (chart?.labels ?? []),
+        datasets: (chart?.datasets ?? []).map((dataset) => ({
+            ...dataset,
+            label: dataset.label_key ? t(dataset.label_key) : dataset.label,
+        })),
+    };
+}
+
+const localizedMetrics = computed(() => (props.metrics ?? []).map((metric) => ({
+    ...metric,
+    label: metric.label_key ? t(metric.label_key) : metric.label,
+})));
+
+const localizedQuickActions = computed(() => (props.quickActions ?? []).map((action) => ({
+    ...action,
+    label: action.label_key ? t(action.label_key) : action.label,
+})));
 
 const palette = {
     blue: '#2563eb',
@@ -93,7 +118,7 @@ function withBarColors(chart, colors = [palette.blue]) {
 
 const attendanceTrendData = computed(() => ({
     labels: props.charts.attendanceTrend?.labels ?? [],
-    datasets: (props.charts.attendanceTrend?.datasets ?? []).map((dataset, index) => {
+    datasets: (localizeChart(props.charts.attendanceTrend).datasets ?? []).map((dataset, index) => {
         const colors = [palette.mint, palette.coral, palette.yellow, palette.blue];
         const color = colors[index] ?? palette.blue;
 
@@ -110,12 +135,12 @@ const attendanceTrendData = computed(() => ({
     }),
 }));
 
-const weeklySessionsData = computed(() => withBarColors(props.charts.weeklySessions, [palette.blue]));
-const studentGrowthData = computed(() => withBarColors(props.charts.studentGrowth, [palette.mint]));
-const groupLoadData = computed(() => withBarColors(props.charts.groupLoad, [palette.coral]));
+const weeklySessionsData = computed(() => withBarColors(localizeChart(props.charts.weeklySessions), [palette.blue]));
+const studentGrowthData = computed(() => withBarColors(localizeChart(props.charts.studentGrowth), [palette.mint]));
+const groupLoadData = computed(() => withBarColors(localizeChart(props.charts.groupLoad), [palette.coral]));
 const examPipelineData = computed(() => ({
-    labels: props.charts.examPipeline?.labels ?? [],
-    datasets: (props.charts.examPipeline?.datasets ?? []).map((dataset) => ({
+    labels: localizeChart(props.charts.examPipeline).labels,
+    datasets: localizeChart(props.charts.examPipeline).datasets.map((dataset) => ({
         ...dataset,
         backgroundColor: [palette.blue, palette.coral, palette.yellow, palette.mint],
         borderColor: '#ffffff',
@@ -125,17 +150,17 @@ const examPipelineData = computed(() => ({
 </script>
 
 <template>
-    <Head title="Teacher Dashboard" />
-    <AppShell title="Teacher Dashboard">
+    <Head :title="$t('dashboard.teacherDashboard')" />
+    <AppShell :title="$t('dashboard.teacherDashboard')">
         <section class="grid gap-4 sm:grid-cols-2 xl:grid-cols-6">
-            <StatTile v-for="metric in metrics" :key="metric.label" v-bind="metric" />
+            <StatTile v-for="metric in localizedMetrics" :key="metric.label" v-bind="metric" />
         </section>
 
         <section class="mt-6 grid gap-5 xl:grid-cols-2">
             <article class="teachify-card rounded-[1.6rem] p-5">
                 <div>
-                    <h2 class="text-lg font-black">Attendance trend</h2>
-                    <p class="text-sm font-medium text-teachify-muted">Last 14 days by attendance status.</p>
+                    <h2 class="text-lg font-black">{{ $t('teacherDashboard.attendanceTrend') }}</h2>
+                    <p class="text-sm font-medium text-teachify-muted">{{ $t('teacherDashboard.attendanceTrendDescription') }}</p>
                 </div>
                 <div class="mt-5 h-80">
                     <Line :data="attendanceTrendData" :options="chartOptions" />
@@ -144,8 +169,8 @@ const examPipelineData = computed(() => ({
 
             <article class="teachify-card rounded-[1.6rem] p-5">
                 <div>
-                    <h2 class="text-lg font-black">This week's sessions</h2>
-                    <p class="text-sm font-medium text-teachify-muted">Saturday-to-Friday teaching load.</p>
+                    <h2 class="text-lg font-black">{{ $t('teacherDashboard.weeklySessions') }}</h2>
+                    <p class="text-sm font-medium text-teachify-muted">{{ $t('teacherDashboard.weeklySessionsDescription') }}</p>
                 </div>
                 <div class="mt-5 h-80">
                     <Bar :data="weeklySessionsData" :options="chartOptions" />
@@ -154,8 +179,8 @@ const examPipelineData = computed(() => ({
 
             <article class="teachify-card rounded-[1.6rem] p-5">
                 <div>
-                    <h2 class="text-lg font-black">Student growth</h2>
-                    <p class="text-sm font-medium text-teachify-muted">New students created over the last 6 months.</p>
+                    <h2 class="text-lg font-black">{{ $t('teacherDashboard.studentGrowth') }}</h2>
+                    <p class="text-sm font-medium text-teachify-muted">{{ $t('teacherDashboard.studentGrowthDescription') }}</p>
                 </div>
                 <div class="mt-5 h-80">
                     <Bar :data="studentGrowthData" :options="chartOptions" />
@@ -164,8 +189,8 @@ const examPipelineData = computed(() => ({
 
             <article class="teachify-card rounded-[1.6rem] p-5">
                 <div>
-                    <h2 class="text-lg font-black">Exam pipeline</h2>
-                    <p class="text-sm font-medium text-teachify-muted">Exam windows and student attempt progress.</p>
+                    <h2 class="text-lg font-black">{{ $t('teacherDashboard.examPipeline') }}</h2>
+                    <p class="text-sm font-medium text-teachify-muted">{{ $t('teacherDashboard.examPipelineDescription') }}</p>
                 </div>
                 <div class="mt-5 h-80">
                     <Doughnut :data="examPipelineData" :options="doughnutOptions" />
@@ -174,8 +199,8 @@ const examPipelineData = computed(() => ({
 
             <article class="teachify-card rounded-[1.6rem] p-5 xl:col-span-2">
                 <div>
-                    <h2 class="text-lg font-black">Top groups by load</h2>
-                    <p class="text-sm font-medium text-teachify-muted">The five groups with the most enrolled students.</p>
+                    <h2 class="text-lg font-black">{{ $t('teacherDashboard.topGroupsByLoad') }}</h2>
+                    <p class="text-sm font-medium text-teachify-muted">{{ $t('teacherDashboard.topGroupsByLoadDescription') }}</p>
                 </div>
                 <div class="mt-5 h-80">
                     <Bar :data="groupLoadData" :options="chartOptions" />
@@ -187,10 +212,10 @@ const examPipelineData = computed(() => ({
             <div class="teachify-card rounded-[1.6rem] p-5">
                 <div class="mb-4 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
                     <div>
-                        <h2 class="text-lg font-black">Upcoming sessions</h2>
-                        <p class="text-sm font-medium text-teachify-muted">The next lessons that need attention.</p>
+                        <h2 class="text-lg font-black">{{ $t('dashboard.upcomingSessions') }}</h2>
+                        <p class="text-sm font-medium text-teachify-muted">{{ $t('teacherDashboard.upcomingSessionsDescription') }}</p>
                     </div>
-                    <Button variant="secondary" href="/admin/sessions/create">Add Manual Session</Button>
+                    <Button variant="secondary" href="/admin/sessions/create">{{ $t('teacherDashboard.addManualSession') }}</Button>
                 </div>
 
                 <div v-if="upcomingSessions.length" class="space-y-3">
@@ -198,19 +223,19 @@ const examPipelineData = computed(() => ({
                         <div class="flex flex-col gap-1 sm:flex-row sm:items-center sm:justify-between">
                             <div>
                                 <h3 class="font-black">{{ session.title }}</h3>
-                                <p class="text-sm font-semibold text-teachify-muted">{{ session.group || 'No group' }}</p>
+                                <p class="text-sm font-semibold text-teachify-muted">{{ session.group || $t('teacherDashboard.noGroup') }}</p>
                             </div>
                             <div class="rounded-full bg-teachify-yellow-soft px-3 py-1 text-sm font-black text-teachify-ink">{{ session.starts_at }}</div>
                         </div>
                     </article>
                 </div>
-                <EmptyState v-else title="No sessions scheduled" message="Save a timetable to generate weekly lessons automatically, or add a manual exception." />
+                <EmptyState v-else :title="$t('teacherDashboard.noSessionsScheduled')" :message="$t('teacherDashboard.noSessionsScheduledMessage')" />
             </div>
 
             <aside class="teachify-card rounded-[1.6rem] p-5">
-                <h2 class="text-lg font-black">Quick actions</h2>
+                <h2 class="text-lg font-black">{{ $t('teacherDashboard.quickActions') }}</h2>
                 <div class="mt-4 grid gap-2">
-                    <Button v-for="action in quickActions" :key="action.label" :href="action.href" variant="secondary">{{ action.label }}</Button>
+                    <Button v-for="action in localizedQuickActions" :key="action.label" :href="action.href" variant="secondary">{{ action.label }}</Button>
                 </div>
             </aside>
         </section>
@@ -218,17 +243,17 @@ const examPipelineData = computed(() => ({
         <section class="mt-6 teachify-card rounded-[1.6rem] p-5">
             <div class="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
                 <div>
-                    <h2 class="text-lg font-black">Recent notifications</h2>
-                    <p class="text-sm font-medium text-teachify-muted">Manual messages plus attendance and exam updates.</p>
+                    <h2 class="text-lg font-black">{{ $t('teacherDashboard.recentNotifications') }}</h2>
+                    <p class="text-sm font-medium text-teachify-muted">{{ $t('teacherDashboard.recentNotificationsDescription') }}</p>
                 </div>
-                <Button variant="secondary" href="/admin/notifications">Manage notifications</Button>
+                <Button variant="secondary" href="/admin/notifications">{{ $t('teacherDashboard.manageNotifications') }}</Button>
             </div>
             <div v-if="recentNotifications.length" class="mt-4 grid gap-3">
                 <article v-for="notification in recentNotifications" :key="notification.id" class="rounded-2xl border border-teachify-line bg-white p-4">
                     <div class="flex items-start justify-between gap-4">
                         <div>
                             <div class="text-xs font-black uppercase tracking-[0.14em] text-teachify-blue">
-                                {{ notification.recipient_role }} · {{ notification.student || 'No student' }}
+                                {{ $t(`admin.notifications.recipients.${notification.recipient_role}`) }} {{ $t('common.separator') }} {{ notification.student || $t('teacherDashboard.noStudent') }}
                             </div>
                             <h3 class="font-black">{{ notification.title }}</h3>
                             <p class="mt-1 text-sm font-medium text-teachify-muted">{{ notification.body }}</p>
@@ -237,7 +262,7 @@ const examPipelineData = computed(() => ({
                     </div>
                 </article>
             </div>
-            <EmptyState v-else title="No notifications yet" message="Attendance, exam results, and manual messages will appear here." />
+            <EmptyState v-else :title="$t('notifications.noNotificationsYet')" :message="$t('teacherDashboard.recentNotificationsDescription')" />
         </section>
     </AppShell>
 </template>

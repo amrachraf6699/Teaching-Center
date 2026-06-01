@@ -9,8 +9,8 @@ defineProps({
 </script>
 
 <template>
-    <Head title="Notifications" />
-    <AppShell title="Notifications">
+    <Head :title="$t('notifications.title')" />
+    <AppShell :title="$t('notifications.title')">
         <div class="space-y-3">
             <template v-if="notifications.data.length">
                 <article
@@ -46,8 +46,8 @@ defineProps({
 
             <EmptyState
                 v-else
-                title="No notifications"
-                message="You have no notifications yet."
+                :title="$t('parentPortal.noNotifications')"
+                :message="$t('parentPortal.noNotificationsMessage')"
             />
         </div>
     </AppShell>

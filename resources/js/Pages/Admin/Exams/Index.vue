@@ -2,6 +2,7 @@
 import { Head, router } from '@inertiajs/vue3';
 import { Download, Filter, RotateCcw, Search } from 'lucide-vue-next';
 import { computed, onBeforeUnmount, ref, watch } from 'vue';
+import { useI18n } from 'vue-i18n';
 import Button from '../../../Components/Button.vue';
 import DataTable from '../../../Components/DataTable.vue';
 import EmptyState from '../../../Components/EmptyState.vue';
@@ -34,21 +35,22 @@ const props = defineProps({
     },
 });
 
+const { t } = useI18n();
 const search = ref(props.filters.search ?? '');
 const group = ref(props.filters.group ?? '');
 let applyTimer = null;
 
 const hasFilters = computed(() => Boolean(search.value || group.value));
 
-const columns = [
-    { key: 'title', label: 'Exam' },
-    { key: 'group', label: 'Group' },
-    { key: 'schedule', label: 'Schedule' },
-    { key: 'max_allowed_time', label: 'Allowed Time' },
-    { key: 'max_score', label: 'Max Score' },
-    { key: 'question_count', label: 'Questions' },
-    { key: 'actions', label: 'Actions' },
-];
+const columns = computed(() => [
+    { key: 'title', label: t('fields.exam') },
+    { key: 'group', label: t('fields.group') },
+    { key: 'schedule', label: t('fields.schedule') },
+    { key: 'max_allowed_time', label: t('fields.allowedTime') },
+    { key: 'max_score', label: t('fields.maxScore') },
+    { key: 'question_count', label: t('fields.questions') },
+    { key: 'actions', label: t('common.actions') },
+]);
 
 function submitSearch() {
     router.get(props.indexUrl, {
@@ -107,30 +109,30 @@ onBeforeUnmount(() => {
 </script>
 
 <template>
-    <Head title="Exams" />
-    <AppShell title="Exams">
+    <Head :title="$t('admin.exams.title')" />
+    <AppShell :title="$t('admin.exams.title')">
         <section class="mb-5 overflow-visible rounded-[1.8rem] border border-teachify-line bg-[linear-gradient(135deg,rgba(37,99,235,0.08),rgba(255,255,255,0.95)_42%,rgba(15,23,42,0.03))] shadow-[0_24px_60px_rgba(15,23,42,0.08)]">
             <div class="flex flex-col gap-4 p-4 sm:p-5 lg:flex-row lg:items-start lg:justify-between lg:p-6">
                 <div class="max-w-2xl">
                     <div class="inline-flex items-center gap-2 rounded-full bg-white/85 px-3 py-1 text-[11px] font-black uppercase tracking-[0.2em] text-teachify-blue">
                         <Filter class="h-3.5 w-3.5" />
-                        Exam filters
+                        {{ $t('admin.exams.filters') }}
                     </div>
                 </div>
-                <Button :href="createUrl">Add Exam</Button>
+                <Button :href="createUrl">{{ $t('admin.exams.add') }}</Button>
             </div>
 
             <form class="border-t border-white/70 bg-white/75 p-4 sm:p-5 lg:p-6" @submit.prevent="submitSearch">
                 <div class="grid gap-3 md:grid-cols-2 xl:grid-cols-[minmax(0,1.5fr)_minmax(0,1fr)]">
                     <div class="w-full">
-                        <TextInput v-model="search" label="Exam search" placeholder="Title or group subject" />
+                        <TextInput v-model="search" :label="$t('admin.exams.searchLabel')" :placeholder="$t('admin.exams.searchPlaceholder')" />
                     </div>
                     <SearchableSelect
                         v-model="group"
-                        label="Group"
+                        :label="$t('fields.group')"
                         :options="groupOptions"
-                        placeholder="Search by group name"
-                        empty-message="No matching group found."
+                        :placeholder="$t('admin.exams.groupPlaceholder')"
+                        :empty-message="$t('admin.exams.noGroupMatch')"
                     />
                 </div>
 
@@ -138,24 +140,24 @@ onBeforeUnmount(() => {
                     <div class="flex flex-wrap items-center gap-2 text-xs font-bold text-teachify-muted">
                         <span class="inline-flex items-center gap-2 rounded-full bg-white px-3 py-2 shadow-sm">
                             <Search class="h-3.5 w-3.5" />
-                            {{ hasFilters ? 'Filters applied' : 'All exams' }}
+                            {{ hasFilters ? $t('admin.filters.applied') : $t('admin.filters.allExams') }}
                         </span>
-                        <span v-if="search" class="rounded-full bg-teachify-blue-soft px-3 py-2 text-teachify-blue">Text</span>
-                        <span v-if="group" class="rounded-full bg-amber-50 px-3 py-2 text-amber-700">Group</span>
+                        <span v-if="search" class="rounded-full bg-teachify-blue-soft px-3 py-2 text-teachify-blue">{{ $t('common.text') }}</span>
+                        <span v-if="group" class="rounded-full bg-amber-50 px-3 py-2 text-amber-700">{{ $t('fields.group') }}</span>
                     </div>
 
                     <div class="flex flex-wrap gap-2">
                         <Button type="button" variant="secondary" @click="downloadExport('csv')">
                             <Download class="h-4 w-4" />
-                            CSV
+                            {{ $t('actions.csv') }}
                         </Button>
                         <Button type="button" variant="secondary" @click="downloadExport('pdf')">
                             <Download class="h-4 w-4" />
-                            PDF
+                            {{ $t('actions.pdf') }}
                         </Button>
                         <Button v-if="hasFilters" type="button" variant="secondary" @click="resetSearch">
                             <RotateCcw class="h-4 w-4" />
-                            Reset
+                            {{ $t('actions.reset') }}
                         </Button>
                     </div>
                 </div>
@@ -167,15 +169,15 @@ onBeforeUnmount(() => {
         </section>
 
         <DataTable v-if="exams.data.length" :columns="columns" :rows="exams.data">
-            <template #group="{ row }">{{ row.group?.name || '-' }}</template>
+            <template #group="{ row }">{{ row.group?.name || $t('common.noData') }}</template>
             <template #actions="{ row }">
                 <ResourceActions :show-url="row.show_url" :edit-url="row.edit_url" :delete-url="row.delete_url" :label="row.title" />
             </template>
         </DataTable>
         <EmptyState
             v-else
-            :title="hasFilters ? 'No exams found' : 'No exams yet'"
-            :message="hasFilters ? 'Try a different search term or filter.' : 'Create group exams before entering grades.'"
+            :title="hasFilters ? $t('admin.exams.noneFound') : $t('admin.exams.noneYet')"
+            :message="hasFilters ? $t('admin.filters.tryDifferentSearchOrFilter') : $t('admin.exams.noneYetMessage')"
         />
         <Pagination :links="exams.links" />
     </AppShell>

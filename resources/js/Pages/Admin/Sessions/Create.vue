@@ -16,18 +16,18 @@ function submit() {
 </script>
 
 <template>
-    <Head title="Add Manual Session" />
-    <AppShell title="Add Manual Session">
+    <Head :title="$t('admin.sessions.addManual')" />
+    <AppShell :title="$t('admin.sessions.addManual')">
         <form class="teachify-card max-w-3xl space-y-4 rounded-[1.6rem] p-5" @submit.prevent="submit">
             <div>
-                <h2 class="text-lg font-black">Manual session exception</h2>
-                <p class="mt-1 text-sm font-medium text-teachify-muted">Use this only for one-off lessons or exceptions. Weekly lessons should come from the timetable.</p>
+                <h2 class="text-lg font-black">{{ $t('admin.sessions.manualException') }}</h2>
+                <p class="mt-1 text-sm font-medium text-teachify-muted">{{ $t('admin.sessions.manualExceptionHelp') }}</p>
             </div>
-            <SelectInput v-model="form.teaching_group_id" label="Group" required :options="groups" :error="form.errors.teaching_group_id" />
-            <TextInput v-model="form.title" label="Title" required :error="form.errors.title" />
+            <SelectInput v-model="form.teaching_group_id" :label="$t('fields.group')" required :options="groups" :error="form.errors.teaching_group_id" />
+            <TextInput v-model="form.title" :label="$t('fields.title')" required :error="form.errors.title" />
             <div class="grid gap-4 sm:grid-cols-2">
-                <TextInput v-model="form.starts_at" label="Starts At" type="datetime-local" required :error="form.errors.starts_at" />
-                <TextInput v-model="form.ends_at" label="Ends At" type="datetime-local" :error="form.errors.ends_at" />
+                <TextInput v-model="form.starts_at" :label="$t('fields.startsAt')" type="datetime-local" required :error="form.errors.starts_at" />
+                <TextInput v-model="form.ends_at" :label="$t('fields.endsAt')" type="datetime-local" :error="form.errors.ends_at" />
             </div>
             <label class="flex items-center justify-between rounded-2xl border border-teachify-line bg-slate-50 px-4 py-3">
                 <span>
@@ -36,8 +36,8 @@ function submit() {
                 </span>
                 <ToggleSwitch v-model="form.attendance_entry_enabled" />
             </label>
-            <TextareaInput v-model="form.notes" label="Notes" :error="form.errors.notes" />
-            <Button type="submit" :disabled="form.processing">Create Manual Session</Button>
+            <TextareaInput v-model="form.notes" :label="$t('fields.notes')" :error="form.errors.notes" />
+            <Button type="submit" :disabled="form.processing">{{ $t('admin.sessions.createManual') }}</Button>
         </form>
     </AppShell>
 </template>

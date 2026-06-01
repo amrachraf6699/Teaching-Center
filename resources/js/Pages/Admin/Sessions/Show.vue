@@ -48,16 +48,16 @@ function toggleSelfCheckIn(nextValue) {
     <Head :title="session.title" />
     <AppShell :title="session.title">
         <div class="mb-4 flex flex-wrap gap-3">
-            <Button :href="session.edit_url">Edit Session</Button>
-            <Button variant="secondary" :href="session.index_url">Back to Sessions</Button>
+            <Button :href="session.edit_url">{{ $t('admin.sessions.edit') }}</Button>
+            <Button variant="secondary" :href="session.index_url">{{ $t('admin.sessions.back') }}</Button>
         </div>
 
         <section class="teachify-card rounded-[1.6rem] p-5">
             <div class="grid gap-4 sm:grid-cols-4">
-                <div><div class="text-xs font-black uppercase text-teachify-muted">Group</div><Link v-if="session.group" :href="session.group.show_url" class="mt-1 block font-bold text-teachify-blue">{{ session.group.name }}</Link></div>
-                <div><div class="text-xs font-black uppercase text-teachify-muted">Starts</div><div class="mt-1 font-bold">{{ session.starts_at }}</div></div>
-                <div><div class="text-xs font-black uppercase text-teachify-muted">Ends</div><div class="mt-1 font-bold">{{ session.ends_at || '-' }}</div></div>
-                <div><div class="text-xs font-black uppercase text-teachify-muted">Source</div><div class="mt-1 font-bold">{{ session.source_label }}</div></div>
+                <div><div class="text-xs font-black uppercase text-teachify-muted">{{ $t('fields.group') }}</div><Link v-if="session.group" :href="session.group.show_url" class="mt-1 block font-bold text-teachify-blue">{{ session.group.name }}</Link></div>
+                <div><div class="text-xs font-black uppercase text-teachify-muted">{{ $t('fields.starts') }}</div><div class="mt-1 font-bold">{{ session.starts_at }}</div></div>
+                <div><div class="text-xs font-black uppercase text-teachify-muted">{{ $t('fields.ends') }}</div><div class="mt-1 font-bold">{{ session.ends_at || $t('common.noData') }}</div></div>
+                <div><div class="text-xs font-black uppercase text-teachify-muted">{{ $t('fields.source') }}</div><div class="mt-1 font-bold">{{ session.source_type === 'timetable' ? $t('admin.sessions.source.generatedFromTimetable') : $t('admin.sessions.source.manualSession') }}</div></div>
             </div>
             <p v-if="session.notes" class="mt-4 text-sm font-medium text-teachify-muted">{{ session.notes }}</p>
         </section>
@@ -91,50 +91,50 @@ function toggleSelfCheckIn(nextValue) {
         </section>
 
         <section class="mt-6 teachify-card rounded-[1.6rem] p-5">
-            <h2 class="text-lg font-black">Students and attendance review</h2>
+            <h2 class="text-lg font-black">{{ $t('admin.sessions.studentsAttendanceReview') }}</h2>
             <div v-if="session.students.length" class="mt-4 grid gap-4">
                 <article v-for="student in session.students" :key="student.id" class="rounded-2xl border border-teachify-line bg-white p-4">
                     <div class="flex flex-col gap-4 lg:flex-row lg:items-start lg:justify-between">
                         <div>
                             <Link :href="student.show_url" class="font-black text-teachify-blue">{{ student.name }}</Link>
-                            <div class="text-sm font-semibold text-teachify-muted">{{ student.code || '-' }} · {{ student.parent || 'No parent' }}</div>
+                            <div class="text-sm font-semibold text-teachify-muted">{{ student.code || $t('common.noData') }} {{ $t('common.separator') }} {{ student.parent || $t('common.noParent') }}</div>
                         </div>
                         <div class="rounded-full bg-slate-100 px-3 py-1 text-sm font-black capitalize text-teachify-ink">
-                            {{ student.attendance || 'pending' }}
+                            {{ $t(`attendance.status.${student.attendance || 'pending'}`) }}
                         </div>
                     </div>
 
                     <div class="mt-4 grid gap-4 md:grid-cols-[200px_minmax(0,1fr)_auto] md:items-end">
                         <label class="block">
-                            <span class="text-sm font-bold text-teachify-ink">Status</span>
+                            <span class="text-sm font-bold text-teachify-ink">{{ $t('fields.status') }}</span>
                             <select v-model="attendanceForms[student.id].status" class="mt-2 min-h-12 w-full rounded-2xl border border-teachify-line bg-white px-4 text-sm font-medium outline-none transition focus:border-teachify-blue focus:ring-4 focus:ring-teachify-blue-soft">
-                                <option value="present">Present</option>
-                                <option value="absent">Absent</option>
-                                <option value="late">Late</option>
-                                <option value="excused">Excused</option>
+                                <option value="present">{{ $t('attendance.status.present') }}</option>
+                                <option value="absent">{{ $t('attendance.status.absent') }}</option>
+                                <option value="late">{{ $t('attendance.status.late') }}</option>
+                                <option value="excused">{{ $t('attendance.status.excused') }}</option>
                             </select>
                         </label>
                         <label class="block">
-                            <span class="text-sm font-bold text-teachify-ink">Notes</span>
+                            <span class="text-sm font-bold text-teachify-ink">{{ $t('fields.notes') }}</span>
                             <textarea v-model="attendanceForms[student.id].notes" rows="2" class="mt-2 w-full rounded-2xl border border-teachify-line bg-white px-4 py-3 text-sm font-medium outline-none transition focus:border-teachify-blue focus:ring-4 focus:ring-teachify-blue-soft"></textarea>
                         </label>
-                        <Button type="button" @click="saveAttendance(student.id)">Save</Button>
+                        <Button type="button" @click="saveAttendance(student.id)">{{ $t('actions.save') }}</Button>
                     </div>
                 </article>
             </div>
-            <EmptyState v-else title="No students" message="Students assigned to the group will appear here." />
+            <EmptyState v-else :title="$t('admin.sessions.noStudents')" :message="$t('admin.sessions.noStudentsMessage')" />
         </section>
 
         <section class="mt-6 teachify-card rounded-[1.6rem] p-5">
-            <h2 class="text-lg font-black">Attendance Records</h2>
+            <h2 class="text-lg font-black">{{ $t('admin.sessions.attendanceRecords') }}</h2>
             <div v-if="session.attendance.length" class="mt-4 grid gap-3">
                 <article v-for="attendance in session.attendance" :key="attendance.id" class="rounded-2xl border border-teachify-line bg-white p-4">
                     <div class="font-black">{{ attendance.student }}</div>
-                    <div class="text-sm font-semibold text-teachify-muted">{{ attendance.parent || 'No parent' }} · <span class="capitalize">{{ attendance.status }}</span></div>
+                    <div class="text-sm font-semibold text-teachify-muted">{{ attendance.parent || $t('common.noParent') }} {{ $t('common.separator') }} <span class="capitalize">{{ $t(`attendance.status.${attendance.status || 'pending'}`) }}</span></div>
                     <p v-if="attendance.notes" class="mt-2 text-sm font-medium text-teachify-muted">{{ attendance.notes }}</p>
                 </article>
             </div>
-            <EmptyState v-else title="No attendance yet" message="Attendance records will appear here after saving them." />
+            <EmptyState v-else :title="$t('admin.sessions.noAttendance')" :message="$t('admin.sessions.noAttendanceMessage')" />
         </section>
     </AppShell>
 </template>

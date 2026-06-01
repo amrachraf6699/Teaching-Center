@@ -1,6 +1,7 @@
 <script setup>
 import { computed, ref, watch } from 'vue';
 import { ChevronDown, ChevronUp, Copy, Trash2 } from 'lucide-vue-next';
+import { useI18n } from 'vue-i18n';
 import Button from '../../../Components/Button.vue';
 import SelectInput from '../../../Components/SelectInput.vue';
 import TextInput from '../../../Components/TextInput.vue';
@@ -18,19 +19,30 @@ const props = defineProps({
     },
     heading: {
         type: String,
-        default: 'Exam builder',
+        default: '',
     },
     description: {
         type: String,
-        default: 'Set the exam details, then add questions below.',
+        default: '',
     },
 });
 
 defineEmits(['submit']);
 
+const { t } = useI18n();
 const maxScore = computed(() => props.form.questions.reduce((total, question) => total + Number(question.points || 0), 0));
 const totalQuestions = computed(() => props.form.questions.length);
 const selectedGroup = computed(() => props.groups.find((group) => String(group.id ?? group.value) === String(props.form.teaching_group_id)));
+const formHeading = computed(() => props.heading || t('admin.exams.builder'));
+const formDescription = computed(() => props.description || t('admin.exams.builderDescription'));
+const localizedQuestionTypes = computed(() => props.questionTypes.map((option) => ({
+    ...option,
+    label: t(`admin.exams.questionTypes.${option.value}`),
+})));
+const localizedReviewModes = computed(() => props.reviewModes.map((option) => ({
+    ...option,
+    label: t(`admin.exams.reviewModes.${option.value}`),
+})));
 const collapsedQuestions = ref({});
 const scheduledMinutes = computed(() => {
     if (!props.form.start_at || !props.form.end_at) {
@@ -136,7 +148,7 @@ function setCorrectOption(question, optionIndex) {
 }
 
 function questionTypeLabel(type) {
-    return type === 'mcq' ? 'MCQ' : 'True / False';
+    return t(`admin.exams.questionTypes.${type}`);
 }
 
 function questionSummary(question) {
@@ -146,7 +158,7 @@ function questionSummary(question) {
         return prompt.length > 90 ? `${prompt.slice(0, 90)}...` : prompt;
     }
 
-    return question.type === 'mcq' ? 'Multiple choice question' : 'True / False question';
+    return question.type === 'mcq' ? t('admin.exams.multipleChoiceQuestion') : t('admin.exams.trueFalseQuestion');
 }
 
 function isCollapsed(index) {
@@ -191,21 +203,21 @@ watch(
         <section class="teachify-card rounded-[1.6rem] p-5 sm:p-6">
             <div class="flex flex-col gap-4 border-b border-teachify-line pb-5">
                 <div>
-                    <h2 class="text-2xl font-black tracking-tight text-teachify-ink">{{ heading }}</h2>
-                    <p class="mt-1 text-sm font-medium text-teachify-muted">{{ description }}</p>
+                    <h2 class="text-2xl font-black tracking-tight text-teachify-ink">{{ formHeading }}</h2>
+                    <p class="mt-1 text-sm font-medium text-teachify-muted">{{ formDescription }}</p>
                 </div>
                 <div class="grid gap-3 sm:grid-cols-3">
                     <div class="rounded-2xl border border-teachify-line bg-slate-50 px-4 py-3">
-                        <div class="text-xs font-black uppercase tracking-[0.16em] text-teachify-muted">Group</div>
-                        <div class="mt-1 text-sm font-bold text-teachify-ink">{{ selectedGroup?.name ?? 'Not selected yet' }}</div>
+                        <div class="text-xs font-black uppercase tracking-[0.16em] text-teachify-muted">{{ $t('fields.group') }}</div>
+                        <div class="mt-1 text-sm font-bold text-teachify-ink">{{ selectedGroup?.name ?? $t('admin.exams.notSelectedYet') }}</div>
                     </div>
                     <div class="rounded-2xl border border-teachify-line bg-slate-50 px-4 py-3">
-                        <div class="text-xs font-black uppercase tracking-[0.16em] text-teachify-muted">Questions</div>
-                        <div class="mt-1 text-sm font-bold text-teachify-ink">{{ totalQuestions }} total</div>
+                        <div class="text-xs font-black uppercase tracking-[0.16em] text-teachify-muted">{{ $t('fields.questions') }}</div>
+                        <div class="mt-1 text-sm font-bold text-teachify-ink">{{ $t('common.totalCount', { count: totalQuestions }) }}</div>
                     </div>
                     <div class="rounded-2xl border border-teachify-line bg-slate-50 px-4 py-3">
-                        <div class="text-xs font-black uppercase tracking-[0.16em] text-teachify-muted">Max score</div>
-                        <div class="mt-1 text-sm font-bold text-teachify-ink">{{ maxScore }} points</div>
+                        <div class="text-xs font-black uppercase tracking-[0.16em] text-teachify-muted">{{ $t('fields.maxScore') }}</div>
+                        <div class="mt-1 text-sm font-bold text-teachify-ink">{{ $t('common.points', { count: maxScore }) }}</div>
                     </div>
                 </div>
             </div>
@@ -213,39 +225,39 @@ watch(
             <div class="mt-5 space-y-5">
                 <section class="rounded-[1.5rem] border border-teachify-line bg-white p-4 sm:p-5">
                     <div class="mb-4">
-                        <h3 class="text-lg font-black text-teachify-ink">1. Exam details</h3>
-                        <p class="mt-1 text-sm font-medium text-teachify-muted">Fill in the basic exam information first.</p>
+                        <h3 class="text-lg font-black text-teachify-ink">{{ $t('admin.exams.detailsStep') }}</h3>
+                        <p class="mt-1 text-sm font-medium text-teachify-muted">{{ $t('admin.exams.detailsHelp') }}</p>
                     </div>
 
                     <div class="grid gap-4 sm:grid-cols-2">
-                        <SelectInput v-model="form.teaching_group_id" label="Group" required :options="groups" :error="form.errors.teaching_group_id" />
-                        <TextInput v-model="form.title" label="Title" required :error="form.errors.title" />
-                        <TextInput v-model="form.start_at" label="Starts At" type="datetime-local" required :error="form.errors.start_at" />
-                        <TextInput v-model="form.end_at" label="Ends At" type="datetime-local" required :error="form.errors.end_at" />
-                        <TextInput v-model="form.max_allowed_time" label="Student Time Limit (minutes)" type="number" required :error="form.errors.max_allowed_time" />
-                        <SelectInput v-model="form.student_review_mode" label="Student Review Mode" required :options="reviewModes" :error="form.errors.student_review_mode" />
+                        <SelectInput v-model="form.teaching_group_id" :label="$t('fields.group')" required :options="groups" :error="form.errors.teaching_group_id" />
+                        <TextInput v-model="form.title" :label="$t('fields.title')" required :error="form.errors.title" />
+                        <TextInput v-model="form.start_at" :label="$t('fields.startsAt')" type="datetime-local" required :error="form.errors.start_at" />
+                        <TextInput v-model="form.end_at" :label="$t('fields.endsAt')" type="datetime-local" required :error="form.errors.end_at" />
+                        <TextInput v-model="form.max_allowed_time" :label="$t('fields.studentTimeLimit')" type="number" required :error="form.errors.max_allowed_time" />
+                        <SelectInput v-model="form.student_review_mode" :label="$t('fields.studentReviewMode')" required :options="localizedReviewModes" :error="form.errors.student_review_mode" />
                         <label class="block">
-                            <span class="text-sm font-bold text-teachify-ink">Exam Window</span>
+                            <span class="text-sm font-bold text-teachify-ink">{{ $t('fields.examWindow') }}</span>
                             <div class="mt-2 flex min-h-12 items-center rounded-2xl border border-teachify-line bg-slate-50 px-4 text-sm font-medium text-teachify-muted">
-                                {{ scheduledMinutes ? `${scheduledMinutes} minutes between start and end` : 'Set start and end to see the full window' }}
+                                {{ scheduledMinutes ? $t('admin.exams.windowSummary', { minutes: scheduledMinutes }) : $t('admin.exams.windowPlaceholder') }}
                             </div>
                         </label>
                     </div>
 
                     <div class="mt-4">
-                        <TextareaInput v-model="form.notes" label="Notes" :error="form.errors.notes" />
+                        <TextareaInput v-model="form.notes" :label="$t('fields.notes')" :error="form.errors.notes" />
                     </div>
                 </section>
 
                 <section class="rounded-[1.5rem] border border-teachify-line bg-white p-4 sm:p-5">
                     <div class="flex flex-col gap-3 md:flex-row md:items-center md:justify-between">
                         <div>
-                            <h3 class="text-lg font-black text-teachify-ink">2. Questions</h3>
-                            <p class="mt-1 text-sm font-medium text-teachify-muted">Write each question and choose the correct answer. The score total updates automatically.</p>
+                            <h3 class="text-lg font-black text-teachify-ink">{{ $t('admin.exams.questionsStep') }}</h3>
+                            <p class="mt-1 text-sm font-medium text-teachify-muted">{{ $t('admin.exams.questionsHelp') }}</p>
                         </div>
                         <div class="flex flex-wrap gap-2">
-                            <Button type="button" variant="secondary" @click="addQuestion('true_false')">Add True/False</Button>
-                            <Button type="button" variant="secondary" @click="addQuestion('mcq')">Add MCQ</Button>
+                            <Button type="button" variant="secondary" @click="addQuestion('true_false')">{{ $t('admin.exams.addTrueFalse') }}</Button>
+                            <Button type="button" variant="secondary" @click="addQuestion('mcq')">{{ $t('admin.exams.addMcq') }}</Button>
                         </div>
                     </div>
 
@@ -262,17 +274,17 @@ watch(
                                     <button
                                         type="button"
                                         class="inline-flex items-center gap-2 text-left text-sm font-black text-teachify-ink"
-                                        :aria-label="isCollapsed(questionIndex) ? `Expand question ${questionIndex + 1}` : `Collapse question ${questionIndex + 1}`"
+                                        :aria-label="isCollapsed(questionIndex) ? $t('admin.exams.expandQuestion', { number: questionIndex + 1 }) : $t('admin.exams.collapseQuestion', { number: questionIndex + 1 })"
                                         @click="toggleQuestion(questionIndex)"
                                     >
                                         <ChevronDown
                                             class="h-4 w-4 text-teachify-muted transition-transform"
                                             :class="{ '-rotate-90': isCollapsed(questionIndex) }"
                                         />
-                                        <span>Question {{ questionIndex + 1 }}</span>
+                                        <span>{{ $t('admin.exams.questionLabel', { number: questionIndex + 1 }) }}</span>
                                     </button>
                                     <div class="mt-1 text-sm font-medium text-teachify-muted">
-                                        {{ questionTypeLabel(question.type) }} · {{ question.points || 0 }} point{{ Number(question.points || 0) === 1 ? '' : 's' }}
+                                        {{ $t('admin.exams.questionMeta', { type: questionTypeLabel(question.type), points: $t('common.points', { count: question.points || 0 }), separator: $t('common.separator') }) }}
                                     </div>
                                     <div v-if="isCollapsed(questionIndex)" class="mt-2 text-sm text-teachify-muted">
                                         {{ questionSummary(question) }}
@@ -283,8 +295,8 @@ watch(
                                     <button
                                         type="button"
                                         class="inline-flex h-10 w-10 items-center justify-center rounded-2xl border border-teachify-line bg-white text-teachify-muted transition hover:border-teachify-blue hover:text-teachify-blue disabled:cursor-not-allowed disabled:opacity-60"
-                                        title="Move up"
-                                        aria-label="Move question up"
+                                        :title="$t('admin.exams.moveUp')"
+                                        :aria-label="$t('admin.exams.moveUp')"
                                         @click="moveQuestion(questionIndex, -1)"
                                     >
                                         <ChevronUp class="h-4 w-4" />
@@ -292,8 +304,8 @@ watch(
                                     <button
                                         type="button"
                                         class="inline-flex h-10 w-10 items-center justify-center rounded-2xl border border-teachify-line bg-white text-teachify-muted transition hover:border-teachify-blue hover:text-teachify-blue disabled:cursor-not-allowed disabled:opacity-60"
-                                        title="Move down"
-                                        aria-label="Move question down"
+                                        :title="$t('admin.exams.moveDown')"
+                                        :aria-label="$t('admin.exams.moveDown')"
                                         @click="moveQuestion(questionIndex, 1)"
                                     >
                                         <ChevronDown class="h-4 w-4" />
@@ -301,8 +313,8 @@ watch(
                                     <button
                                         type="button"
                                         class="inline-flex h-10 w-10 items-center justify-center rounded-2xl border border-teachify-line bg-white text-teachify-muted transition hover:border-teachify-blue hover:text-teachify-blue disabled:cursor-not-allowed disabled:opacity-60"
-                                        title="Duplicate question"
-                                        aria-label="Duplicate question"
+                                        :title="$t('admin.exams.duplicate')"
+                                        :aria-label="$t('admin.exams.duplicate')"
                                         @click="duplicateQuestion(questionIndex)"
                                     >
                                         <Copy class="h-4 w-4" />
@@ -310,8 +322,8 @@ watch(
                                     <button
                                         type="button"
                                         class="inline-flex h-10 w-10 items-center justify-center rounded-2xl border border-teachify-line bg-white text-teachify-muted transition hover:border-teachify-coral hover:text-teachify-coral disabled:cursor-not-allowed disabled:opacity-60"
-                                        title="Remove question"
-                                        aria-label="Remove question"
+                                        :title="$t('admin.exams.removeQuestion')"
+                                        :aria-label="$t('admin.exams.removeQuestion')"
                                         :disabled="form.questions.length === 1"
                                         @click="removeQuestion(questionIndex)"
                                     >
@@ -322,24 +334,24 @@ watch(
 
                             <div v-if="!isCollapsed(questionIndex)">
                                 <div class="mt-4 grid gap-4 md:grid-cols-[minmax(0,1fr)_220px_160px]">
-                                    <TextareaInput v-model="question.prompt" label="Prompt" :error="form.errors[`questions.${questionIndex}.prompt`]" />
+                                    <TextareaInput v-model="question.prompt" :label="$t('fields.prompt')" :error="form.errors[`questions.${questionIndex}.prompt`]" />
                                     <SelectInput
                                         v-model="question.type"
-                                        label="Type"
-                                        :options="questionTypes"
+                                        :label="$t('fields.type')"
+                                        :options="localizedQuestionTypes"
                                         :error="form.errors[`questions.${questionIndex}.type`]"
                                         @update:model-value="syncQuestionType(question)"
                                     />
-                                    <TextInput v-model="question.points" label="Points" type="number" :error="form.errors[`questions.${questionIndex}.points`]" />
+                                    <TextInput v-model="question.points" :label="$t('fields.points')" type="number" :error="form.errors[`questions.${questionIndex}.points`]" />
                                 </div>
 
                                 <div v-if="question.type === 'true_false'" class="mt-4 max-w-sm">
                                     <SelectInput
                                         v-model="question.correct_boolean"
-                                        label="Correct Answer"
+                                        :label="$t('fields.correctAnswer')"
                                         :options="[
-                                            { value: 'true', label: 'True' },
-                                            { value: 'false', label: 'False' },
+                                            { value: 'true', label: $t('common.true') },
+                                            { value: 'false', label: $t('common.false') },
                                         ]"
                                         :error="form.errors[`questions.${questionIndex}.correct_boolean`]"
                                     />
@@ -347,8 +359,8 @@ watch(
 
                                 <div v-else class="mt-4 rounded-2xl border border-teachify-line bg-white p-4">
                                     <div class="mb-3 flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
-                                        <div class="text-sm font-black text-teachify-ink">Options</div>
-                                        <Button type="button" variant="secondary" @click="addOption(question)" :disabled="question.options.length >= 6">Add Option</Button>
+                                        <div class="text-sm font-black text-teachify-ink">{{ $t('fields.options') }}</div>
+                                        <Button type="button" variant="secondary" @click="addOption(question)" :disabled="question.options.length >= 6">{{ $t('admin.exams.addOption') }}</Button>
                                     </div>
                                     <p v-if="form.errors[`questions.${questionIndex}.options`]" class="mb-3 text-sm font-semibold text-teachify-coral">
                                         {{ form.errors[`questions.${questionIndex}.options`] }}
@@ -361,11 +373,11 @@ watch(
                                         >
                                             <TextInput
                                                 v-model="option.label"
-                                                :label="`Option ${optionIndex + 1}`"
+                                                :label="$t('admin.exams.optionLabel', { number: optionIndex + 1 })"
                                                 :error="form.errors[`questions.${questionIndex}.options.${optionIndex}.label`]"
                                             />
                                             <label class="block">
-                                                <span class="text-sm font-bold text-teachify-ink">Correct</span>
+                                                <span class="text-sm font-bold text-teachify-ink">{{ $t('fields.correct') }}</span>
                                                 <div class="mt-2 flex min-h-12 items-center rounded-2xl border border-teachify-line bg-white px-4">
                                                     <input
                                                         :checked="option.is_correct"
@@ -374,10 +386,10 @@ watch(
                                                         class="h-4 w-4 border-teachify-line text-teachify-blue"
                                                         @change="setCorrectOption(question, optionIndex)"
                                                     />
-                                                    <span class="ml-3 text-sm font-medium text-teachify-muted">Mark correct</span>
+                                                    <span class="ml-3 text-sm font-medium text-teachify-muted">{{ $t('admin.exams.markCorrect') }}</span>
                                                 </div>
                                             </label>
-                                            <Button type="button" variant="secondary" @click="removeOption(question, optionIndex)" :disabled="question.options.length <= 2">Remove</Button>
+                                            <Button type="button" variant="secondary" @click="removeOption(question, optionIndex)" :disabled="question.options.length <= 2">{{ $t('actions.delete', { name: $t('admin.exams.optionLabel', { number: optionIndex + 1 }) }) }}</Button>
                                         </div>
                                     </div>
                                 </div>
@@ -390,7 +402,7 @@ watch(
 
         <div class="flex flex-wrap gap-3">
             <Button type="submit" :disabled="form.processing">{{ submitLabel }}</Button>
-            <Button v-if="cancelUrl" variant="secondary" :href="cancelUrl">Cancel</Button>
+            <Button v-if="cancelUrl" variant="secondary" :href="cancelUrl">{{ $t('actions.cancel') }}</Button>
         </div>
     </form>
 </template>

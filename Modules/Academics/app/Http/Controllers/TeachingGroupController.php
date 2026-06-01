@@ -103,7 +103,7 @@ class TeachingGroupController extends Controller
                     'show_url' => route('admin.timetables.show', $group->timetable),
                     'edit_url' => route('admin.timetables.edit', $group->timetable),
                     'entries' => $group->timetable->entries->map(fn ($entry): array => [
-                        'day' => ucfirst($entry->day_of_week),
+                        'day' => $entry->day_of_week,
                         'time_range' => substr((string) $entry->starts_at, 0, 5).' - '.substr((string) $entry->ends_at, 0, 5),
                     ])->values()->all(),
                 ] : null,

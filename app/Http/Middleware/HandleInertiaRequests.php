@@ -68,6 +68,7 @@ class HandleInertiaRequests extends Middleware
                 'studentSessions' => route('student.sessions'),
                 'studentExams' => route('student.exams.index'),
                 'studentPassword' => route('student.password.edit'),
+                'studentScanAttendance' => route('student.scan-attendance'),
                 'studentAttendanceLookupByCode' => route('student.attendance.lookup-by-code'),
                 'adminParents' => route('admin.parents.index'),
                 'adminStudents' => route('admin.students.index'),
