@@ -26,6 +26,12 @@
     --color-teachify-yellow-soft: #fef9c3;
 }
 
+html[lang='ar'] {
+    --font-sans: 'Cairo', ui-sans-serif, system-ui, sans-serif, 'Apple Color Emoji', 'Segoe UI Emoji',
+        'Segoe UI Symbol', 'Noto Color Emoji';
+    --default-font-family: var(--font-sans);
+}
+
 @layer base {
     html {
         background: #f7fbff;
@@ -36,12 +42,6 @@
         background:
             radial-gradient(circle at top left, rgba(45, 212, 191, 0.16), transparent 32rem),
             linear-gradient(180deg, #f7fbff 0%, #ffffff 48%, #f7fbff 100%);
-    }
-
-    html[lang='ar'] body,
-    html[lang='ar'] .font-sans {
-        font-family: 'Cairo', ui-sans-serif, system-ui, sans-serif, 'Apple Color Emoji', 'Segoe UI Emoji',
-            'Segoe UI Symbol', 'Noto Color Emoji';
     }
 
     button,
