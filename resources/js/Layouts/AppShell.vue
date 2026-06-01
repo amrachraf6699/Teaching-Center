@@ -294,7 +294,7 @@ function logout() {
                         <h1 class="truncate text-left text-xl font-bold tracking-normal">{{ props.title }}</h1>
                     </div>
 
-                    <div class="flex shrink-0 items-center gap-3">
+                    <div class="ml-auto flex shrink-0 items-center gap-3">
                         <button
                             v-if="user?.role === 'student'"
                             type="button"
