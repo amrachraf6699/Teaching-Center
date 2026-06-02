@@ -19,6 +19,7 @@ class AuthController extends Controller
         return Inertia::render('Auth/Login', [
             'title' => 'Login',
             'action' => route('login.store'),
+            'quickLoginAccounts' => $this->quickLoginEnabled() ? $this->seededPortalAccounts() : [],
         ]);
     }
 
@@ -28,6 +29,7 @@ class AuthController extends Controller
             'title' => 'Student Login',
             'action' => route('student.login.store'),
             'redirect' => (string) $request->query('redirect', ''),
+            'quickLoginAccounts' => $this->quickLoginEnabled() ? $this->seededStudentAccounts() : [],
         ]);
     }
 
@@ -98,5 +100,56 @@ class AuthController extends Controller
             'student' => route('student.home'),
             default => route('parent.dashboard'),
         };
+    }
+
+    private function quickLoginEnabled(): bool
+    {
+        return ! app()->isProduction();
+    }
+
+    private function seededPortalAccounts(): array
+    {
+        return [
+            [
+                'role' => 'teacher',
+                'name' => 'Teachify Teacher',
+                'email' => 'teacher@teachify.test',
+                'password' => 'password',
+            ],
+            [
+                'role' => 'parent',
+                'name' => 'Mona Hassan',
+                'email' => 'mona.parent@teachify.test',
+                'password' => 'password',
+            ],
+            [
+                'role' => 'parent',
+                'name' => 'Karim Saleh',
+                'email' => 'karim.parent@teachify.test',
+                'password' => 'password',
+            ],
+            [
+                'role' => 'parent',
+                'name' => 'Sara Nabil',
+                'email' => 'sara.parent@teachify.test',
+                'password' => 'password',
+            ],
+        ];
+    }
+
+    private function seededStudentAccounts(): array
+    {
+        return collect([
+            ['name' => 'Omar Hassan', 'code' => 'ST-001'],
+            ['name' => 'Laila Hassan', 'code' => 'ST-002'],
+            ['name' => 'Youssef Saleh', 'code' => 'ST-003'],
+            ['name' => 'Nour Saleh', 'code' => 'ST-004'],
+            ['name' => 'Adam Nabil', 'code' => 'ST-005'],
+            ['name' => 'Mariam Nabil', 'code' => 'ST-006'],
+        ])->map(fn (array $student): array => [
+            ...$student,
+            'role' => 'student',
+            'password' => $student['code'],
+        ])->all();
     }
 }

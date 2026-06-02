@@ -18,6 +18,15 @@ const en = {
         signIn: 'Sign in',
         studentPortalPrompt: 'Student account?',
         studentLoginLink: 'Student Login',
+        quickLoginTitle: 'Quick login',
+        quickLoginHelp: 'Use a seeded teacher or parent account.',
+        quickStudentLoginHelp: 'Use a seeded student account.',
+        quickLoginAction: 'Continue as {name}',
+        quickLoginRole: {
+            teacher: 'Teacher',
+            parent: 'Parent',
+            student: 'Student',
+        },
     },
     nav: {
         dashboard: 'Dashboard',
@@ -710,6 +719,15 @@ const ar = {
         signIn: 'تسجيل الدخول',
         studentPortalPrompt: 'لديك حساب طالب؟',
         studentLoginLink: 'تسجيل دخول الطالب',
+        quickLoginTitle: 'دخول سريع',
+        quickLoginHelp: 'استخدم حساب معلم أو ولي أمر من البيانات التجريبية.',
+        quickStudentLoginHelp: 'استخدم حساب طالب من البيانات التجريبية.',
+        quickLoginAction: 'الدخول باسم {name}',
+        quickLoginRole: {
+            teacher: 'معلم',
+            parent: 'ولي أمر',
+            student: 'طالب',
+        },
     },
     nav: {
         dashboard: 'لوحة التحكم',

@@ -29,7 +29,22 @@ it('renders the unified login inertia page', function () {
         ->assertInertia(fn (Assert $page) => $page
             ->component('Auth/Login')
             ->where('title', 'Login')
-            ->where('action', route('login.store')));
+            ->where('action', route('login.store'))
+            ->has('quickLoginAccounts', 4)
+            ->where('quickLoginAccounts.0.email', 'teacher@teachify.test')
+            ->where('quickLoginAccounts.0.password', 'password'));
+});
+
+it('renders the student login inertia page with seeded quick-login accounts', function () {
+    $this->get(route('student.login'))
+        ->assertOk()
+        ->assertInertia(fn (Assert $page) => $page
+            ->component('Auth/StudentLogin')
+            ->where('title', 'Student Login')
+            ->where('action', route('student.login.store'))
+            ->has('quickLoginAccounts', 6)
+            ->where('quickLoginAccounts.0.code', 'ST-001')
+            ->where('quickLoginAccounts.0.password', 'ST-001'));
 });
 
 it('logs teachers and parents in from the same login page', function () {
